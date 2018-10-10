@@ -204,9 +204,11 @@ if ICsNon0 == 1:
         #r.dat.data[:] += np.random.uniform(low=-1., high=1., size=r.dof_dset.size)
         #b_pert = r*bprime*20
 
-        #Read in the random field:  
-        if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180.txt')
-        if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360.txt')
+        #Read in the random field:
+        #dirICs = '/home/ubuntu/BoussinesqLab/'
+        dirICs = '/work/e01/e01/paul/BoussinesqLab/'
+        if factor == 1: RandomSample = np.loadtxt(dirICs + 'RandomSample_080_180.txt')
+        if factor == 2: RandomSample = np.loadtxt(dirICs + 'RandomSample_160_360.txt')
         RandomSample = RandomSample/np.max(RandomSample)
         RandomSample = RandomSample*bprime*5
 
