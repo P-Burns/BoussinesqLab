@@ -51,8 +51,7 @@ dt = 0.001
 if '--running-tests' in sys.argv:
     tmax = dt
 else:
-    #tmax = 5*24*60*60
-    tmax = 0.01
+    tmax = 60*60
 
 
 ##############################################################################
@@ -61,7 +60,7 @@ else:
 # Construct 1d periodic base mesh for idealised lab experiment of Park et al. (1994)
 factor = 1
 nx = 80
-ny = 3
+ny = 10
 nx = nx*factor
 ny = ny*factor
 Lx = 0.2
@@ -105,15 +104,15 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 #points_z = [0.22]
 #points = np.array([p for p in itertools.product(points_x, points_z)])
 
-dtOutput = 10.
+#dtOutput = 10.
 #dtOutput = 1.
-#dtOutput = 0.1
+dtOutput = 0.1
 #dtOutput = 0.01
 dumpfreq = int(dtOutput/(dt*subcycles))
 
-output = OutputParameters(dirname='benchmark', dumpfreq_method = "nsteps", dumpfreq=dumpfreq, dumplist=['u','b'], 
-perturbation_fields=['b'], checkpoint=CheckPoint, timestepping=False, dump_diagnostics=False)
-#output = OutputParameters(dirname='tmp', dumpfreq_method = "time", dumpfreq=1., dumplist=['u','b'], 
+output = OutputParameters(dirname='benchmark', dumpfreq=dumpfreq, dumplist=['u','b','p'], 
+perturbation_fields=['b'], checkpoint=CheckPoint, dump_diagnostics=False)
+#output = OutputParameters(dirname='tmp', dumpfreq_method = "time", dumpfreq=dumpfreq, dumplist=['u','b','p'], 
 #perturbation_fields=['b'], checkpoint=False, timestepping=True)
 
 
