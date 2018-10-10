@@ -2,16 +2,17 @@
 
 #PBS -N Gusto2DPark18
 #PBS -l select=1
-#PBS -l walltime=00:10:00
+#PBS -l walltime=48:00:00
 #PBS -A e01-EXE-Wing
 
 
 # The directory on /work which contains your firedrake installation
-myFiredrake=/work/e01/e01/paul/firedrake
+myFiredrake=${WORK}/firedrake
 # The script you want to run
-myScript=$myFiredrake/firedrake/src/gusto/examples/boussinesq_3d_lab.py
+myScript=${WORK}/BoussinesqLab/boussinesqLab2D.py
+#myScript=${WORK}/BoussinesqLab/boussinesqLab3D.py
 # The number of processors to use
-nprocs=4
+nprocs=24
 
 
 # The following lines should not require modification ####### 
