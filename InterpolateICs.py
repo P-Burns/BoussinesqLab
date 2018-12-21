@@ -12,7 +12,7 @@ import pdb
 #Program control:
 #Model grid points are not exactly the same due to different bases:
 AegirGrid = 1
-meshFactor = 4
+meshFactor = 1./4
 DedalusGrid = 0
 GustoGrid = 0
 
@@ -21,7 +21,7 @@ GustoGrid = 0
 method = 'linear'	#seems to give best results.
 #method = 'cubic'
 
-MakePlot = 0
+MakePlot = 1
 w2f = 1
 
 
@@ -75,8 +75,10 @@ points = np.array(list(product(x1, z1)))
 
 #Define the new grid on which you wish to interpolate the ICs.
 if AegirGrid == 1:
-    Nx2 = Nx*meshFactor
-    Nz2 = Nz*meshFactor
+    Nx2 = int(Nx*meshFactor)
+    Nz2 = int(Nz*meshFactor)
+    if meshFactor == 1./4: Nz2 += 1
+    print(Nx2,Nz2)
     Lx2 = max(x1)
     Lz2 = max(z1)
     dx2 = float(Lx2)/(Nx2-1)
@@ -155,6 +157,8 @@ if MakePlot == 1:
 
 
 if w2f == 1:
+    if meshFactor==1./4: fnm_ICs = './RandomSample_020_046.txt'
+    if meshFactor==1./2: fnm_ICs = './RandomSample_040_090.txt'
     if meshFactor==1: fnm_ICs = './RandomSample_080_180.txt'
     if meshFactor==2: fnm_ICs = './RandomSample_160_360.txt'
     if meshFactor==4: fnm_ICs = './RandomSample_320_720.txt'
