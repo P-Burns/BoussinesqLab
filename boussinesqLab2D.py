@@ -10,6 +10,7 @@ import sympy as sp
 from sympy.stats import Normal
 import sys
 import matplotlib.pyplot as plt
+import CosineSineTransforms as cst
 
 
 #PETSc.Log.begin()
@@ -29,8 +30,8 @@ ICsGaussian = 0
 ICsRandom = 1
 FilterField = 0
 
-AddNonRandomForce = 1
-AddWaveForce = 1
+AddNonRandomForce = 0
+AddWaveForce = 0
 AddDedalusForce = 0
 AddRandomForce = 0
 
@@ -101,7 +102,8 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 #points = np.array([p for p in itertools.product(points_x, points_z)])
 
 #dtOutput = 0.001
-dtOutput = 1.
+#dtOutput = .1
+dtOutput = .1
 dumpfreq = int(dtOutput/(dt*subcycles))
 
 output = OutputParameters(dirname='tmp', dumpfreq=dumpfreq, dumplist=['u','b'], 
@@ -199,47 +201,40 @@ if ICsNon0 == 1:
         #r.dat.data[:] += np.random.uniform(low=-1., high=1., size=r.dof_dset.size)
         #b_pert = r*bprime*20
 
-        if factor == 1: fhat_Aegir = np.loadtxt('/home/ubuntu/BoussinesqLab/fhat_Aegir_080_180.txt')
+        #Read in the random field:  
+        if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180.txt')
+        if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360.txt')
+        RandomSample = RandomSample/np.max(RandomSample)
+        RandomSample = RandomSample*bprime*5
+
+        #get Aegir coefficients and re-normalise:
+        fhat_Aegir = cst.FFT_FST(Nx, Nz, RandomSample)/(np.float_(Nx))
 
         kk = np.fft.fftfreq(Nx,Lx/Nx)*2.*np.pi # wave numbers used in Aegir
         kk_cosine = np.arange((Nz))*np.pi/Lz   # wave numbers used in Aegir
 
-        def InterpolateFromAegir(Nx, Nz, xgridAlt, zgridAlt, kk, kk_cosine, uHatNumpy):
+        def InterpolateFromAegir(Nx, Nz, xAlt, zAlt, kk, kk_cosine, uHatNumpy):
             """
             Nx and Nz are the size of the Aegir arrays
             xgrid and zgrid are the grids from Dedalus and can be any size
             kk and kk_cosine are from Aegir
             uHatNumpy is the spectral coefficents as computed with Aegir
             """
-            fOutput = np.zeros((len(xgridAlt),len(zgridAlt)))*1j
-            for ix in range(len(xgridAlt)): # Loops over the xgrid
-                for iz in range(len(zgridAlt)):# Loops over the zgrid
-                    fOutput[ix,iz] = 0.
-                    for i in range(Nx):
-                        for j in range(1,Nz-1):
-                            fOutput[ix, iz] += np.sin(kk_cosine[j]*zgridAlt[iz])*np.exp(-1j*kk[i]*xgridAlt[ix])*uHatNumpy[i,j]
+            for i in range(Nx):
+                for j in range(1,Nz-1):
+                    fOutput += np.sin(kk_cosine[j]*zAlt)*np.exp(-1j*kk[i]*xAlt)*uHatNumpy[i,j]
             return fOutput.real
-
-        RandomSample = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
-
-        #Read in the random field:  
-        RandomSample = RandomSample/np.max(RandomSample)
-        RandomSample = RandomSample*bprime*5
+            #RandomSample_Dedalus = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
 
         #Get vector of coordinates:
         V_DG0 = FunctionSpace(mesh, "DG", 0)
         W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
         X = interpolate(mesh.coordinates, W)
 
-        def ExternalDataPoint(data, x, y, Nx, Ny, Lx, Ly):
-            dx = Lx/Nx
-            dy = Ly/Ny
-            return data[int(x/dx),int(y/dy)]
-
         def mydata(X):
             list_of_output_values = []
             for (x, y) in X:
-                list_of_output_values.append(ExternalDataPoint(RandomSample, x, y, columns, nlayers, L, H))
+                list_of_output_values.append(InterpolateFromAegir(columns, nlayers, x, y, kk, kk_cosine, fhat_Aegir))
             return list_of_output_values
 
         b_pert_dg0 = Function(V_DG0)
@@ -299,18 +294,17 @@ if AddNonRandomForce == 1:
         lmda_z1 = 2.0/100
 
         #Domain is periodic in x so we get as close to the 
-        #observations as possible:
+        #observations are possible:
         k_int = 10
-        k1 = 2*pi*k_int/L
+        k1 = 2*np.pi*k_int/L
         #Domain is not periodic in z so we can exactly mimic the 
-        #observations in z:
+        #observations:
         m1 = 2*pi/lmda_z1
             
         omega = 2*pi*N
 
         A_f = bprime/2.
 
-        #Construct forcing term ensuring that it obeys non-divergence condition:
         f_ux = -m1/k1*A_f * sin(x[0]*k1 + x[1]*m1 - omega*state.t)
         f_uz = A_f * sin(x[0]*k1 + x[1]*m1 - omega*state.t)
 
@@ -350,8 +344,8 @@ if ZeroDiffusion != 1:
         kappa_u = 10.**(-2.)
         kappa_b = 10.**(-2.)
     if ScaleDiffusion == 1:
-        DiffScaleFact_u = 100.
-        DiffScaleFact_b = 100.
+        DiffScaleFact_u = 10.
+        DiffScaleFact_b = 10.
         kappa_u = kappa_u * DiffScaleFact_u
         kappa_b = kappa_b * DiffScaleFact_b
 
@@ -366,7 +360,7 @@ if ZeroDiffusion != 1:
     diffused_fields.append(("u", InteriorPenalty(state, Vu, kappa=kappa_u,
                                            mu=Constant(10./delta) )))
     diffused_fields.append(("b", InteriorPenalty(state, Vb, kappa=kappa_b,
-                                           mu=Constant(10./delta), bcs=bcs_b )))
+                                           mu=Constant(10./delta),bcs=bcs_b )))
 
 
 ##############################################################################
