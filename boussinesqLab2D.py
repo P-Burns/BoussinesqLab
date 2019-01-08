@@ -208,10 +208,10 @@ if ICsNon0 == 1:
         RandomSample = RandomSample*bprime*5
 
         #get Aegir coefficients and re-normalise:
-        fhat_Aegir = cst.FFT_FST(Nx, Nz, RandomSample)/(np.float_(Nx))
+        fhat_Aegir = cst.FFT_FST(columns, nlayers, RandomSample)/(np.float_(columns))
 
-        kk = np.fft.fftfreq(Nx,Lx/Nx)*2.*np.pi # wave numbers used in Aegir
-        kk_cosine = np.arange((Nz))*np.pi/Lz   # wave numbers used in Aegir
+        kk = np.fft.fftfreq(columns,L/columns)*2.*np.pi # wave numbers used in Aegir
+        kk_cosine = np.arange((nlayers))*np.pi/nlayers   # wave numbers used in Aegir
 
         def InterpolateFromAegir(Nx, Nz, xAlt, zAlt, kk, kk_cosine, uHatNumpy):
             """
@@ -220,6 +220,7 @@ if ICsNon0 == 1:
             kk and kk_cosine are from Aegir
             uHatNumpy is the spectral coefficents as computed with Aegir
             """
+            fOutput = 0j
             for i in range(Nx):
                 for j in range(1,Nz-1):
                     fOutput += np.sin(kk_cosine[j]*zAlt)*np.exp(-1j*kk[i]*xAlt)*uHatNumpy[i,j]
