@@ -11,6 +11,7 @@ from sympy.stats import Normal
 import sys
 import matplotlib.pyplot as plt
 import CosineSineTransforms as cst
+import pdb as pdb
 
 
 #PETSc.Log.begin()
@@ -28,6 +29,7 @@ ICsNon0 = 1
 ICsSimpleWave = 0
 ICsGaussian = 0
 ICsRandom = 1
+Interpolate = 0
 FilterField = 0
 
 AddNonRandomForce = 0
@@ -201,41 +203,62 @@ if ICsNon0 == 1:
         #r.dat.data[:] += np.random.uniform(low=-1., high=1., size=r.dof_dset.size)
         #b_pert = r*bprime*20
 
-        #Read in the random field:  
-        if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180.txt')
-        if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360.txt')
-        RandomSample = RandomSample/np.max(RandomSample)
-        RandomSample = RandomSample*bprime*5
-
-        #get Aegir coefficients and re-normalise:
-        fhat_Aegir = cst.FFT_FST(columns, nlayers, RandomSample)/(np.float_(columns))
-
-        kk = np.fft.fftfreq(columns,L/columns)*2.*np.pi # wave numbers used in Aegir
-        kk_cosine = np.arange((nlayers))*np.pi/nlayers   # wave numbers used in Aegir
-
-        def InterpolateFromAegir(Nx, Nz, xAlt, zAlt, kk, kk_cosine, uHatNumpy):
-            """
-            Nx and Nz are the size of the Aegir arrays
-            xgrid and zgrid are the grids from Dedalus and can be any size
-            kk and kk_cosine are from Aegir
-            uHatNumpy is the spectral coefficents as computed with Aegir
-            """
-            fOutput = 0j
-            for i in range(Nx):
-                for j in range(1,Nz-1):
-                    fOutput += np.sin(kk_cosine[j]*zAlt)*np.exp(-1j*kk[i]*xAlt)*uHatNumpy[i,j]
-            return fOutput.real
-            #RandomSample_Dedalus = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
-
         #Get vector of coordinates:
         V_DG0 = FunctionSpace(mesh, "DG", 0)
         W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
         X = interpolate(mesh.coordinates, W)
 
+        dx = L/columns
+        dz = H/nlayers
+
+        if Interpolate == 1:
+            #Read in the Aegir random field:  
+            if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180.txt')
+            if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360.txt')
+
+            #get Aegir coefficients and re-normalise:
+            fhat_Aegir = cst.FFT_FST(columns, nlayers, RandomSample)/(np.float_(columns))
+
+            kk = np.fft.fftfreq(columns,L/columns)*2.*np.pi # wave numbers used in Aegir
+            kk_cosine = np.arange((nlayers))*np.pi/H   # wave numbers used in Aegir
+
+            def InterpolateFromAegir(dx,dz,Nx,Nz,X, kk,kk_cosine, uHatNumpy):
+                """
+                Nx and Nz are the size of the Aegir arrays
+                X is the grid for Gusto
+                kk and kk_cosine are from Aegir
+                uHatNumpy is the spectral coefficents as computed with Aegir
+                """
+                fOutput = np.zeros((Nx,Nz))*1j
+
+                for (x, z) in X:
+                    for i in range(Nx):
+                        for j in range(1,Nz-1):
+                            idxX = int(x/dx)
+                            idxZ = int(z/dz)
+                            fOutput[idxX,idxZ] += np.sin(kk_cosine[j]*z)*np.exp(-1j*kk[i]*x)*uHatNumpy[i,j]
+                return fOutput.real
+
+            RandomSample_Gusto = InterpolateFromAegir(dx,dz,columns,nlayers,X.dat.data_ro, kk,kk_cosine, fhat_Aegir)
+            #plt.contourf(RandomSample_Gusto.transpose())
+            #plt.show()
+
+            fnm = '/home/ubuntu/BoussinesqLab/RandomSample_080_180_Gusto.txt'
+            np.savetxt(fnm,RandomSample_Gusto)
+
+        #Read in the random field:  
+        if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_Gusto.txt')
+        if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360_Gusto.txt')
+        RandomSample = RandomSample/np.max(RandomSample)
+        RandomSample = RandomSample*bprime*5
+
+        def ExternalData(dx,dz,x,z, data):
+            return data[int(x/dx),int(z/dz)]
+
         def mydata(X):
             list_of_output_values = []
-            for (x, y) in X:
-                list_of_output_values.append(InterpolateFromAegir(columns, nlayers, x, y, kk, kk_cosine, fhat_Aegir))
+            for (x, z) in X:
+                list_of_output_values.append(ExternalData(dx,dz,x,z, RandomSample))
             return list_of_output_values
 
         b_pert_dg0 = Function(V_DG0)
