@@ -37,7 +37,7 @@ AddWaveForce = 0
 AddDedalusForce = 0
 AddRandomForce = 0
 
-ZeroDiffusion = 0
+Inviscid = 0
 MolecularDiffusion = 1
 EddyDiffusion = 0
 ScaleDiffusion = 1
@@ -250,7 +250,10 @@ if ICsNon0 == 1:
         if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_Gusto.txt')
         if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360_Gusto.txt')
         RandomSample = RandomSample/np.max(RandomSample)
-        RandomSample = RandomSample*bprime*5
+
+        cs = 7.6*10**(-4.)
+        A_b = 5*bprime/(g*cs)
+        RandomSample = RandomSample*A_b
 
         def ExternalData(dx,dz,x,z, data):
             return data[int(x/dx),int(z/dz)]
@@ -357,7 +360,7 @@ if (AddNonRandomForce == 0) and (AddRandomForce == 0):
 ##############################################################################
 #Set up diffusion scheme and any desired BCs
 ##############################################################################
-if ZeroDiffusion != 1:
+if Inviscid != 1:
     # mu is a numerical parameter
     # kappa is the diffusion constant for each variable
     # Note that molecular diffusion coefficients were taken from Lautrup, 2005:
@@ -368,8 +371,8 @@ if ZeroDiffusion != 1:
         kappa_u = 10.**(-2.)
         kappa_b = 10.**(-2.)
     if ScaleDiffusion == 1:
-        DiffScaleFact_u = 10.
-        DiffScaleFact_b = 10.
+        DiffScaleFact_u = 100.
+        DiffScaleFact_b = 100.
         kappa_u = kappa_u * DiffScaleFact_u
         kappa_b = kappa_b * DiffScaleFact_b
 
@@ -392,7 +395,7 @@ if ZeroDiffusion != 1:
 ##############################################################################
 
 
-if ZeroDiffusion == 1:
+if Inviscid == 1:
     stepper = CrankNicolson(state, advected_fields, linear_solver, forcing)
 else:
     stepper = CrankNicolson(state, advected_fields, linear_solver, forcing, diffused_fields)
