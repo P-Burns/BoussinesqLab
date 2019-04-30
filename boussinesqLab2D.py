@@ -99,9 +99,9 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 # and documented in configuration.py
 
 #points = np.array([[0.1,0.22]])
-#points_x = [0.05]
-#points_z = [0.22]
-#points = np.array([p for p in itertools.product(points_x, points_z)])
+points_x = [L/2.]
+points_z = numpy.linspace(0, H, nlayers+1)
+points = np.array([p for p in itertools.product(points_x, points_z)])
 
 #dtOutput = 0.001
 #dtOutput = .1
@@ -109,7 +109,7 @@ dtOutput = .1
 dumpfreq = int(dtOutput/(dt*subcycles))
 
 output = OutputParameters(dirname='tmp', dumpfreq=dumpfreq, dumplist=['u','b'], 
-perturbation_fields=['b'], checkpoint=CheckPoint)
+perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', points])
 #output = OutputParameters(dirname='tmp', dumpfreq_method = "time", dumpfreq=dumpfreq, dumplist=['u','b'], 
 #perturbation_fields=['b'], checkpoint=False, timestepping=True)
 
@@ -131,7 +131,7 @@ parameters = CompressibleParameters(N=np.sqrt(N2))
 diagnostics = Diagnostics(*fieldlist)
 
 # list of diagnostic fields, each defined in a class in diagnostics.py
-diagnostic_fields = [CourantNumber()]
+diagnostic_fields = [CourantNumber(), Gradient("b")]
 
 
 # set up state, passing in the mesh, information on the required finite element
@@ -382,9 +382,9 @@ if ZeroDiffusion != 1:
 
     diffused_fields = []
     diffused_fields.append(("u", InteriorPenalty(state, Vu, kappa=kappa_u,
-                                           mu=Constant(10./delta) )))
+                                           mu=Constant(10./delta), bcs=bcs_u )))
     diffused_fields.append(("b", InteriorPenalty(state, Vb, kappa=kappa_b,
-                                           mu=Constant(10./delta),bcs=bcs_b )))
+                                           mu=Constant(10./delta), bcs=bcs_b )))
 
 
 ##############################################################################
