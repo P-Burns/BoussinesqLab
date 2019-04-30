@@ -10,8 +10,9 @@ import sympy as sp
 from sympy.stats import Normal
 import sys
 import matplotlib.pyplot as plt
-import CosineSineTransforms as cst
+#import CosineSineTransforms as cst
 import pdb as pdb
+import itertools as itertools
 
 
 #PETSc.Log.begin()
@@ -100,7 +101,7 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 
 #points = np.array([[0.1,0.22]])
 points_x = [L/2.]
-points_z = numpy.linspace(0, H, nlayers+1)
+points_z = np.linspace(0, H, nlayers+1)
 points = np.array([p for p in itertools.product(points_x, points_z)])
 
 #dtOutput = 0.001
@@ -109,10 +110,10 @@ dtOutput = .1
 dumpfreq = int(dtOutput/(dt*subcycles))
 
 output = OutputParameters(dirname='tmp', dumpfreq=dumpfreq, dumplist=['u','b'], 
-perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', points)] )
+perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', points)]  )
 #output = OutputParameters(dirname='tmp', dumpfreq_method = "time", dumpfreq=dumpfreq, dumplist=['u','b'], 
 #perturbation_fields=['b'], checkpoint=False, timestepping=True)
-
+#point_data=[('b_gradient', points)] 
 
 # class containing physical parameters
 # all values not explicitly set here use the default values provided
@@ -251,9 +252,7 @@ if ICsNon0 == 1:
         if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360_Gusto.txt')
         RandomSample = RandomSample/np.max(RandomSample)
 
-        cs = 7.6*10**(-4.)
-        A_b = 5*bprime/(g*cs)
-        RandomSample = RandomSample*A_b
+        RandomSample = RandomSample*bprime*5
 
         def ExternalData(dx,dz,x,z, data):
             return data[int(x/dx),int(z/dz)]
@@ -292,7 +291,6 @@ ueqn = EulerPoincare(state, u0.function_space())
 supg = True
 if supg:
     beqn = SUPGAdvection(state, Vb,
-                         supg_params={"dg_direction":"horizontal"},
                          equation_form="advective")
 else:
     beqn = EmbeddedDGAdvection(state, Vb,
