@@ -109,7 +109,7 @@ dtOutput = .1
 dumpfreq = int(dtOutput/(dt*subcycles))
 
 output = OutputParameters(dirname='tmp', dumpfreq=dumpfreq, dumplist=['u','b'], 
-perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', points])
+perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', points)] )
 #output = OutputParameters(dirname='tmp', dumpfreq_method = "time", dumpfreq=dumpfreq, dumplist=['u','b'], 
 #perturbation_fields=['b'], checkpoint=False, timestepping=True)
 
