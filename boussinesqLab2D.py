@@ -103,17 +103,11 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 points_x = [L/2.]
 
 #Get vector of coordinates:
-#V_DG0 = FunctionSpace(mesh, "DG", 0)
-#W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
-#X = interpolate(mesh.coordinates, W)
-#points_z = X.dat.data_ro[0,:].flatten()
-
-x = SpatialCoordinate(mesh)
-#print(x[1] )
-#print(points_x)
-#pdb.set_trace()
-points_z = np.linspace(0, H, nlayers+1)
-
+V_DG0 = FunctionSpace(mesh, "DG", 0)
+W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
+X = interpolate(mesh.coordinates, W)
+points_z = X.dat.data_ro[0,:].flatten()
+#points_z = np.linspace(0, H, nlayers+1)
 
 points = np.array([p for p in itertools.product(points_x, points_z)])
 
@@ -173,6 +167,7 @@ b0 = state.fields("b")
 # z.grad(bref) = N**2
 # the following is symbolic algebra, using the default buoyancy frequency
 # from the parameters class. x[1]=z and comes from x=SpatialCoordinate(mesh)
+x = SpatialCoordinate(mesh)
 N = parameters.N
 bref = N**2*(x[1]-H)
 # interpolate the expression to the function
