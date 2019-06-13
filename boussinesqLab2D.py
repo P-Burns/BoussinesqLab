@@ -24,8 +24,8 @@ from pyop2.mpi import MPI
 CheckPoint = True
 Pickup = False
 #ParkRun = 14
-#ParkRun = 16
-ParkRun = 18
+#ParkRun = 18
+ParkRun = -1
 
 ICsNon0 = 1
 ICsSimpleWave = 0
@@ -55,7 +55,7 @@ dt = 0.001
 if '--running-tests' in sys.argv:
     tmax = dt
 else:
-    tmax = 3*60*60
+    tmax = 30*60
     #tmax = 1
 
 
@@ -142,8 +142,19 @@ perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', poi
 
 # Physical parameters adjusted for idealised lab experiment of Park et al. (1994):
 if ParkRun == 14: N2=0.35
-if ParkRun == 16: N2=1.34
 if ParkRun == 18: N2=3.83
+if ParkRun == -1:
+    #N2 = 0.25
+    #N2 = 1
+    N2 = 2.25
+    #N2 = 4
+    #N2 = 6.25
+    #N2 = 9
+    #N2 = 12.25
+    #N2 = 16
+    #N2 = 20.25
+    #N2 = 25
+
 parameters = CompressibleParameters(N=np.sqrt(N2))
 
 
@@ -192,21 +203,20 @@ b_b = Function(Vb).interpolate(bref)
 # and then using the N^2 value.
 g = parameters.g
 
-drho0_dz13 = -122.09
-
-#No clear number for buoyancy perturbation for run 18 -
-#Scale perturbations using background stratification:
-if ParkRun == 14: drho0_dz = -31.976
-if ParkRun == 18: drho0_dz = -425.9
-rho0 = -g/N2*drho0_dz
-
 dgamma = 100./3
 dz_b = 2./100
 a0 = 100.
 z_a = H/2
 rhoprime13 = dgamma*z_a + a0*dz_b + dgamma/2*dz_b
-scalefactor = g/rho0* drho0_dz/drho0_dz13
-bprime = rhoprime13 * scalefactor
+
+#Make comparison to Run 18 by only changing background gradient:
+drho0_dz13 = -122.09
+N2_18 = 3.83
+drho0_dz_18 = -425.9
+rho0 = -g/N2_18*drho0_dz_18
+rhoprime = rhoprime13 * drho0_dz_18/drho0_dz13
+bprime = -g/rho0*rhoprime
+
 
 if ICsNon0 == 1:
     if ICsSimpleWave == 1:
