@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 #import CosineSineTransforms as cst
 import pdb as pdb
 import itertools as itertools
+from pyop2.mpi import MPI
 
 
 #PETSc.Log.begin()
@@ -73,6 +74,7 @@ nlayers = 180
 nlayers = nlayers*factor
 H = 0.45  # Height position of the model top
 mesh = ExtrudedMesh(m, layers=nlayers, layer_height=H/nlayers)
+x = SpatialCoordinate(mesh)
 
 
 ##############################################################################
@@ -99,17 +101,29 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 # all values not explicitly set here use the default values provided
 # and documented in configuration.py
 
-#points = np.array([[0.1,0.22]])
-points_x = [L/2.]
-
 #Get vector of coordinates:
 V_DG0 = FunctionSpace(mesh, "DG", 0)
 W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
 X = interpolate(mesh.coordinates, W)
-points_z = X.dat.data_ro[0,:].flatten()
+#points_x = X.dat.data_ro[:,0]
+#points_x = np.sort(np.unique(points_x))
+#points_x = [points_x[int(columns/2.)]]
+
+points_x = np.array([0.10125])
+points_z = X.dat.data_ro[:,1].flatten()
+points_z = np.sort(np.unique(points_z)).tolist()
+
+#points_x = np.array([0.10125])
 #points_z = np.linspace(0, H, nlayers+1)
 
 points = np.array([p for p in itertools.product(points_x, points_z)])
+
+#print("Rank: ", MPI.COMM_WORLD.rank, " points: ", points)
+
+w2f_points= 0
+if w2f_points == 1:
+    fnm = './points.txt' 
+    np.savetxt(fnm,points)
 
 #dtOutput = 0.001
 #dtOutput = .1
@@ -167,7 +181,6 @@ b0 = state.fields("b")
 # z.grad(bref) = N**2
 # the following is symbolic algebra, using the default buoyancy frequency
 # from the parameters class. x[1]=z and comes from x=SpatialCoordinate(mesh)
-x = SpatialCoordinate(mesh)
 N = parameters.N
 bref = N**2*(x[1]-H)
 # interpolate the expression to the function
