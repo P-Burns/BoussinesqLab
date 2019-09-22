@@ -44,6 +44,8 @@ MolecularDiffusion = 1
 EddyDiffusion = 0
 ScaleDiffusion = 1
 
+AdjustmentCase = 1
+
 #Set some time control options:
 #dt = 1./20
 #dt = 0.01
@@ -55,8 +57,7 @@ dt = 0.001
 if '--running-tests' in sys.argv:
     tmax = dt
 else:
-    tmax = 30*60
-    #tmax = 1
+    tmax = 5*60
 
 
 ##############################################################################
@@ -106,7 +107,6 @@ V_DG0 = FunctionSpace(mesh, "DG", 0)
 W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
 X = interpolate(mesh.coordinates, W)
 #points_x = X.dat.data_ro[:,0]
-#points_x = np.sort(np.unique(points_x))
 #points_x = [points_x[int(columns/2.)]]
 
 points_x = np.array([0.10125])
@@ -120,7 +120,7 @@ points = np.array([p for p in itertools.product(points_x, points_z)])
 
 #print("Rank: ", MPI.COMM_WORLD.rank, " points: ", points)
 
-w2f_points= 0
+w2f_points= 1
 if w2f_points == 1:
     fnm = './points.txt' 
     np.savetxt(fnm,points)
@@ -146,8 +146,8 @@ if ParkRun == 18: N2=3.83
 if ParkRun == -1:
     #N2 = 0.25
     #N2 = 1
-    N2 = 2.25
-    #N2 = 4
+    #N2 = 2.25
+    N2 = 4
     #N2 = 6.25
     #N2 = 9
     #N2 = 12.25
@@ -408,8 +408,19 @@ if Inviscid == 0:
     Vb = state.spaces("HDiv_v")
     delta = L/columns		#Grid resolution (same in both directions).
 
+    if AdjustmentCase == 1:
+        #fctr = 1./2
+        #fctr = np.sqrt(1./2)
+        fctr = np.sqrt(7./8)
+        #fctr = 2
+        BCz0 = -(fctr*N)**2*H
+        BCzH = 0
+    else:
+        BCz0 = -N**2*H
+        BCzH = 0
+
     bcs_u = [DirichletBC(Vu, 0.0, "bottom"), DirichletBC(Vu, 0.0, "top")]
-    bcs_b = [DirichletBC(Vb, -N**2*H, "bottom"), DirichletBC(Vb, 0.0, "top")]
+    bcs_b = [DirichletBC(Vb, BCz0, "bottom"), DirichletBC(Vb, BCzH, "top")]
 
     diffused_fields = []
     diffused_fields.append(("u", InteriorPenalty(state, Vu, kappa=kappa_u,
