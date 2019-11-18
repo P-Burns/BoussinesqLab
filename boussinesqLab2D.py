@@ -248,8 +248,8 @@ if ICsNon0 == 1:
             np.savetxt(fnm,RandomSample_Gusto)
 
         #Read in the random field:  
-        if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_Gusto.txt')
-        if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360_Gusto.txt')
+        if factor == 1: RandomSample = np.loadtxt('/gpfs/ts0/home/pb412/BoussinesqLab/RandomSample_080_180_Gusto.txt')
+        if factor == 2: RandomSample = np.loadtxt('/gpfs/ts0/home/pb412/BoussinesqLab/RandomSample_160_360_Gusto.txt')
         RandomSample = RandomSample/np.max(RandomSample)
 
         RandomSample = RandomSample*bprime*5
