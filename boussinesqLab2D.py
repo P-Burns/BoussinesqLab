@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 #import CosineSineTransforms as cst
 import pdb as pdb
 import itertools as itertools
+from pyop2.mpi import MPI
 
 
 #PETSc.Log.begin()
@@ -23,8 +24,8 @@ import itertools as itertools
 CheckPoint = True
 Pickup = False
 #ParkRun = 14
-#ParkRun = 16
-ParkRun = 18
+#ParkRun = 18
+ParkRun = -1
 
 ICsNon0 = 1
 ICsSimpleWave = 0
@@ -43,6 +44,8 @@ MolecularDiffusion = 1
 EddyDiffusion = 0
 ScaleDiffusion = 1
 
+AdjustmentCase = 1
+
 #Set some time control options:
 #dt = 1./20
 #dt = 0.01
@@ -54,8 +57,7 @@ dt = 0.001
 if '--running-tests' in sys.argv:
     tmax = dt
 else:
-    tmax = 3*60*60
-    #tmax = 1
+    tmax = 5*60
 
 
 ##############################################################################
@@ -73,6 +75,7 @@ nlayers = 180
 nlayers = nlayers*factor
 H = 0.45  # Height position of the model top
 mesh = ExtrudedMesh(m, layers=nlayers, layer_height=H/nlayers)
+x = SpatialCoordinate(mesh)
 
 
 ##############################################################################
@@ -99,10 +102,28 @@ timestepping = TimesteppingParameters(dt=dt*subcycles)
 # all values not explicitly set here use the default values provided
 # and documented in configuration.py
 
-#points = np.array([[0.1,0.22]])
-points_x = [L/2.]
-points_z = np.linspace(0, H, nlayers+1)
+#Get vector of coordinates:
+V_DG0 = FunctionSpace(mesh, "DG", 0)
+W = VectorFunctionSpace(mesh, V_DG0.ufl_element())
+X = interpolate(mesh.coordinates, W)
+#points_x = X.dat.data_ro[:,0]
+#points_x = [points_x[int(columns/2.)]]
+
+points_x = np.array([0.10125])
+points_z = X.dat.data_ro[:,1].flatten()
+points_z = np.sort(np.unique(points_z)).tolist()
+
+#points_x = np.array([0.10125])
+#points_z = np.linspace(0, H, nlayers+1)
+
 points = np.array([p for p in itertools.product(points_x, points_z)])
+
+#print("Rank: ", MPI.COMM_WORLD.rank, " points: ", points)
+
+w2f_points= 1
+if w2f_points == 1:
+    fnm = './points.txt' 
+    np.savetxt(fnm,points)
 
 #dtOutput = 0.001
 #dtOutput = .1
@@ -121,8 +142,19 @@ perturbation_fields=['b'], checkpoint=CheckPoint, point_data=[('b_gradient', poi
 
 # Physical parameters adjusted for idealised lab experiment of Park et al. (1994):
 if ParkRun == 14: N2=0.35
-if ParkRun == 16: N2=1.34
 if ParkRun == 18: N2=3.83
+if ParkRun == -1:
+    #N2 = 0.25
+    #N2 = 1
+    #N2 = 2.25
+    N2 = 4
+    #N2 = 6.25
+    #N2 = 9
+    #N2 = 12.25
+    #N2 = 16
+    #N2 = 20.25
+    #N2 = 25
+
 parameters = CompressibleParameters(N=np.sqrt(N2))
 
 
@@ -160,7 +192,6 @@ b0 = state.fields("b")
 # z.grad(bref) = N**2
 # the following is symbolic algebra, using the default buoyancy frequency
 # from the parameters class. x[1]=z and comes from x=SpatialCoordinate(mesh)
-x = SpatialCoordinate(mesh)
 N = parameters.N
 bref = N**2*(x[1]-H)
 # interpolate the expression to the function
@@ -172,21 +203,20 @@ b_b = Function(Vb).interpolate(bref)
 # and then using the N^2 value.
 g = parameters.g
 
-drho0_dz13 = -122.09
-
-#No clear number for buoyancy perturbation for run 18 -
-#Scale perturbations using background stratification:
-if ParkRun == 14: drho0_dz = -31.976
-if ParkRun == 18: drho0_dz = -425.9
-rho0 = -g/N2*drho0_dz
-
 dgamma = 100./3
 dz_b = 2./100
 a0 = 100.
 z_a = H/2
 rhoprime13 = dgamma*z_a + a0*dz_b + dgamma/2*dz_b
-scalefactor = g/rho0* drho0_dz/drho0_dz13
-bprime = rhoprime13 * scalefactor
+
+#Make comparison to Run 18 by only changing background gradient:
+drho0_dz13 = -122.09
+N2_18 = 3.83
+drho0_dz_18 = -425.9
+rho0 = -g/N2_18*drho0_dz_18
+rhoprime = rhoprime13 * drho0_dz_18/drho0_dz13
+bprime = -g/rho0*rhoprime
+
 
 if ICsNon0 == 1:
     if ICsSimpleWave == 1:
@@ -358,7 +388,7 @@ if (AddNonRandomForce == 0) and (AddRandomForce == 0):
 ##############################################################################
 #Set up diffusion scheme and any desired BCs
 ##############################################################################
-if Inviscid != 1:
+if Inviscid == 0:
     # mu is a numerical parameter
     # kappa is the diffusion constant for each variable
     # Note that molecular diffusion coefficients were taken from Lautrup, 2005:
@@ -378,8 +408,19 @@ if Inviscid != 1:
     Vb = state.spaces("HDiv_v")
     delta = L/columns		#Grid resolution (same in both directions).
 
+    if AdjustmentCase == 1:
+        #fctr = 1./2
+        #fctr = np.sqrt(1./2)
+        fctr = np.sqrt(7./8)
+        #fctr = 2
+        BCz0 = -(fctr*N)**2*H
+        BCzH = 0
+    else:
+        BCz0 = -N**2*H
+        BCzH = 0
+
     bcs_u = [DirichletBC(Vu, 0.0, "bottom"), DirichletBC(Vu, 0.0, "top")]
-    bcs_b = [DirichletBC(Vb, -N**2*H, "bottom"), DirichletBC(Vb, 0.0, "top")]
+    bcs_b = [DirichletBC(Vb, BCz0, "bottom"), DirichletBC(Vb, BCzH, "top")]
 
     diffused_fields = []
     diffused_fields.append(("u", InteriorPenalty(state, Vu, kappa=kappa_u,
