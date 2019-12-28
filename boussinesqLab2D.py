@@ -410,11 +410,14 @@ if Inviscid == 0:
 
     if AdjustmentCase == 1:
         #fctr = 1./2
-        #fctr = np.sqrt(1./2)
-        fctr = np.sqrt(7./8)
+        fctr = np.sqrt(1./2)
+        #fctr = np.sqrt(7./8)
         #fctr = 2
+
         BCz0 = -(fctr*N)**2*H
-        BCzH = 0
+
+        #BCzH = 0
+        BCzH = -(fctr*N)**2*H
     else:
         BCz0 = -N**2*H
         BCzH = 0
