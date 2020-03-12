@@ -420,7 +420,6 @@ if Inviscid == 0:
         #fctr = 2
 
         BCz0 = -(fctr*N)**2*H
-
         BCzH = -(fctr*N)**2*H
         #BCzH = 0
     else:
