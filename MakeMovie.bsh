@@ -1,0 +1,11 @@
+#!/bin/bash
+
+PicDir="./XZplots"
+
+#To make animated gif:
+convert -delay 20 -loop 0 $PicDir/*.png $PicDir/movie.gif
+
+#To make pmg movie:
+ffmpeg -i INFILE -r 25 -f mpeg -vcodec mpeg1video -ar 48000 -b 1500k -acodec mp2 -ar 44100 -ac 1 -y OUTFILE.mpg
+
+#scp $PicDir/movie.gif pb412@login.isca.ex.ac.uk:
