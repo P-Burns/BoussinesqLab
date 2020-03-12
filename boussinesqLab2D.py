@@ -2,6 +2,7 @@ from gusto import *
 from firedrake import PeriodicIntervalMesh, ExtrudedMesh, \
     cos, sin, exp, pi, SpatialCoordinate, Constant, Function, as_vector, DirichletBC, \
     FunctionSpace, VectorFunctionSpace, interpolate
+from firedrake import *
 #from firedrake.petsc import PETSc
 #from firedrake import parameters
 #from pyop2.profiling import timed_stage
@@ -18,6 +19,10 @@ from pyop2.mpi import MPI
 
 #PETSc.Log.begin()
 #parameters["pyop2_options"]["lazy_evaluation"] = False
+
+
+#get list of citations
+Citations.print_at_exit()
 
 
 # Programme control:
@@ -415,9 +420,8 @@ if Inviscid == 0:
         #fctr = 2
 
         BCz0 = -(fctr*N)**2*H
-
-        #BCzH = 0
         BCzH = -(fctr*N)**2*H
+        #BCzH = 0
     else:
         BCz0 = -N**2*H
         BCzH = 0
