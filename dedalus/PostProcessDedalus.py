@@ -33,8 +33,8 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
-SinglePoint	= 1
+FullDomain      = 1
+SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
 VaryN           = 1
@@ -46,11 +46,11 @@ forced          = 0
 #N2		= 0.09
 #N2		= 0.25
 N2 		= 1
-#N2		= 2.25		
+N2		= 2.25		
 #N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
-#N2 		= 9
+N2 		= 9
 #N2		= 10.5625
 #N2 		= 12.25
 #N2		= 14.0625
@@ -61,10 +61,10 @@ N2 		= 1
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-#var_nms = ['psi','S']
+var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-var_nms = ['S','S_r']
+#var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -77,14 +77,18 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
-StateS_2                = 1
+Density			= 1
+StateS_2                = 0
+PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
-TrackSteps              = 0
+TrackSteps              = 1
 TrackInterfaces         = 0
+Fluxes			= 1
+UseProxySz 		= 0
 dUdz                    = 0
 Richardson              = 0
 Vorticity               = 0
@@ -102,11 +106,12 @@ PlotBigMode		= 0
 CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
-PSD_mod_unmod_plot	= 1
+PSD_mod_unmod_plot	= 0
 
-TimescaleSeparation	= 1
+TimescaleSeparation	= 0
 OverlayModulated	= 0
 IGWmethod 		= 0
+step_prediction		= 0
 
 NaturalBasis            = 0
 nvars	            	= 2
@@ -131,7 +136,7 @@ wing = Nt_mean//2
 MakePlot = 1
 PlotXZ = 0
 PlotTZ = 0
-PlotT = 1
+PlotT = 0
 PlotZ = 0
 MakeMovie = 0
 filledContour = 1
@@ -189,7 +194,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1./10
@@ -613,6 +618,14 @@ if FullFields == 1 and Gusto == 0:
     #pdb.set_trace()
 
 
+if Density == 1:
+    #calculate density using a linear equation of state where rho=rho(S):
+    S0 = np.mean(S)
+    rho = rho0*(1 + cs*(S-S0))
+    #print(np.min(rho))
+    #pdb.set_trace()
+
+
 if Flow == 1:
 
     if Modulated == 0:
@@ -894,7 +907,8 @@ if dSdz == 1:
         clevels = np.arange(nlevs)*dSz + SzMin
         if filledContour == 1: 
             nlevs = 41
-            cmap = 'PRGn'
+            #cmap = 'PRGn'
+            cmap = 'bwr'
         else:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
@@ -1067,15 +1081,16 @@ if TrackSteps == 1:
         if count0 != 0: MaxSteps0 = MaxSteps1
 
         for tt in range(0,Nt):        
-            for jj in range(0+zIdx_offset,Nz-zIdx_offset):
-                if (data[tt,xIdx,jj] <= 0) or UseShear==1:         
-                    if UseShear == 0: logical1 = abs(data[tt,xIdx,jj]) <= epsilon
-                    if UseShear == 1: logical1 = abs(data[tt,xIdx,jj]) >= epsilon
-                    if logical1 == True: 
-                        tmp1[tt,xIdx,jj] = True
-                    else:
-                        tmp1[tt,xIdx,jj] = False                 
-                else: tmp1[tt,xIdx,jj] = False
+            for ii in range(0,Nx):
+                for jj in range(0+zIdx_offset,Nz-zIdx_offset):
+                    if (data[tt,ii,jj] <= 0) or UseShear==1:         
+                        if UseShear == 0: logical1 = abs(data[tt,ii,jj]) <= epsilon
+                        if UseShear == 1: logical1 = abs(data[tt,ii,jj]) >= epsilon
+                        if logical1 == True: 
+                            tmp1[tt,ii,jj] = True
+                        else:
+                            tmp1[tt,ii,jj] = False                 
+                    else: tmp1[tt,ii,jj] = False
         
             count = 0
             flag = 0
@@ -1206,6 +1221,129 @@ if TrackInterfaces == 1:
          
         plt.show()
         pdb.set_trace()
+
+
+if Fluxes == 1:
+
+    if UseProxySz == 1: 
+        #This uses dS/dz as a proxy for fluxes which is what Jerin did for his MSc project.
+        #This ignores the variation of the flow.
+        f = Sz
+    if UseProxySz == 0:
+        #compute the vertical mass flux (of salt):
+        w = -d_dx(Psi,Nt,Nx,Nz,x)
+        flux = np.multiply(rho,w)*dx    
+        f = flux
+
+    #tm1 from TrackSteps provides step region points in space and time.
+    #We also need the points in between the steps but excluding boundary layers:
+    NotSteps = tmp1 == False
+
+    #Exclude boundary layer effects:
+    if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
+    if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
+    NotBoundLayer = np.ones((Nt,Nx,Nz))
+    NotBoundLayer[:,:,0:zIdx_offset] = 0
+    NotBoundLayer[:,:,(Nz-zIdx_offset):Nz-1] = 0
+    NotSteps = np.multiply(NotSteps,NotBoundLayer)
+    NotSteps = NotSteps != 0
+  
+    #find max, min and means across space and time:
+    f_max_steps = np.max(f[tmp1])
+    f_min_steps = np.min(f[tmp1])
+    f_mean_steps = np.mean(f[tmp1])
+    f_total_steps = np.sum(f[tmp1])
+  
+    idxsNotSteps = np.where( tmp1 == False )
+    f_max_Notsteps = np.max(f[idxsNotSteps])
+    f_min_Notsteps = np.min(f[idxsNotSteps])
+    f_mean_Notsteps = np.mean(f[idxsNotSteps])
+    f_total_Notsteps = np.sum(f[idxsNotSteps])
+
+    print(f_max_steps,f_min_steps,f_mean_steps,f_max_Notsteps,f_min_Notsteps,f_mean_Notsteps)
+    print(f_total_steps,f_total_Notsteps)
+
+    #Find max, min and mean across space as function of time.
+    #First take absolute value to enable use of log scale:
+    f_min_abs_steps_t = np.zeros((Nt))
+    f_min_steps_t = np.zeros((Nt))
+    f_max_abs_steps_t = np.zeros((Nt))
+    f_max_steps_t = np.zeros((Nt))
+    f_mean_abs_steps_t = np.zeros((Nt))
+    f_mean_steps_t = np.zeros((Nt))
+    f_min_abs_Notsteps_t = np.zeros((Nt))
+    f_min_Notsteps_t = np.zeros((Nt))
+    f_max_abs_Notsteps_t = np.zeros((Nt))
+    f_max_Notsteps_t = np.zeros((Nt))
+    f_mean_abs_Notsteps_t = np.zeros((Nt))
+    f_mean_Notsteps_t = np.zeros((Nt))
+    if UseProxySz == 0:
+        f_total_steps_t = np.zeros((Nt))
+        f_total_Notsteps_t = np.zeros((Nt))
+    for tt in range(0,Nt):
+        if np.any(tmp1[tt,:,:])==1:
+            f_min_abs_steps_t[tt] 	= np.min( np.abs( f[tt,tmp1[tt,:,:]] ))
+            f_min_steps_t[tt] 		= np.min( f[tt,tmp1[tt,:,:]] )
+            f_max_abs_steps_t[tt] 	= np.max( np.abs( f[tt,tmp1[tt,:,:]] ))
+            f_max_steps_t[tt] 		= np.max( f[tt,tmp1[tt,:,:]] )
+            f_mean_abs_steps_t[tt] 	= np.mean( np.abs( f[tt,tmp1[tt,:,:]] ))
+            f_mean_steps_t[tt] 		= np.mean( f[tt,tmp1[tt,:,:]] )
+            f_min_abs_Notsteps_t[tt] 	= np.min( np.abs( f[tt,NotSteps[tt,:,:]] ))
+            f_min_Notsteps_t[tt] 	= np.min( f[tt,NotSteps[tt,:,:]] )
+            f_max_abs_Notsteps_t[tt] 	= np.max( np.abs( f[tt,NotSteps[tt,:,:]] ))
+            f_max_Notsteps_t[tt] 	= np.max( f[tt,NotSteps[tt,:,:]] )
+            f_mean_abs_Notsteps_t[tt] 	= np.mean( np.abs( f[tt,NotSteps[tt,:,:]] ))
+            f_mean_Notsteps_t[tt] 	= np.mean( f[tt,NotSteps[tt,:,:]] )
+            if UseProxySz == 0:
+                f_total_steps_t[tt]   	= np.sum( f[tt,tmp1[tt,:,:]] )
+                f_total_Notsteps_t[tt]	= np.sum( f[tt,NotSteps[tt,:,:]] )
+        else:  
+            f_min_abs_steps_t[tt] 	= np.nan 
+            f_min_steps_t[tt] 		= np.nan 
+            f_max_abs_steps_t[tt] 	= np.nan 
+            f_max_steps_t[tt] 		= np.nan 
+            f_mean_abs_steps_t[tt] 	= np.nan 
+            f_mean_steps_t[tt] 		= np.nan 
+            f_min_abs_Notsteps_t[tt] 	= np.nan 
+            f_min_Notsteps_t[tt] 	= np.nan 
+            f_max_abs_Notsteps_t[tt] 	= np.nan 
+            f_max_Notsteps_t[tt] 	= np.nan 
+            f_mean_abs_Notsteps_t[tt] 	= np.nan 
+            f_mean_Notsteps_t[tt] 	= np.nan 
+            if UseProxySz == 0:
+                f_total_steps_t[tt]   	= np.nan
+                f_total_Notsteps_t[tt]	= np.nan
+
+    #plot results
+    fig = plt.figure(1, figsize=(width,height))
+    fig.set_tight_layout(True)
+    grid = plt.GridSpec(1, 2, wspace=0.3, hspace=0.)
+    ax1 = fig.add_subplot(grid[0,0])
+
+    if UseProxySz == 1:
+        ax1.semilogy(f_min_abs_steps_t, label=r'min$|S_z|$ in steps')
+        ax1.semilogy(f_max_abs_steps_t, label=r'max$|S_z|$ in steps')
+        ax1.semilogy(f_mean_abs_steps_t, label=r'$\overline{|S_z|}$ in steps')
+        ax1.semilogy(f_min_abs_Notsteps_t, label=r'min$|S_z|$')
+        ax1.semilogy(f_min_Notsteps_t, '-o', label=r'min$(S_z)$')
+        ax1.semilogy(f_max_abs_Notsteps_t, label=r'max$|S_z|$')
+        ax1.semilogy(f_max_Notsteps_t, label=r'max$(S_z)$')
+        ax1.semilogy(f_mean_abs_Notsteps_t, label=r'$\overline{|S_z|}$')
+        ax1.semilogy(f_mean_Notsteps_t, label=r'$\overline{S_z}$')
+        ax1.legend()
+
+        ax2 = fig.add_subplot(grid[0,1])
+        ax2.plot(f_min_Notsteps_t, label=r'min$(S_z)$')
+        ax2.plot(f_mean_Notsteps_t, label=r'$\overline{S_z}$')
+        ax2.legend()
+    if UseProxySz == 0:
+        ax1.plot(f_total_steps_t, label=r'mean in steps')
+        ax1.plot(f_total_Notsteps_t, label=r'mean')
+        ax1.plot([0,Nt],[0,0], '--k')
+        ax1.legend()
+
+
+    plt.show()
 
 
 if NaturalBasis == 1:
@@ -1548,7 +1686,7 @@ if StateS_2 == 1:
         dS = (SMax-SMin)/(nlevs-1)
         clevels = np.arange(nlevs)*dS + SMin
 
-        xlim=(10,40)
+        xlim=(0,60)
 
         PlotTitle=r'$S$ (g/kg)'
 
@@ -1586,8 +1724,6 @@ if StateS_2 == 1:
 
 
 if StateS == 1:
-#New salinity after applying coordinate rotation (matrix exponential):
-
     #print(np.min(S), np.max(S))
     #pdb.set_trace()
 
@@ -1600,24 +1736,27 @@ if StateS == 1:
         data = S
 
     if MakePlot == 1:
-        PlotTitle = ''
         FigNmBase = 'S_r'
         cmap = 'bwr'
 
         if CoefficientSpace == 0:
             nlevs = 41
             if Modulated == 1:
+                PlotTitle = r'$\zeta$ (g/kg)'
                 SMin = -.02
                 SMax = .02
             if Modulated == 0:
-                SMin = -2
-                SMax = 2
-            #SMin = np.min(State[int(Nx/2.),:,:,vIdx])
-            #SMax = np.max(State[int(Nx/2.),:,:,vIdx])
+                PlotTitle = r'$S$ (g/kg)'
+                #SMin = -2
+                #SMax = 2
+                SMin = -200
+                SMax = 200
+                #SMin = np.min(State[int(Nx/2.),:,:,vIdx])
+                #SMax = np.max(State[int(Nx/2.),:,:,vIdx])
             dS = (SMax-SMin)/(nlevs-1)
             clevels = np.arange(nlevs)*dS + SMin
 
-            #xlim=(10,40)
+            xlim=(0,60)
         
         if CoefficientSpace == 1:
             tIdx = 1
@@ -1786,6 +1925,8 @@ if SpectralAnalysis == 1:
     Welch = 1
     spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
     npersegStr = str(nperseg)
+
+    print('frequency resolution: ', np.min(freqvec[1:]))
 
     intPSD = np.trapz(spectralCoef.flatten(),freqvec)
     print("integral of PSD: ", intPSD)
@@ -2249,7 +2390,8 @@ if TimescaleSeparation == 1:
         ax1 = fig.add_subplot(grid[0,0])
         if Modulated == 0:
             i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{IGW}$')
-            i1b = ax1.plot(N_vec,psdIGWarr[:,5], '^k', fillstyle='none', label=r'$\omega_{IGW}$')
+            i1b = ax1.plot(N_vec,psdIGWarr[:,5], 'k', marker='s', linestyle = 'None', fillstyle='none', label=r'$\omega_{IGW_E}$')
+            i1b = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{IGW}$')
             i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{IGW}$')
         i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{MF}$')
         #i4 = ax1.plot(N_vec,meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{well}$')
@@ -2260,25 +2402,19 @@ if TimescaleSeparation == 1:
 
         if Modulated == 0:
             #Overplot linear models:
-            # model for df:
-            c1 = 0.279
-            c2 = 0.796
+            # model for last peak of IGW bandwidth:
+            c1 = 0.02462
+            c2 = 0.98154 
             m1 = c1+c2*N_vec
-            # model for fprime: 
-            c3 = 0.478
-            c4 = 0.759
-            m2 = c3 + c4*N_vec
-            l1 = '$0.279+0.796\,N$'
-            l2 = '$0.478+0.759\,N$'
-            #i5 = ax1.plot(N_vec,m1,'--k',linewidth=2, label=l1)
-            #i6 = ax1.plot(N_vec,m2,'--k',linewidth=1, label=l2)
+            l1 = '$0.0246+0.982\,N$'
+            i5 = ax1.plot(N_vec,m1,'-k',linewidth=1)
 
         ax1.legend(frameon=False, loc=2, labelspacing=.3)
 
         #ax2 = ax1.twinx()
         ax2 = fig.add_subplot(grid[0,1])
         if Modulated == 0:
-            i7 = ax2.plot(N_vec,psdIGWarr[:,0], '.', c='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{IGW}$)')
+            i7 = ax2.plot(N_vec,psdIGWarr[:,0], '^', c='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{IGW}$)')
             i8 = ax2.plot(N_vec,psdIGWarr[:,3], 'o', c='grey', fillstyle='none', label=r'PSD($\Delta \omega_{IGW}$)')
         i9 = ax2.plot(N_vec,meanflowarr[:,0], 'o', c='grey', label=r'PSD($\Delta \omega_{MF}$)')
         #i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', c='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
@@ -2305,6 +2441,36 @@ if TimescaleSeparation == 1:
         #lns = i1+i2+i3+i4+i5
         #labs = [l.get_label() for l in lns]
         #ax1.legend(lns, labs, loc=0, frameon=False, ncol=2)
+
+        plt.show()
+
+        #check contributions of IGW signal to mean flow using PSD data:
+        F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
+        plt.figure()
+        plt.plot(N_vec,F_IGW, 'ok')
+        plt.show() 
+
+    if step_prediction == 1:
+
+        omega_well = np.loadtxt('./meanflowarr.txt')[:,3]
+        Nvec = np.loadtxt('./steptracking_means.txt')[0,:]
+        #print(Nvec)
+        Nsteps = np.loadtxt('./steptracking_means.txt')[1,:]
+
+        fig=plt.figure(figsize=(width,height))
+        grid = plt.GridSpec(1, 2, wspace=0.5, hspace=0.0)
+
+        ax1 = fig.add_subplot(grid[0,0])
+        ax1.plot(Nvec,omega_well,'o', color='k')
+        ax1.set_xlabel(r'$N$ (rad/s)') 
+        ax1.set_ylabel(r'$\omega_{well}$ (rad/s)') 
+      
+        m1 = -1.74 + 8.41*omega_well #linear model from R code.
+        ax2 = fig.add_subplot(grid[0,1])
+        ax2.plot(omega_well,Nsteps, 'o', c='k')
+        ax2.plot(omega_well,m1, c='k')
+        ax2.set_xlabel(r'$\omega_{well}$ (rad/s)') 
+        ax2.set_ylabel(r'average # of steps') 
 
         plt.show()
 
@@ -2352,6 +2518,14 @@ if w2f_analysis == 1:
 #plotting program for research purposes, which are exploratory. Currently this section 
 #only includes some of the time series analysis plotting.  
 if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 and PlotT==1):
+
+    if PlotStairStartEnd == 1:
+        dat = np.loadtxt('./stairStartEnd.txt')
+        #print(dat[0,:])
+        idxN = np.where(dat[0,:]==np.sqrt(N2))
+        tau0 = dat[1,int(np.array(idxN))]
+        tauE = dat[2,int(np.array(idxN))]
+
     if PlotXZ == 1:
         #We define 3 options here:
         #1) consider spatial field at some t.
@@ -2442,6 +2616,9 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
             ax1.set_ylim(0,Lz)
             ax1.set_ylabel(r'$z$ (m)')
             ax1.set_title(PlotTitle)
+            if PlotStairStartEnd==1: 
+                ax1.plot([tau0,tau0],[0,Lz], c='silver')
+                ax1.plot([tauE,tauE],[0,Lz], c='silver')
         if PlotT == 1:
             if 'xlim' not in locals(): xlim=(np.min(xgrid),np.max(xgrid))
             if 'ylim' not in locals(): ylim=(np.min(data),np.max(data))
