@@ -37,20 +37,20 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
-#ParkRun 	= 18
-ParkRun 	= -1
+ParkRun 	= 18
+#ParkRun 	= -1
 scalePert	= 0
 forced          = 0
 #N2		= 0.09
 #N2		= 0.25
 N2 		= 1
-N2		= 2.25		
+#N2		= 2.25		
 #N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
-N2 		= 9
+#N2 		= 9
 #N2		= 10.5625
 #N2 		= 12.25
 #N2		= 14.0625
@@ -60,8 +60,8 @@ N2 		= 9
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-#var_nms = ['S']
-var_nms = ['psi','S']
+var_nms = ['S']
+#var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
@@ -80,14 +80,14 @@ Nvars = len(var_nms)
 FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
-Density			= 1
+Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 0
-TrackSteps              = 1
+dSdz                    = 1
+TrackSteps              = 0
 TrackInterfaces         = 0
-Fluxes			= 1
+Fluxes			= 0
 UseProxySz 		= 0
 dUdz                    = 0
 Richardson              = 0
@@ -135,9 +135,9 @@ wing = Nt_mean//2
 #Choose type of plot:
 MakePlot = 1
 PlotXZ = 0
-PlotTZ = 0
+PlotTZ = 1
 PlotT = 0
-PlotZ = 0
+PlotZ = 1
 MakeMovie = 0
 filledContour = 1
 
@@ -148,7 +148,17 @@ w2f_analysis = 0
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:
-    dir_state = './Results/State/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced04/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced05/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced06/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced08/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced09/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced10/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced11/'
+    #dir_state = './Results/State/'
     #dir_state = './Results/StateN2_02_25_lnr/'
     #dir_state = './Results/StateN2_02_25_lnr_invis/'
     #dir_state = './Results/State_mesh0/'
@@ -194,7 +204,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 3
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1./10
@@ -913,7 +923,8 @@ if dSdz == 1:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
-        xlim = (0,60)
+        xlim = (10,20)
+        #xlim = (0,np.max(t))
 
 
 if dUdz == 1:
@@ -2668,7 +2679,8 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
 
-        plt.show()
+        #plt.show()
+        plt.savefig('tmp.png')
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,
