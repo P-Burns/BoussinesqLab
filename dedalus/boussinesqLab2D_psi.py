@@ -39,7 +39,7 @@ ParkRun 		= -1
 scalePert		= 0
 #N2			= 0.09
 #N2			= 0.25
-#N2			= 1
+N2			= 1
 #N2			= 2.25
 #N2			= 4
 #N2			= 6.25
@@ -47,7 +47,7 @@ scalePert		= 0
 #N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
-N2			= 14.0625
+#N2			= 14.0625
 #N2			= 16
 #N2			= 20.25
 #N2			= 25
@@ -57,14 +57,14 @@ ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
 ScaleDiffusion 		= 1
 
-ICsRandomPert 		= 1
+ICsRandomPert 		= 0
 ReadICs 		= 1
 Interpolate		= 0
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 0
+AddForce 		= 1
 ForceFullDomain 	= 1
 ForceSingleColumn 	= 0
 
@@ -225,36 +225,26 @@ if AddForce == 1:
     F = domain.new_field()
     F.meta['z']['parity'] = -1
 
+    kf 		= x_basis.wavenumbers
+    nf		= z_basis.wavenumbers
+    kIdx 	= 1 
+    nIdx	= 4
+    k1		= kf[kIdx]
+    n1		= nf[nIdx]
     if ForceFullDomain == 1:
-        #k1 = 2*np.pi/dz_b - this is from the physics - 
-        #we need to get as close to this as possible in the numerical problem.
-        k_int = 10/2
-        k1 = 2*np.pi*k_int/Lx
-        #m_int = 22/2
-        m_int = 22/2
-        m1 = 2*np.pi*m_int/Lz
 
-        #kmag2 = k1**2 + m1**2
-        #N2 = -g*(ct*bt-cs*bs)
-        #omega = sqrt(k1**2/kmag2*N2) 
+        kvec = np.array([k1,n1])
+        kmag = np.linalg.norm(kvec)
+        omega = np.abs(k1)/kmag*np.sqrt(N2)
 
-        #omega = np.sqrt(N2)*(2*np.pi)/100
-        omega = np.sqrt(N2)*(2*np.pi)/10
-        #omega = np.sqrt(N2)*(2*np.pi)
-        #omega = 0.3*(2*np.pi) 
-
-        #A_f = Spert0/10000.
-        #A_f = Spert0/1000.
-        A_f = Spert0/100.
-        #A_f = Spert0/10.
+        Sfact = 2.
    
-        #F['g'] = A_f*np.sin(m1*z) + 0*x
         #F['g'] = A_f*np.sin(m1*z)*np.cos(omega*time.time()) 
-        F['g'] = (m1**2/k1+k1)*A_f*np.sin(k1*x)*np.sin(m1*z)*np.sin(omega*time.time())
+        F['g'] = (n1**2/k1+k1)*Spert0/Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*time.time())
       
         #F['g'] = A_f*np.sin(k1*x-omega*time.time()) 		# invalid - incorrect parity 
         #F['g'] = A_f*np.sin(m1*z-omega*time.time())		# invalid - mixing parities
-        #F['g'] = Spert0/2.*np.sin(k1*x+m1*z-omega*time.time()) 	# invalid - mixing parities
+        #F['g'] = Spert0/2.*np.sin(k1*x+m1*z-omega*time.time()) # invalid - mixing parities
 
     if ForceSingleColumn == 1:
        
