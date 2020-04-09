@@ -45,9 +45,9 @@ scalePert	= 0
 forced          = 0
 #N2		= 0.09
 #N2		= 0.25
-N2 		= 1
+#N2 		= 1
 #N2		= 2.25		
-#N2 		= 4
+N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
 #N2 		= 9
@@ -148,15 +148,16 @@ w2f_analysis = 0
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced04/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced05/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced06/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced08/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced09/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced10/'
+    dir_state = '/home/ubuntu/dedalus/Results/State/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced04/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced05/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced06/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced08/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced09/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced10/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced11/'
     #dir_state = './Results/State/'
     #dir_state = './Results/StateN2_02_25_lnr/'
@@ -189,7 +190,8 @@ if VaryN == 1:
             RunName = RunName + '_dt0.01_sp'
         if Modulated == 1 and SinglePoint == 0:
             RunName = RunName + '_R'
-    dir_state = './Results/' + RunName + '/'
+    #dir_state = './Results/' + RunName + '/'
+    dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
 
 
 if Gusto == 0:
@@ -204,7 +206,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 3
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1./10
@@ -923,8 +925,8 @@ if dSdz == 1:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
-        xlim = (10,20)
-        #xlim = (0,np.max(t))
+        #xlim = (10,20)
+        xlim = (0,np.max(t))
 
 
 if dUdz == 1:

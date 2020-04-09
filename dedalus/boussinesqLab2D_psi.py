@@ -237,7 +237,7 @@ if AddForce == 1:
         kmag = np.linalg.norm(kvec)
         omega = np.abs(k1)/kmag*np.sqrt(N2)
 
-        Sfact = 10.
+        Sfact = 20.
    
         #F['g'] = A_f*np.sin(m1*z)*np.cos(omega*time.time()) 
         F['g'] = (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*time.time())
@@ -260,7 +260,7 @@ if AddForce == 1:
         #pdb.set_trace()
 
         omega = np.sqrt(N2)
-        Sfact = 10.
+        Sfact = 100.
      
         #F['g'] = mask['g'] * m1**2*A_f*np.sin(m1*z)*np.sin(omega*time.time())*Lx
         mask = c1*np.exp(-(z-c2)**2/(2*c3**2))
