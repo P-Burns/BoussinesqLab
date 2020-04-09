@@ -7,7 +7,7 @@ from matplotlib import ticker, cm
 import pdb as pdb
 
 
-Speeds = 0
+Speeds = 1
 
 
 #Physical parameters:
@@ -49,6 +49,13 @@ for nn in range(0,len(N_vec)):
                 Cgz[ii,jj,nn] 	= -N_vec[nn]/np.linalg.norm(kvec)**3*np.abs(k[ii])*n[jj]
 
 
+#plt.plot(DR[:,int(Nz/2.),0], 'ok')
+#plt.show()
+#out1 = np.unique(DR[:,:,0])
+#print(len(out1))
+#print(Nx/2*Nz)
+#pdb.set_trace()
+
 #Set general plotting parameters assuming A4 page size:
 A4Width = 8.27
 MarginWidth = 1
@@ -81,7 +88,7 @@ for i in range(0,Ni):
         axs0[0,0].set_xlabel(r'$n$ (rad/m)')
         axs0[0,0].set_ylabel(r'$\Lambda_{\bf k}^{\alpha}$ (rad/s)')
 
-    if i==0 or i==Ni-1: label=str(N_vec[i])
+    if i==0 or i==Ni-1: label=str(N_vec[i*2])
     else: label=''
     axs0[0,0].plot(n,DR[kIdx1,:,i*2], 'k', linestyle=vec1[i], linewidth=vec2[i], label=label)
 

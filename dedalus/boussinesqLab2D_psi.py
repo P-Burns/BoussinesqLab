@@ -39,9 +39,9 @@ ParkRun 		= -1
 scalePert		= 0
 #N2			= 0.09
 #N2			= 0.25
-N2			= 1
+#N2			= 1
 #N2			= 2.25
-#N2			= 4
+N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
 #N2			= 9
@@ -227,8 +227,8 @@ if AddForce == 1:
 
     kf 		= x_basis.wavenumbers
     nf		= z_basis.wavenumbers
-    kIdx 	= 1 
-    nIdx	= 4
+    kIdx 	= 2 
+    nIdx	= 20
     k1		= kf[kIdx]
     n1		= nf[nIdx]
     if ForceFullDomain == 1:
@@ -237,10 +237,10 @@ if AddForce == 1:
         kmag = np.linalg.norm(kvec)
         omega = np.abs(k1)/kmag*np.sqrt(N2)
 
-        Sfact = 2.
+        Sfact = 10.
    
         #F['g'] = A_f*np.sin(m1*z)*np.cos(omega*time.time()) 
-        F['g'] = (n1**2/k1+k1)*Spert0/Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*time.time())
+        F['g'] = (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*time.time())
       
         #F['g'] = A_f*np.sin(k1*x-omega*time.time()) 		# invalid - incorrect parity 
         #F['g'] = A_f*np.sin(m1*z-omega*time.time())		# invalid - mixing parities
@@ -259,21 +259,15 @@ if AddForce == 1:
         #print(mask['g'][Nx-1,:])
         #pdb.set_trace()
 
-        k_int = 10/2
-        k1 = 2*np.pi*k_int/Lx
-        m_int = 22/2
-        m1 = 2*np.pi*m_int/Lz
-
-        omega = np.sqrt(N2)*(2*np.pi)
- 
-        A_f = Spert0/100.
+        omega = np.sqrt(N2)
+        Sfact = 10.
      
         #F['g'] = mask['g'] * m1**2*A_f*np.sin(m1*z)*np.sin(omega*time.time())*Lx
         mask = c1*np.exp(-(z-c2)**2/(2*c3**2))
         #print(mask)
         F['g'] = 0
         #F['g'][Nx-1,:] = m1**2*A_f*np.sin(m1*z)*np.sin(omega*time.time())*Lx * mask
-        F['g'][0,:] = (m1**2/k1+k1)*A_f*np.sin(k1*x[0])*np.sin(m1*z)*np.sin(omega*time.time())
+        F['g'][0,:] = (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x[0])*np.sin(n1*z)*np.sin(omega*time.time())
 
         #print(F['g'][Nx-2,:])
         #pdb.set_trace()
@@ -426,9 +420,10 @@ RHS_1 = ""
 if Inviscid == 0:
     if ImplicitDiffusion == 1: LHS_1 += "-nu*L(L(psi))"
     else: RHS_1 += "nu*L(L(psi))"
-if AddForce == 1: RHS_1 += "+F"
+if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += "F"
+if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += "+F"
 if Linear == 0: RHS_1 += "-u*dx(L(psi))-w*dz(L(psi))"
-if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1): RHS_1 = "0"
+if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1) and AddForce == 1: RHS_1 = "0"
 momentum_eq = LHS_1 + " = " + RHS_1
 print(momentum_eq)
 problem.add_equation(momentum_eq, condition = "(nx != 0) or (nz != 0)")
@@ -719,7 +714,7 @@ else:
 
 SimDays = 0.
 SimHrs = 0.
-SimMins = 2.
+SimMins = 10.
 SimSecs = 0.
 te = SimDays*(24*60*60) + SimHrs*(60*60) + SimMins*60 + SimSecs
 solver.stop_sim_time = te
