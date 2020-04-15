@@ -66,6 +66,7 @@ ICsTestModulation	= 0
 
 AddForce 		= 1
 ForceFullDomain 	= 1
+ForceDecay		= 0
 ForceSingleColumn 	= 0
 
 PassiveTracer 		= 0
@@ -79,8 +80,8 @@ Linear			= 0
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 1
-w2f_SinglePoint 	= 0
+w2f_state 		= 0
+w2f_SinglePoint 	= 1
 w2f_dt		 	= 1
 w2f_energy		= 0
 
@@ -109,8 +110,8 @@ if domain3D == 1:
 domain 	= de.Domain([x_basis, z_basis], grid_dtype=np.float64)
 #Use COMM_SELF so keep calculations independent between processes:
 #domain = de.Domain([x_basis, z_basis], grid_dtype=np.float64, comm=MPI.COMM_SELF)
-x = domain.grid(0)
-z = domain.grid(1)
+#x = domain.grid(0)
+#z = domain.grid(1)
 
 #print(x)
 #print(z)
@@ -222,55 +223,84 @@ if PassiveTracer == 1:
     s.meta['z']['parity'] = -1
 
 if AddForce == 1:
-    F = domain.new_field()
-    F.meta['z']['parity'] = -1
+    #Read in some key frequencies from decay case:
+    arr1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+    arr2 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+    N_vec           = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
+    N               = np.sqrt(N2)
+    idxN            = np.where(N_vec==N)
+    omegaWell       = arr1[idxN,3].flatten()
+    omegaIGWprime   = arr2[idxN,1].flatten()
+    delta           = N - omegaWell
 
-    kf 		= x_basis.wavenumbers
-    nf		= z_basis.wavenumbers
-    kIdx 	= 2 
-    nIdx	= 20
-    k1		= kf[kIdx]
-    n1		= nf[nIdx]
-    if ForceFullDomain == 1:
+    #Set-up wavenumbers for Dedalus grid:
+    k = np.zeros(Nx)
+    kkx = x_basis.wavenumbers
+    k[0:int(Nx/2.)] = kkx
+    dk = kkx[1]-kkx[0]
+    nyquist_f = -(np.max(kkx) + dk)
+    k[int(Nx/2.)] = nyquist_f
+    kkx_neg = np.flipud(kkx[1:]*(-1))
+    k[int(Nx/2.)+1:] = kkx_neg
+    n = z_basis.wavenumbers
 
-        kvec = np.array([k1,n1])
-        kmag = np.linalg.norm(kvec)
-        omega = np.abs(k1)/kmag*np.sqrt(N2)
+    #Compute Dispersion Relation for alpha=+1:
+    DR = np.zeros( (Nx,Nz,len(N_vec)) )
+    for nn in range(0,len(N_vec)):
+        for ii in range(0,Nx):
+            for jj in range(0,Nz):
+                if k[ii] != 0:
+                    kvec = np.array([k[ii],n[jj]])
+                    DR[ii,jj,nn] = np.abs(k[ii])/np.linalg.norm(kvec)*N_vec[nn]
 
-        Sfact = 20.
-   
-        #F['g'] = A_f*np.sin(m1*z)*np.cos(omega*time.time()) 
-        F['g'] = (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*time.time())
-      
-        #F['g'] = A_f*np.sin(k1*x-omega*time.time()) 		# invalid - incorrect parity 
-        #F['g'] = A_f*np.sin(m1*z-omega*time.time())		# invalid - mixing parities
-        #F['g'] = Spert0/2.*np.sin(k1*x+m1*z-omega*time.time()) # invalid - mixing parities
+    idx_k                   = 3
+    k1                      = k[idx_k]
+    omega_vec               = np.flip(DR[idx_k,:,idxN].flatten(),0)
+    #omegaExact             = omegaWell/2.
+    #omegaExact             = omegaWell
+    #omegaExact             = (omegaWell + delta/4.)
+    omegaExact             = (omegaWell + delta/2.)
+    #omegaExact             = (omegaWell + delta*3/4.)
+    #omegaExact              = (omegaWell + delta*9/10.)
+    if omegaExact != N:
+        tmp = np.where(omega_vec > omegaExact)
+    if omegaExact == N:
+        tmp = np.where(omega_vec == omegaExact)
+    idxOmega        = np.min(tmp)
+    omega           = omega_vec[idxOmega]
+    n1              = np.sqrt( (N*np.abs(k1)/omega)**2 - k1**2 )
+    print(k1, n1, n[Nz-idxOmega-1], omega, omegaExact)
 
-    if ForceSingleColumn == 1:
-       
-        #mask = domain.new_field()
-        #mask.meta['z']['parity'] = 1
-        #mask['g']=0
-        c1 = 1.
-        c2 = Lz/2.
-        c3 = Lz/10. 
-        #mask['g'][Nx-1,:] = c1 * np.exp( -(z-c2)**2/(2*c3**2) )
-        #mask['g'][Nx-1,:] = 1
-        #print(mask['g'][Nx-1,:])
-        #pdb.set_trace()
+    Sfact = 100.
 
-        omega = np.sqrt(N2)
-        Sfact = 100.
-     
-        #F['g'] = mask['g'] * m1**2*A_f*np.sin(m1*z)*np.sin(omega*time.time())*Lx
-        mask = c1*np.exp(-(z-c2)**2/(2*c3**2))
-        #print(mask)
-        F['g'] = 0
-        #F['g'][Nx-1,:] = m1**2*A_f*np.sin(m1*z)*np.sin(omega*time.time())*Lx * mask
-        F['g'][0,:] = (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x[0])*np.sin(n1*z)*np.sin(omega*time.time())
 
-        #print(F['g'][Nx-2,:])
-        #pdb.set_trace()
+    #Define subclass of GeneralFunction and add meta_parity definition:
+    class GF_parity_force(GeneralFunction):
+        #Add meta_parity module to new class.
+        def meta_parity(self, axis):
+            if axis == 'z': return -1
+
+    def StandingWaveForce(*args):
+        x 	= args[0].data
+        z 	= args[1].data
+        t 	= args[2].value
+        k1 	= args[3].value
+        n1 	= args[4].value
+        omega 	= args[5].value
+        Spert0 	= args[6].value
+        Sfact 	= args[7].value
+
+        if ForceDecay == 0:
+            return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
+        if ForceDecay == 1:      
+            return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)*np.exp(-1.*t)
+
+    #Define a function which will return subclass GF_parity_force, 
+    #which takes function CR as an argument:
+    def Forcing(*args, domain=domain, F=StandingWaveForce):
+        return GF_parity_force(domain, layout='g', func=F, args=args)
+
+    de.operators.parseables['F'] = Forcing
 
 
 if CoordinateRotation == 1:
@@ -406,8 +436,14 @@ problem.parameters['cs'] = cs
 problem.parameters['bt'] = bt
 problem.parameters['bs'] = bs
 problem.parameters['Lz'] = Lz
-if AddForce == 1: problem.parameters['F'] = F
-if compute_p == 1: problem.parameters['rho0'] = rho0
+if AddForce == 1: 
+    problem.parameters['k1'] = k1
+    problem.parameters['n1'] = n1
+    problem.parameters['Spert0'] = Spert0
+    problem.parameters['Sfact'] = Sfact
+    problem.parameters['omega'] = omega
+if compute_p == 1: 
+    problem.parameters['rho0'] = rho0
 
 #Substitutions:
 problem.substitutions['L(psi)'] = "d(psi,x=2) + d(psi,z=2)"
@@ -420,8 +456,8 @@ RHS_1 = ""
 if Inviscid == 0:
     if ImplicitDiffusion == 1: LHS_1 += "-nu*L(L(psi))"
     else: RHS_1 += "nu*L(L(psi))"
-if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += "F"
-if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += "+F"
+if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += 'F(x,z,t,k1,n1,omega,Spert0,Sfact)'
+if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += '+' + 'F(x,z,t,k1,n1,omega,Spert0,Sfact)'
 if Linear == 0: RHS_1 += "-u*dx(L(psi))-w*dz(L(psi))"
 if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1) and AddForce == 1: RHS_1 = "0"
 momentum_eq = LHS_1 + " = " + RHS_1
@@ -728,8 +764,14 @@ solver.stop_wall_time = wall_time
 solver.stop_iteration = np.inf
 
 #Set data write frequency.
-if w2f_state == 1 or w2f_energy: write_dt = 1.0/10
-if w2f_SinglePoint == 1: write_dt = 1.0/100
+if (w2f_state == 1 and w2f_SinglePoint == 0) or w2f_energy == 1: write_dt = 1e-1
+
+if w2f_SinglePoint == 1 and w2f_state == 0: 
+    if AddForce == 0: write_dt = 1e-1
+    if AddForce == 1: 
+        write_dt = 5e-3
+        #write_dt = 1e-2
+        #write_dt = 1e-1
 
 # Analysis:
 file_nt = 60./write_dt	#Each file contains 1 min of data

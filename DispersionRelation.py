@@ -7,7 +7,8 @@ from matplotlib import ticker, cm
 import pdb as pdb
 
 
-Speeds = 1
+Speeds = 0
+PlanPoints = 1
 
 
 #Physical parameters:
@@ -183,6 +184,32 @@ if Speeds == 1:
     c8 = axs1[3,1].contourf(xvec,yvec,CgMag, cmap='Blues', levels=levels, locator=ticker.LogLocator())
     axs1[3,1].plot([0,Nz],[kIdx1,kIdx1],'--k')
     fig1.colorbar(c8,ax=axs1[3,1])
+
+
+if PlanPoints == 1:
+    Np = 5
+
+    N_vec = [0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.]
+    Nn = len(N_vec)
+
+    ar1 = (np.arange(Np)+1)*N_vec[Nn-1]/Np
+
+    ar2 = (np.arange(Np)+1)*N_vec[Nn-2]/Np
+    ar3 = (np.arange(Np)+1)*N_vec[Nn-3]/Np
+    ar4 = (np.arange(Np)+1)*N_vec[Nn-4]/Np
+    ar5 = (np.arange(Np)+1)*N_vec[Nn-5]/Np
+    ar6 = (np.arange(Np)+1)*N_vec[Nn-6]/Np
+    ar7 = (np.arange(Np)+1)*N_vec[Nn-7]/Np
+    ar8 = (np.arange(Np)+1)*N_vec[Nn-8]/Np
+    ar9 = (np.arange(Np)+1)*N_vec[Nn-9]/Np
+    ar10 = (np.arange(Np)+1)*N_vec[Nn-10]/Np
+
+    plt.plot(np.repeat(N_vec[Nn-1],Np),ar1,'ok')
+    plt.plot(np.repeat(N_vec[Nn-2],Np),ar2,'ok')
+    plt.xlim(0,6)
+    plt.ylim(0,6)
+    plt.show()
+
 
 
 plt.show()

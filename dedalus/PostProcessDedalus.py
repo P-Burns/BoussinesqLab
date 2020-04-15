@@ -33,16 +33,16 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 1
-SinglePoint	= 0
+FullDomain      = 0
+SinglePoint	= 1
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
-ParkRun 	= 18
-#ParkRun 	= -1
+#ParkRun 	= 18
+ParkRun 	= -1
 scalePert	= 0
-forced          = 0
+forced          = 1
 #N2		= 0.09
 #N2		= 0.25
 #N2 		= 1
@@ -60,9 +60,9 @@ N2 		= 4
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-var_nms = ['S']
+#var_nms = ['S']
 #var_nms = ['psi','S']
-#var_nms = ['psi','S','psi_r','S_r']
+var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -77,14 +77,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
-StateS_2                = 0
+StateS_2                = 1
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
+dSdz                    = 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -100,7 +100,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
@@ -133,13 +133,13 @@ Nt_mean = 11
 wing = Nt_mean//2
 
 #Choose type of plot:
-MakePlot = 1
-PlotXZ = 0
-PlotTZ = 1
-PlotT = 0
-PlotZ = 1
-MakeMovie = 0
-filledContour = 1
+MakePlot 	= 1
+PlotXZ 		= 0
+PlotTZ 		= 0
+PlotT 		= 1
+PlotZ 		= 0
+MakeMovie 	= 0
+filledContour 	= 1
 
 #Write analysis to file
 w2f_analysis = 0
@@ -185,10 +185,12 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced==1 or SinglePoint==1 or Modulated==1:
         if forced == 1:
-            RunName = RunName + '_forced02'
+            RunName = RunName + '_forced01'
+            #RunName = RunName + '_forced02'
         if SinglePoint == 1:
-            RunName = RunName + '_dt0.01_sp'
-        if Modulated == 1 and SinglePoint == 0:
+            #RunName = RunName + '_dt0.01_sp'
+            RunName = RunName + '_dt0.005_sp'
+        if Modulated == 1 and forced == 0 and SinglePoint == 0:
             RunName = RunName + '_R'
     #dir_state = './Results/' + RunName + '/'
     dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
@@ -209,8 +211,11 @@ if Gusto == 0:
         nfiles = 1
 
     #Model output/write timestep:
-    if FullDomain == 1: dt = 1./10
-    if SinglePoint == 1: dt = 1./100
+    if FullDomain == 1: dt = 1e-1
+    if SinglePoint == 1: 
+        #dt = 1e-2
+        dt = 5e-3
+        #dt = 1e-3
 
 if Gusto == 1: dt = 0.004
 
@@ -220,7 +225,9 @@ if Gusto == 1: dt = 0.004
 #(This is important for computations involving numerous large arrays - 
 #it avoids exceeding system memory limits).
 #Effectively we use a subset of the model output data for the analysis:
-if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: dt2=0.2
+if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
+    if forced == 0: dt2=0.2
+    if forced == 1: dt2=0.2
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -546,11 +553,11 @@ def spectral_analysis(data,dt2,Welch=True):
         #So if nperseg is longer then we have higher frequency resolution but possibly more variance/noise.
 
         #Here we vary the number of points in the periodograms with the timestep. This avoids a set
-        #number of frequency points being distributed over different bandwidths, which results in 
+        #number of points being distributed over different bandwidths, which results in 
         #relatively low frequency resolution at low frequencies for small dt, making the results less comparable.
         #Of course we need to always apply our method to the physical problem - we need to compute 
         #the spectrum for bandwiths that include the fast waves of our system, whilst using a practical 
-        #method with the data we have (i.e. the number of points in finite, affecting window length choice).         
+        #method with the data we have (i.e. the number of points is finite, affecting window length choice).         
         #Additionally we should consider that the variance reduction will be greater when using more
         #windows, that is, for smaller dt. 
 
@@ -1756,14 +1763,16 @@ if StateS == 1:
             nlevs = 41
             if Modulated == 1:
                 PlotTitle = r'$\zeta$ (g/kg)'
-                SMin = -.02
-                SMax = .02
+                #SMin = -.02
+                #SMax = .02
+                SMin = -.2
+                SMax = .2
             if Modulated == 0:
                 PlotTitle = r'$S$ (g/kg)'
-                #SMin = -2
-                #SMax = 2
-                SMin = -200
-                SMax = 200
+                SMin = -20
+                SMax = 20
+                #SMin = -200
+                #SMax = 200
                 #SMin = np.min(State[int(Nx/2.),:,:,vIdx])
                 #SMax = np.max(State[int(Nx/2.),:,:,vIdx])
             dS = (SMax-SMin)/(nlevs-1)
@@ -1928,7 +1937,9 @@ if ForwardTransform == 1:
 
 
 if SpectralAnalysis == 1:
-    if Modulated == 0: data = S2
+    if Modulated == 0: 
+        data = S2
+        #data = Psi
     if Modulated == 1: data = S_r
 
     #idx0 = int(10./dt2)
@@ -2001,7 +2012,7 @@ if SpectralAnalysis == 1:
             data = spectralCoef[:,Idx1,Idx2]
 
             xgrid = freqvec*(2*np.pi)
-            xlim = (0,6)
+            xlim = (0,5)
             ylim = (1e-18,1e+0)
             xlabel = r'$\omega$ (rad/s)'
             if Modulated == 0: ylabel = r'PSD ([$S$]$^2$/(rad/s))'
@@ -2681,8 +2692,9 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
 
-        #plt.show()
-        plt.savefig('tmp.png')
+        plt.show()
+        #plt.savefig('plot.png')
+        #plt.close(fig)
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,
@@ -2758,6 +2770,6 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
             FigNm = FigNmBase + '_' + str("%04d" % tt) + '.png'
             fig.savefig(FigPath+FigNm)
             plt.close(fig)
-
+            #plt.show()
 
 pdb.set_trace()
