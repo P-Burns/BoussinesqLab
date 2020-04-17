@@ -37,7 +37,7 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -134,8 +134,8 @@ wing = Nt_mean//2
 
 #Choose type of plot:
 MakePlot 	= 1
-PlotXZ 		= 0
-PlotTZ 		= 1
+PlotXZ 		= 1
+PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -185,8 +185,8 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced==1 or SinglePoint==1 or Modulated==1:
         if forced == 1:
-            RunName = RunName + '_forced01'
-            #RunName = RunName + '_forced02'
+            #RunName = RunName + '_delta05'
+            RunName = RunName + '_delta09'
         if SinglePoint == 1:
             #RunName = RunName + '_dt0.01_sp'
             RunName = RunName + '_dt0.005_sp'

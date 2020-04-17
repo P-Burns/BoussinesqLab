@@ -41,10 +41,10 @@ scalePert		= 0
 #N2			= 0.25
 #N2			= 1
 #N2			= 2.25
-N2			= 4
+#N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
-#N2			= 9
+N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
 #N2			= 14.0625
@@ -259,9 +259,9 @@ if AddForce == 1:
     #omegaExact             = omegaWell/2.
     #omegaExact             = omegaWell
     #omegaExact             = (omegaWell + delta/4.)
-    omegaExact             = (omegaWell + delta/2.)
+    #omegaExact             = (omegaWell + delta/2.)
     #omegaExact             = (omegaWell + delta*3/4.)
-    #omegaExact              = (omegaWell + delta*9/10.)
+    omegaExact              = (omegaWell + delta*9/10.)
     if omegaExact != N:
         tmp = np.where(omega_vec > omegaExact)
     if omegaExact == N:
@@ -269,7 +269,7 @@ if AddForce == 1:
     idxOmega        = np.min(tmp)
     omega           = omega_vec[idxOmega]
     n1              = np.sqrt( (N*np.abs(k1)/omega)**2 - k1**2 )
-    print(k1, n1, n[Nz-idxOmega-1], omega, omegaExact)
+    print(k1, n1, n[Nz-idxOmega-1], idx_k, (Nz-idxOmega-1), omega, omegaExact)
 
     Sfact = 100.
 
@@ -278,7 +278,7 @@ if AddForce == 1:
     class GF_parity_force(GeneralFunction):
         #Add meta_parity module to new class.
         def meta_parity(self, axis):
-            if axis == 'z': return -1
+            return -1
 
     def StandingWaveForce(*args):
         x 	= args[0].data
