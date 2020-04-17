@@ -271,7 +271,7 @@ if AddForce == 1:
     n1              = np.sqrt( (N*np.abs(k1)/omega)**2 - k1**2 )
     print(k1, n1, n[Nz-idxOmega-1], idx_k, (Nz-idxOmega-1), omega, omegaExact)
 
-    Sfact = 100.
+    Sfact = 1.
 
 
     #Define subclass of GeneralFunction and add meta_parity definition:
@@ -291,9 +291,11 @@ if AddForce == 1:
         Sfact 	= args[7].value
 
         if ForceDecay == 0:
-            return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
-        if ForceDecay == 1:      
-            return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)*np.exp(-1.*t)
+            #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
+            return np.real(-1j*Spert0/2./Sfact*np.exp(1j*k1*x)*np.sin(n1*z)*np.exp(-1j*omega*t))
+        if ForceDecay == 1: 
+            #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)*np.exp(-1.*t)
+            return np.real(-1j*Spert0/2./Sfact*np.exp(1j*k1*x)*np.sin(n1*z)*np.exp(-1j*omega*t))*np.exp(-1.*t)
 
     #Define a function which will return subclass GF_parity_force, 
     #which takes function CR as an argument:
@@ -750,7 +752,7 @@ else:
 
 SimDays = 0.
 SimHrs = 0.
-SimMins = 10.
+SimMins = 20.
 SimSecs = 0.
 te = SimDays*(24*60*60) + SimHrs*(60*60) + SimMins*60 + SimSecs
 solver.stop_sim_time = te

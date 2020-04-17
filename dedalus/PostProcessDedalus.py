@@ -30,11 +30,11 @@ if len(sys.argv) > 1:
 
 #Program control:
 Gusto		= 0
-Modulated       = 1
+Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 1
-SinglePoint	= 0
+FullDomain      = 0
+SinglePoint	= 1
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
 VaryN           = 1
@@ -47,10 +47,10 @@ forced          = 1
 #N2		= 0.25
 #N2 		= 1
 #N2		= 2.25		
-#N2 		= 4
+N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
-N2 		= 9
+#N2 		= 9
 #N2		= 10.5625
 #N2 		= 12.25
 #N2		= 14.0625
@@ -77,14 +77,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
-StateS_2                = 0
+StateS_2                = 1
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
+dSdz                    = 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -100,7 +100,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
@@ -135,7 +135,7 @@ wing = Nt_mean//2
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 1
-PlotTZ 		= 0
+PlotTZ 		= 1
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -185,8 +185,8 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced==1 or SinglePoint==1 or Modulated==1:
         if forced == 1:
-            #RunName = RunName + '_delta05'
-            RunName = RunName + '_delta09'
+            RunName = RunName + '_delta05'
+            #RunName = RunName + '_delta09'
         if SinglePoint == 1:
             #RunName = RunName + '_dt0.01_sp'
             RunName = RunName + '_dt0.005_sp'
@@ -208,7 +208,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 2
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -227,7 +227,7 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
-    if forced == 1: dt2=0.2
+    if forced == 1: dt2=dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -898,8 +898,12 @@ if dSdz == 1:
                 SzMin = -500
                 SzMax = 500
             if N2==3.83 or N2==4:
-                SzMin = -1000
-                SzMax = 1000
+                if Modulated == 0:
+                    SzMin = -1000
+                    SzMax = 1000
+                if Modulated == 1:
+                    SzMin = np.min(data)
+                    SzMax = np.max(data)
             if N2==6.25:
                 SzMin = -1500
                 SzMax = 1500
@@ -1954,6 +1958,7 @@ if SpectralAnalysis == 1:
     spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
     npersegStr = str(nperseg)
 
+    print('analysis timestep: ', dt2)
     print('frequency resolution: ', np.min(freqvec[1:]))
 
     intPSD = np.trapz(spectralCoef.flatten(),freqvec)
@@ -2016,7 +2021,7 @@ if SpectralAnalysis == 1:
             data = spectralCoef[:,Idx1,Idx2]
 
             xgrid = freqvec*(2*np.pi)
-            xlim = (0,5)
+            #xlim = (0,5)
             ylim = (1e-18,1e+0)
             xlabel = r'$\omega$ (rad/s)'
             if Modulated == 0: ylabel = r'PSD ([$S$]$^2$/(rad/s))'
