@@ -134,9 +134,9 @@ wing = Nt_mean//2
 
 #Choose type of plot:
 MakePlot 	= 1
-PlotXZ 		= 0
-PlotTZ 		= 0
-PlotT 		= 1
+PlotXZ 		= 1
+PlotTZ 		= 1
+PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
