@@ -25,7 +25,7 @@ AddGusto 	= 1
 #Choose statistical measure:
 Mean 		= 1
 Median 		= 0
-PertVsN		= 0
+PertVsN		= 1
 ParkStepSize	= 0
 
 
@@ -335,7 +335,7 @@ if PertVsN == 1:
     dz_pert = 1./14
     #print(dz_pert)
     #print(np.asarray(N_vec)**2)
-    drho_dz_vec = -np.asarray(N_vec)**2/g*rho0
+    drho_dz_vec = -np.asarray(N_vec)**2/g*rho0/2
     #print(drho_dz_vec)
     rhoprimeN = np.abs(drho_dz_vec)*dz_pert
     ForceN = -g/rho0*rhoprimeN

@@ -41,10 +41,10 @@ scalePert		= 0
 #N2			= 0.25
 #N2			= 1
 #N2			= 2.25
-#N2			= 4
+N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
-N2			= 9
+#N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
 #N2			= 14.0625
@@ -65,9 +65,9 @@ ICsWaves 		= 0
 ICsTestModulation	= 0
 
 AddForce 		= 1
-ForceFullDomain 	= 1
+ForceFullDomain 	= 0
 ForceDecay		= 0
-ForceSingleColumn 	= 0
+ForceSingleColumn 	= 1
 
 PassiveTracer 		= 0
 compute_p		= 0
@@ -80,8 +80,8 @@ Linear			= 0
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 0
-w2f_SinglePoint 	= 1
+w2f_state 		= 1
+w2f_SinglePoint 	= 0
 w2f_dt		 	= 1
 w2f_energy		= 0
 
@@ -290,12 +290,22 @@ if AddForce == 1:
         Spert0 	= args[6].value
         Sfact 	= args[7].value
 
-        if ForceDecay == 0:
+        if SimpleWave == 1:
             #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
-            return np.real(-1j*Spert0/2./Sfact*np.exp(1j*k1*x)*np.sin(n1*z)*np.exp(-1j*omega*t))
-        if ForceDecay == 1: 
-            #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)*np.exp(-1.*t)
-            return np.real(-1j*Spert0/2./Sfact*np.exp(1j*k1*x)*np.sin(n1*z)*np.exp(-1j*omega*t))*np.exp(-1.*t)
+            force = Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
+        if GaussianSpectrum == 1:
+            print('not complete')
+        if ForceSingleColumn == 1:
+            c1 = 1.
+            c3 = Lx/10.
+            c2 = Lx-c3
+            mask_x = c1*np.exp(-(x-c2)**2/(2*c3**2))
+        if ForceSingleColumn == 0: mask_x = 1
+        if ForceDecay == 1: mask_t = np.exp(-1.*t)
+        if ForceDecay == 0: mask_t = 1
+
+        return force*mask_x*mask_t
+
 
     #Define a function which will return subclass GF_parity_force, 
     #which takes function CR as an argument:
