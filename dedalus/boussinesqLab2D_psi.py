@@ -40,8 +40,8 @@ scalePert		= 0
 #N2			= 0.09
 #N2			= 0.25
 #N2			= 1
-#N2			= 2.25
-N2			= 4
+N2			= 2.25
+#N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
 #N2			= 9
@@ -57,14 +57,14 @@ ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
 ScaleDiffusion 		= 1
 
-ICsRandomPert 		= 0
+ICsRandomPert 		= 1
 ReadICs 		= 1
-Interpolate		= 0
+Interpolate		= 1
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 1
+AddForce 		= 0
 ForceFullDomain 	= 0
 ForceDecay		= 0
 ForceSingleColumn 	= 1
@@ -72,7 +72,7 @@ ForceSingleColumn 	= 1
 PassiveTracer 		= 0
 compute_p		= 0
 
-CoordinateRotation	= 1
+CoordinateRotation	= 0
 nvars			= 2
 
 Linear			= 0
@@ -651,13 +651,14 @@ if ProblemType == "Layers":
             if Interpolate == 1:
 
                 #Read in Aegir ICs:
-                if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180.txt')
+                #if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180.txt')
+                if factor == 1: RandomSample = np.loadtxt('./RandomPhase_080_180_forced.txt')
                 if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360.txt')
 
                 #check symmetry:
-                #print(RandomSample[:,1])
-                #print(RandomSample[0,:])
-                #pdb.set_trace()
+                print(RandomSample[:,1])
+                print(RandomSample[0,:])
+                pdb.set_trace()
 
                 #get Aegir coefficients and re-normalise:
                 fhat_Aegir = cst.FFT_FST(Nx, Nz, RandomSample)/(np.float_(Nx))
@@ -683,7 +684,8 @@ if ProblemType == "Layers":
 
                 RandomSample_Dedalus = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
-                if factor == 1: fname = './RandomSample_080_180_Dedalus.txt'
+                #if factor == 1: fname = './RandomSample_080_180_Dedalus.txt'
+                if factor == 1: fname = './RandomPhase_080_180_forced_Dedalus.txt'
                 if factor == 2: fname = './RandomSample_160_360_Dedalus.txt'
                 np.savetxt(fname, RandomSample_Dedalus) 
                 #pdb.set_trace()
@@ -695,7 +697,8 @@ if ProblemType == "Layers":
                 if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360.txt')
                 if factor == 4: RandomSample = np.loadtxt('./RandomSample_320_720.txt')
             else:
-                if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180_Dedalus.txt')
+                #if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180_Dedalus.txt')
+                if factor == 1: RandomSample = np.loadtxt('./RandomPhase_080_180_forced_Dedalus.txt')
                 if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360_Dedalus.txt')
             RandomSample = RandomSample/np.max(RandomSample)
         
