@@ -332,10 +332,10 @@ if PertVsN == 1:
     #Buoyancy force of perturbations:
     ForcePert = -rhoprime/rho0*g
     #Restoring force of background field over length scale of perturbations:
-    dz_pert = 1./14
+    dz_pert = (14./Lz)**(-1.)
     #print(dz_pert)
     #print(np.asarray(N_vec)**2)
-    drho_dz_vec = -np.asarray(N_vec)**2/g*rho0/2
+    drho_dz_vec = -np.asarray(N_vec)**2/g*rho0
     #print(drho_dz_vec)
     rhoprimeN = np.abs(drho_dz_vec)*dz_pert
     ForceN = -g/rho0*rhoprimeN

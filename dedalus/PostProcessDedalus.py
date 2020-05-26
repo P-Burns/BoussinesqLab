@@ -33,8 +33,8 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
-SinglePoint	= 1
+FullDomain      = 1
+SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
 VaryN           = 0
@@ -42,12 +42,12 @@ VaryN           = 0
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 1
+forced          = 0
 #N2		= 0.09
 #N2		= 0.25
 #N2 		= 1
-#N2		= 2.25		
-N2 		= 4
+N2		= 2.25		
+#N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
 #N2 		= 9
@@ -60,9 +60,9 @@ N2 		= 4
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-#var_nms = ['S']
+var_nms = ['S']
 #var_nms = ['psi','S']
-var_nms = ['psi','S','psi_r','S_r']
+#var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -77,14 +77,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
-StateS_2                = 1
+StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 0
+dSdz                    = 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -100,7 +100,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
@@ -134,7 +134,7 @@ wing = Nt_mean//2
 
 #Choose type of plot:
 MakePlot 	= 1
-PlotXZ 		= 1
+PlotXZ 		= 0
 PlotTZ 		= 1
 PlotT 		= 0
 PlotZ 		= 0
@@ -202,13 +202,14 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 10
+        nfiles = 20
+        #nfiles = 10
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -227,12 +228,12 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
-    if forced == 1: dt2=dt
+    if forced == 1: dt2=0.01
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     dt2 = dt
-    #dt2 = 0.1
+    dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.02
@@ -1859,10 +1860,12 @@ if StatePsi == 1:
 
         if CoefficientSpace == 0:
             nlevs = 41
-            psiMin = -.0002
-            psiMax = .0002
+            #psiMin = -.0002
+            #psiMax = .0002
             #psiMin = np.min(State[int(Nx/2.),:,:,0])
             #psiMax = np.max(State[int(Nx/2.),:,:,0])
+            psiMin = np.min(Psi)
+            psiMax = np.max(Psi)
             dpsi = (psiMax-psiMin)/(nlevs-1)
             clevels = np.arange(nlevs)*dpsi + psiMin
             #clevels = 50
