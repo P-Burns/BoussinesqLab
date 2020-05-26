@@ -65,9 +65,12 @@ ICsWaves 		= 0
 ICsTestModulation	= 0
 
 AddForce 		= 1
-ForceFullDomain 	= 0
+ForceFullDomain 	= 1
+ForceSingleColumn 	= 0
+SimpleWave		= 0
+WaveSpectrum		= 1
+GaussianSpectrum	= 0
 ForceDecay		= 0
-ForceSingleColumn 	= 1
 
 PassiveTracer 		= 0
 compute_p		= 0
@@ -253,25 +256,6 @@ if AddForce == 1:
                     kvec = np.array([k[ii],n[jj]])
                     DR[ii,jj,nn] = np.abs(k[ii])/np.linalg.norm(kvec)*N_vec[nn]
 
-    idx_k                   = 3
-    k1                      = k[idx_k]
-    omega_vec               = np.flip(DR[idx_k,:,idxN].flatten(),0)
-    #omegaExact             = omegaWell/2.
-    #omegaExact             = omegaWell
-    #omegaExact             = (omegaWell + delta/4.)
-    #omegaExact             = (omegaWell + delta/2.)
-    #omegaExact             = (omegaWell + delta*3/4.)
-    omegaExact              = (omegaWell + delta*9/10.)
-    if omegaExact != N:
-        tmp = np.where(omega_vec > omegaExact)
-    if omegaExact == N:
-        tmp = np.where(omega_vec == omegaExact)
-    idxOmega        = np.min(tmp)
-    omega           = omega_vec[idxOmega]
-    n1              = np.sqrt( (N*np.abs(k1)/omega)**2 - k1**2 )
-    print(k1, n1, n[Nz-idxOmega-1], idx_k, (Nz-idxOmega-1), omega, omegaExact)
-
-    Sfact = 1.
 
 
     #Define subclass of GeneralFunction and add meta_parity definition:
@@ -284,17 +268,54 @@ if AddForce == 1:
         x 	= args[0].data
         z 	= args[1].data
         t 	= args[2].value
-        k1 	= args[3].value
-        n1 	= args[4].value
-        omega 	= args[5].value
-        Spert0 	= args[6].value
-        Sfact 	= args[7].value
+        #k1 	= args[3].data
+        #n1 	= args[4].data
+        #omega 	= args[5].data
+        #Spert0 	= args[6].value
+        #Sfact 	= args[7].data
+
+        idx_k                   = 3
+        omega_vec               = np.flip(DR[idx_k,:,idxN].flatten(),0)
+        #omegaExact             = omegaWell/2.
+        #omegaExact             = omegaWell
+        #omegaExact             = (omegaWell + delta/4.)
+        omegaExact             = (omegaWell + delta/2.)
+        #omegaExact             = (omegaWell + delta*3/4.)
+        #omegaExact              = (omegaWell + delta*9/10.)
+        sigma                   = delta/2.
+
+        bool1 = omega_vec >= (omegaExact-sigma)
+        bool2 = omega_vec <= (omegaExact+sigma)
+        idxOmega = np.multiply(bool1,bool2)
+
+        omega               = omega_vec[idxOmega]
+        k1                  = np.repeat(k[idx_k],len(omega))
+        n1                  = np.sqrt( (N*np.divide(np.abs(k1),omega))**2 - k1**2 )
+        #print(k1, n1, n[Nz-idxOmega-1], idx_k, (Nz-idxOmega-1), omega, omegaExact)
+
+        a1 = 1.
+        a2 = np.median(n1)
+        a3 = (n1[1]-n1[0])*2
+        gauss = a1*np.exp(-(n1-a2)**2/(2*a3**2))
+        Sfact = 1./gauss
+        #plt.plot(Sfact)
+        #plt.show()
+        #Sfact = np.repeat(1,len(idxOmega))
 
         if SimpleWave == 1:
             #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
             force = Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
+        if WaveSpectrum == 1:
+            force = 0
+            for i in range(len(omega)):
+                force += Spert0/2./Sfact[i]*np.sin(k1[i]*x)*np.sin(n1[i]*z)*np.sin(omega[i]*t)
+
         if GaussianSpectrum == 1:
-            print('not complete')
+            #k 	= domain.elements(0).flatten()
+            ef 	= 1
+            #kf 	= 1
+            #s	= 1
+            #return ef*np.exp(-0.5*(k-kf)**2/s**2)/(np.sqrt(2*np.pi)*s)
         if ForceSingleColumn == 1:
             c1 = 1.
             c3 = Lx/10.
@@ -448,12 +469,12 @@ problem.parameters['cs'] = cs
 problem.parameters['bt'] = bt
 problem.parameters['bs'] = bs
 problem.parameters['Lz'] = Lz
-if AddForce == 1: 
-    problem.parameters['k1'] = k1
-    problem.parameters['n1'] = n1
-    problem.parameters['Spert0'] = Spert0
-    problem.parameters['Sfact'] = Sfact
-    problem.parameters['omega'] = omega
+#if AddForce == 1: 
+#    problem.parameters['k1'] = k1
+#    problem.parameters['n1'] = n1
+#    problem.parameters['Spert0'] = Spert0
+#    problem.parameters['Sfact'] = Sfact
+#    problem.parameters['omega'] = omega
 if compute_p == 1: 
     problem.parameters['rho0'] = rho0
 
@@ -468,7 +489,7 @@ RHS_1 = ""
 if Inviscid == 0:
     if ImplicitDiffusion == 1: LHS_1 += "-nu*L(L(psi))"
     else: RHS_1 += "nu*L(L(psi))"
-if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += 'F(x,z,t,k1,n1,omega,Spert0,Sfact)'
+if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += 'F(x,z,t)'
 if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += '+' + 'F(x,z,t,k1,n1,omega,Spert0,Sfact)'
 if Linear == 0: RHS_1 += "-u*dx(L(psi))-w*dz(L(psi))"
 if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1) and AddForce == 1: RHS_1 = "0"
