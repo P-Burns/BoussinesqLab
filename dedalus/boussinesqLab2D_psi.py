@@ -59,7 +59,7 @@ ScaleDiffusion 		= 1
 
 ICsRandomPert 		= 1
 ReadICs 		= 1
-Interpolate		= 1
+Interpolate		= 0
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
@@ -673,8 +673,11 @@ if ProblemType == "Layers":
 
                 #Read in Aegir ICs:
                 #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180.txt')
-                if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced.txt')
-                if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360.txt')
+                #if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360.txt')
+
+                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced.txt')
+                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced2.txt')
+                if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_test.txt')
 
                 #check symmetry:
                 #print(RandomSample[:,1])
@@ -706,8 +709,11 @@ if ProblemType == "Layers":
                 RandomSample_Dedalus = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
                 #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomSample_080_180_Dedalus.txt'
-                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt'
-                if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomSample_160_360_Dedalus.txt'
+                #if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomSample_160_360_Dedalus.txt'
+
+                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt'
+                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced2_Dedalus.txt'
+                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomSample_080_180_test_Dedalus.txt'
                 np.savetxt(fname, RandomSample_Dedalus) 
                 #pdb.set_trace()
 
@@ -719,7 +725,9 @@ if ProblemType == "Layers":
                 if factor == 4: RandomSample = np.loadtxt('./RandomSample_320_720.txt')
             else:
                 #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_Dedalus.txt')
-                if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt')
+                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt')
+                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced2_Dedalus.txt')
+                if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_test_Dedalus.txt')
                 if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360_Dedalus.txt')
             RandomSample = RandomSample/np.max(RandomSample)
         
