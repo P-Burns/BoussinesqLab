@@ -32,6 +32,10 @@ randArrIn = np.loadtxt('./RandomPhase_080_180_1.txt')
 #Give input field correct parity for chosen basis:
 randArrIn_flipx = np.flipud(randArrIn)
 randArrIn = randArrIn + randArrIn_flipx
+plt.contourf(randArrIn)
+plt.colorbar()
+plt.show()
+pdb.set_trace()
 
 
 #Convert 2D numpy array into 1D vector of values:
