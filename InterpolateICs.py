@@ -26,7 +26,7 @@ w2f = 1
 
 
 #Read in ICs that you wish to interpolate:
-randArrIn = np.loadtxt('./RandomSample_080_180_1.txt')
+randArrIn = np.loadtxt('./RandomPhase_080_180_1.txt')
 
 
 #Give input field correct parity for chosen basis:
@@ -157,10 +157,10 @@ if MakePlot == 1:
 
 
 if w2f == 1:
-    if meshFactor==1./4: fnm_ICs = './RandomSample_020_046.txt'
-    if meshFactor==1./2: fnm_ICs = './RandomSample_040_090.txt'
-    if meshFactor==1: fnm_ICs = './RandomSample_080_180.txt'
-    if meshFactor==2: fnm_ICs = './RandomSample_160_360.txt'
-    if meshFactor==4: fnm_ICs = './RandomSample_320_720.txt'
-    if meshFactor==8: fnm_ICs = './RandomSample_640_1440.txt'
+    if meshFactor==1./4: fnm_ICs = './RandomPhase_020_046.txt'
+    if meshFactor==1./2: fnm_ICs = './RandomPhase_040_090.txt'
+    if meshFactor==1: fnm_ICs = './RandomPhase_080_180.txt'
+    if meshFactor==2: fnm_ICs = './RandomPhase_160_360.txt'
+    if meshFactor==4: fnm_ICs = './RandomPhase_320_720.txt'
+    if meshFactor==8: fnm_ICs = './RandomPhase_640_1440.txt'
     np.savetxt(fnm_ICs,randArrOut)
