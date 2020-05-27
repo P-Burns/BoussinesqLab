@@ -672,23 +672,25 @@ if ProblemType == "Layers":
             if Interpolate == 1:
 
                 #Read in Aegir ICs:
-                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180.txt')
-                #if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360.txt')
-
-                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced.txt')
-                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced2.txt')
-                if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_test.txt')
+                fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_1.txt')
+                #if factor == 1: fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/meshTest/RandomPhase_080_180.txt')
+                #if factor == 2: fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/meshTest/RandomPhase_160_360.txt')
 
                 #check symmetry:
-                #print(RandomSample[:,1])
-                #print(RandomSample[0,:])
-                #pdb.set_trace()
+                plt.contourf(fAegir)
+                plt.colorbar()
+                plt.show()
+                #print(arr[:,1])
+                #print(arr[0,:])
+                pdb.set_trace()
 
                 #get Aegir coefficients and re-normalise:
-                fhat_Aegir = cst.FFT_FST(Nx, Nz, RandomSample)/(np.float_(Nx))
+                NxAegir = 80
+                NzAegir = 180
+                fhat_Aegir = cst.FFT_FST(NxAegir, NzAegir, fAegir)/(np.float_(NxAegir))
 
-                kk = np.fft.fftfreq(Nx,Lx/Nx)*2.*np.pi # wave numbers used in Aegir
-                kk_cosine = np.arange((Nz))*np.pi/Lz   # wave numbers used in Aegir
+                kk = np.fft.fftfreq(NxAegir,Lx/NxAegir)*2.*np.pi # wave numbers used in Aegir
+                kk_cosine = np.arange((NzAegir))*np.pi/Lz   # wave numbers used in Aegir
 
                 def InterpolateFromAegir(Nx, Nz, xgridAlt, zgridAlt, kk, kk_cosine, uHatNumpy):
                     """
@@ -706,39 +708,32 @@ if ProblemType == "Layers":
                                     fOutput[ix, iz] += np.sin(kk_cosine[j]*zgridAlt[iz])*np.exp(-1j*kk[i]*xgridAlt[ix])*uHatNumpy[i,j]
                     return fOutput.real
 
-                RandomSample_Dedalus = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
+                fDedalus = InterpolateFromAegir(NxAegir, NzAegir, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
-                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomSample_080_180_Dedalus.txt'
-                #if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomSample_160_360_Dedalus.txt'
-
-                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt'
-                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced2_Dedalus.txt'
-                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomSample_080_180_test_Dedalus.txt'
-                np.savetxt(fname, RandomSample_Dedalus) 
+                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
+                if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt'
+                np.savetxt(fname, fDedalus) 
                 #pdb.set_trace()
 
             if MeshTest == 1:
-                if factor == 1./4: RandomSample = np.loadtxt('./RandomSample_020_046.txt')
-                if factor == 1./2: RandomSample = np.loadtxt('./RandomSample_040_090.txt')
-                if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180.txt')
-                if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360.txt')
-                if factor == 4: RandomSample = np.loadtxt('./RandomSample_320_720.txt')
+                if factor == 1./4: fDedalus = np.loadtxt('./RandomPhase_020_046.txt')
+                if factor == 1./2: fDedalus = np.loadtxt('./RandomPhase_040_090.txt')
+                if factor == 1: fDedalus = np.loadtxt('./RandomPhase_080_180.txt')
+                if factor == 2: fDedalus = np.loadtxt('./RandomPhase_160_360.txt')
+                if factor == 4: fDedalus = np.loadtxt('./RandomPhase_320_720.txt')
             else:
-                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_Dedalus.txt')
-                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt')
-                #if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced2_Dedalus.txt')
-                if factor == 1: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_080_180_test_Dedalus.txt')
-                if factor == 2: RandomSample = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomSample_160_360_Dedalus.txt')
-            RandomSample = RandomSample/np.max(RandomSample)
+                if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
+                if factor == 2: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
+            fDedalus = fDedalus/np.max(fDedalus)
         
             #check symmetry:
-            #plt.plot(RandomSample[:,1])
+            #plt.plot(fDedalus[:,1])
             #plt.figure()
-            #plt.plot(RandomSample[0,:])
+            #plt.plot(fDedalus[0,:])
             #plt.show()
             #pdb.set_trace()
 
-            S0 = RandomSample*Spert0*5
+            S0 = fDedalus*Spert0*5
             slices = domain.dist.grid_layout.slices(scales=1) 
             S0 = S0[slices]
             S['g'] = S0
