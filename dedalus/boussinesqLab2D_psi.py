@@ -59,7 +59,7 @@ ScaleDiffusion 		= 1
 
 ICsRandomPert 		= 1
 ReadICs 		= 1
-Interpolate		= 1
+Interpolate		= 0
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
