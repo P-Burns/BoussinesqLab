@@ -37,7 +37,7 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -60,8 +60,8 @@ N2		= 2.25
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-var_nms = ['S']
-#var_nms = ['psi','S']
+#var_nms = ['S']
+var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
@@ -77,14 +77,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
-StatePsi                = 0
+FullFields              = 0
+StatePsi                = 1
 StateS                  = 0
 Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
+dSdz                    = 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
