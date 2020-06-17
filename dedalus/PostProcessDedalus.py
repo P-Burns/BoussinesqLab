@@ -37,7 +37,7 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -77,14 +77,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
-StatePsi                = 1
+FullFields              = 1
+StatePsi                = 0
 StateS                  = 0
 Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 0
+dSdz                    = 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -357,6 +357,22 @@ if FullFields == 1 and Gusto == 0:
     STop = Spert0
     Tbase = np.zeros(Nz) + TTop
     Sbase = -bs*(z-Lz) + STop
+
+
+#Set-up wavenumbers for Dedalus grid:
+kk = np.zeros(Nx)
+kkx = x_basis.wavenumbers
+kk[0:int(Nx/2.)] = kkx
+dk = kkx[1]-kkx[0]
+nyquist_f = -(np.max(kkx) + dk)
+kk[int(Nx/2.)] = nyquist_f
+kkx_neg = np.flipud(kkx[1:]*(-1))
+kk[int(Nx/2.)+1:] = kkx_neg
+#plt.plot(kk,'-+')
+#plt.show()
+#print(kk) 
+#pdb.set_trace()
+kk_cosine = z_basis.wavenumbers
 
 
 #Set general plotting parameters assuming A4 page size:
@@ -1407,23 +1423,6 @@ if NaturalBasis == 1:
     if nvars == 3: T_hat = np.zeros((Nx,Nz))*1j
     S_hat = np.zeros((Nx,Nz))*1j
 
-    #Set-up wavenumbers for Dedalus grid:
-    kk = np.zeros(Nx)
-    kkx = x_basis.wavenumbers
-    kk[0:int(Nx/2.)] = kkx
-    dk = kkx[1]-kkx[0]
-    nyquist_f = -(np.max(kkx) + dk)
-    kk[int(Nx/2.)] = nyquist_f
-    kkx_neg = np.flipud(kkx[1:]*(-1))
-    kk[int(Nx/2.)+1:] = kkx_neg
-
-    #plt.plot(kk,'-+')
-    #plt.show()
-    #print(kk) 
-    #pdb.set_trace()
-
-    kk_cosine = z_basis.wavenumbers
-
     #When rotating into space of waves using matrix exponential:
     if MakeCoordRotation == 1: State_R = np.zeros((Nt,Nx,Nz,nvars))
 
@@ -1854,7 +1853,7 @@ if StatePsi == 1:
         data = Psi
 
     if MakePlot == 1:
-        PlotTitle = ''
+        PlotTitle = r'$\psi$'
         FigNmBase = 'Psi_r'
         cmap = 'bwr'
 
