@@ -42,11 +42,11 @@ VaryN           = 0
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 1
+forced          = 0
 #N2		= 0.09
 #N2		= 0.25
 #N2 		= 1
-#N2		= 2.25		
+N2		= 2.25		
 #N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
@@ -61,8 +61,8 @@ N2 		= 9
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-#var_nms = ['psi','S']
-var_nms = ['psi','S','psi_r','S_r']
+var_nms = ['psi','S']
+#var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -134,8 +134,8 @@ wing = Nt_mean//2
 
 #Choose type of plot:
 MakePlot 	= 1
-PlotXZ 		= 1
-PlotTZ 		= 0
+PlotXZ 		= 0
+PlotTZ 		= 1
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -202,13 +202,14 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 10
+        nfiles = 20
+        #nfiles = 10
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -227,12 +228,12 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
-    if forced == 1: dt2=dt
+    if forced == 1: dt2=0.01
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     dt2 = dt
-    #dt2 = 0.1
+    dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.02
@@ -356,6 +357,22 @@ if FullFields == 1 and Gusto == 0:
     STop = Spert0
     Tbase = np.zeros(Nz) + TTop
     Sbase = -bs*(z-Lz) + STop
+
+
+#Set-up wavenumbers for Dedalus grid:
+kk = np.zeros(Nx)
+kkx = x_basis.wavenumbers
+kk[0:int(Nx/2.)] = kkx
+dk = kkx[1]-kkx[0]
+nyquist_f = -(np.max(kkx) + dk)
+kk[int(Nx/2.)] = nyquist_f
+kkx_neg = np.flipud(kkx[1:]*(-1))
+kk[int(Nx/2.)+1:] = kkx_neg
+#plt.plot(kk,'-+')
+#plt.show()
+#print(kk) 
+#pdb.set_trace()
+kk_cosine = z_basis.wavenumbers
 
 
 #Set general plotting parameters assuming A4 page size:
@@ -1406,23 +1423,6 @@ if NaturalBasis == 1:
     if nvars == 3: T_hat = np.zeros((Nx,Nz))*1j
     S_hat = np.zeros((Nx,Nz))*1j
 
-    #Set-up wavenumbers for Dedalus grid:
-    kk = np.zeros(Nx)
-    kkx = x_basis.wavenumbers
-    kk[0:int(Nx/2.)] = kkx
-    dk = kkx[1]-kkx[0]
-    nyquist_f = -(np.max(kkx) + dk)
-    kk[int(Nx/2.)] = nyquist_f
-    kkx_neg = np.flipud(kkx[1:]*(-1))
-    kk[int(Nx/2.)+1:] = kkx_neg
-
-    #plt.plot(kk,'-+')
-    #plt.show()
-    #print(kk) 
-    #pdb.set_trace()
-
-    kk_cosine = z_basis.wavenumbers
-
     #When rotating into space of waves using matrix exponential:
     if MakeCoordRotation == 1: State_R = np.zeros((Nt,Nx,Nz,nvars))
 
@@ -1853,16 +1853,18 @@ if StatePsi == 1:
         data = Psi
 
     if MakePlot == 1:
-        PlotTitle = ''
+        PlotTitle = r'$\psi$'
         FigNmBase = 'Psi_r'
         cmap = 'bwr'
 
         if CoefficientSpace == 0:
             nlevs = 41
-            psiMin = -.0002
-            psiMax = .0002
+            #psiMin = -.0002
+            #psiMax = .0002
             #psiMin = np.min(State[int(Nx/2.),:,:,0])
             #psiMax = np.max(State[int(Nx/2.),:,:,0])
+            psiMin = np.min(Psi)
+            psiMax = np.max(Psi)
             dpsi = (psiMax-psiMin)/(nlevs-1)
             clevels = np.arange(nlevs)*dpsi + psiMin
             #clevels = 50

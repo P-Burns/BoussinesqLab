@@ -12,7 +12,7 @@ import pdb
 #Program control:
 #Model grid points are not exactly the same due to different bases:
 AegirGrid = 1
-meshFactor = 1./4
+meshFactor = 1.
 DedalusGrid = 0
 GustoGrid = 0
 
@@ -26,12 +26,16 @@ w2f = 1
 
 
 #Read in ICs that you wish to interpolate:
-randArrIn = np.loadtxt('./RandomSample_080_180_1.txt')
+randArrIn = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_1.txt')
 
 
 #Give input field correct parity for chosen basis:
 randArrIn_flipx = np.flipud(randArrIn)
 randArrIn = randArrIn + randArrIn_flipx
+#plt.contourf(randArrIn)
+#plt.colorbar()
+#plt.show()
+#pdb.set_trace()
 
 
 #Convert 2D numpy array into 1D vector of values:
@@ -157,10 +161,10 @@ if MakePlot == 1:
 
 
 if w2f == 1:
-    if meshFactor==1./4: fnm_ICs = './RandomSample_020_046.txt'
-    if meshFactor==1./2: fnm_ICs = './RandomSample_040_090.txt'
-    if meshFactor==1: fnm_ICs = './RandomSample_080_180.txt'
-    if meshFactor==2: fnm_ICs = './RandomSample_160_360.txt'
-    if meshFactor==4: fnm_ICs = './RandomSample_320_720.txt'
-    if meshFactor==8: fnm_ICs = './RandomSample_640_1440.txt'
+    if meshFactor==1./4: fnm_ICs = './RandomPhase_020_046.txt'
+    if meshFactor==1./2: fnm_ICs = './RandomPhase_040_090.txt'
+    if meshFactor==1: fnm_ICs = './RandomPhase_080_180.txt'
+    if meshFactor==2: fnm_ICs = './RandomPhase_160_360.txt'
+    if meshFactor==4: fnm_ICs = './RandomPhase_320_720.txt'
+    if meshFactor==8: fnm_ICs = './RandomPhase_640_1440.txt'
     np.savetxt(fnm_ICs,randArrOut)

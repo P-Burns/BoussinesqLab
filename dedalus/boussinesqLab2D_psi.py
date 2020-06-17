@@ -40,11 +40,11 @@ scalePert		= 0
 #N2			= 0.09
 #N2			= 0.25
 #N2			= 1
-#N2			= 2.25
+N2			= 2.25
 #N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
-N2			= 9
+#N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
 #N2			= 14.0625
@@ -66,8 +66,11 @@ ICsTestModulation	= 0
 
 AddForce 		= 1
 ForceFullDomain 	= 1
-ForceDecay		= 0
 ForceSingleColumn 	= 0
+SimpleWave		= 0
+WaveSpectrum		= 0
+GaussianSpectrum	= 1
+ForceDecay		= 0
 
 PassiveTracer 		= 0
 compute_p		= 0
@@ -110,8 +113,8 @@ if domain3D == 1:
 domain 	= de.Domain([x_basis, z_basis], grid_dtype=np.float64)
 #Use COMM_SELF so keep calculations independent between processes:
 #domain = de.Domain([x_basis, z_basis], grid_dtype=np.float64, comm=MPI.COMM_SELF)
-#x = domain.grid(0)
-#z = domain.grid(1)
+x = domain.grid(0)
+z = domain.grid(1)
 
 #print(x)
 #print(z)
@@ -223,55 +226,37 @@ if PassiveTracer == 1:
     s.meta['z']['parity'] = -1
 
 if AddForce == 1:
-    #Read in some key frequencies from decay case:
-    arr1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
-    arr2 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
-    N_vec           = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
-    N               = np.sqrt(N2)
-    idxN            = np.where(N_vec==N)
-    omegaWell       = arr1[idxN,3].flatten()
-    omegaIGWprime   = arr2[idxN,1].flatten()
-    delta           = N - omegaWell
 
-    #Set-up wavenumbers for Dedalus grid:
-    k = np.zeros(Nx)
-    kkx = x_basis.wavenumbers
-    k[0:int(Nx/2.)] = kkx
-    dk = kkx[1]-kkx[0]
-    nyquist_f = -(np.max(kkx) + dk)
-    k[int(Nx/2.)] = nyquist_f
-    kkx_neg = np.flipud(kkx[1:]*(-1))
-    k[int(Nx/2.)+1:] = kkx_neg
-    n = z_basis.wavenumbers
+    if SimpleWave==1 or WaveSpectrum==1:
+        #Read in some key frequencies from decay case:
+        arr1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+        arr2 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+        N_vec           = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
+        N               = np.sqrt(N2)
+        idxN            = np.where(N_vec==N)
+        omegaWell       = arr1[idxN,3].flatten()
+        omegaIGWprime   = arr2[idxN,1].flatten()
+        delta           = N - omegaWell
 
-    #Compute Dispersion Relation for alpha=+1:
-    DR = np.zeros( (Nx,Nz,len(N_vec)) )
-    for nn in range(0,len(N_vec)):
-        for ii in range(0,Nx):
-            for jj in range(0,Nz):
-                if k[ii] != 0:
-                    kvec = np.array([k[ii],n[jj]])
-                    DR[ii,jj,nn] = np.abs(k[ii])/np.linalg.norm(kvec)*N_vec[nn]
+        #Set-up wavenumbers for Dedalus grid:
+        k = np.zeros(Nx)
+        kkx = x_basis.wavenumbers
+        k[0:int(Nx/2.)] = kkx
+        dk = kkx[1]-kkx[0]
+        nyquist_f = -(np.max(kkx) + dk)
+        k[int(Nx/2.)] = nyquist_f
+        kkx_neg = np.flipud(kkx[1:]*(-1))
+        k[int(Nx/2.)+1:] = kkx_neg
+        n = z_basis.wavenumbers
 
-    idx_k                   = 3
-    k1                      = k[idx_k]
-    omega_vec               = np.flip(DR[idx_k,:,idxN].flatten(),0)
-    #omegaExact             = omegaWell/2.
-    #omegaExact             = omegaWell
-    #omegaExact             = (omegaWell + delta/4.)
-    #omegaExact             = (omegaWell + delta/2.)
-    #omegaExact             = (omegaWell + delta*3/4.)
-    omegaExact              = (omegaWell + delta*9/10.)
-    if omegaExact != N:
-        tmp = np.where(omega_vec > omegaExact)
-    if omegaExact == N:
-        tmp = np.where(omega_vec == omegaExact)
-    idxOmega        = np.min(tmp)
-    omega           = omega_vec[idxOmega]
-    n1              = np.sqrt( (N*np.abs(k1)/omega)**2 - k1**2 )
-    print(k1, n1, n[Nz-idxOmega-1], idx_k, (Nz-idxOmega-1), omega, omegaExact)
-
-    Sfact = 1.
+        #Compute Dispersion Relation for alpha=+1:
+        DR = np.zeros( (Nx,Nz,len(N_vec)) )
+        for nn in range(0,len(N_vec)):
+            for ii in range(0,Nx):
+                for jj in range(0,Nz):
+                    if k[ii] != 0:
+                        kvec = np.array([k[ii],n[jj]])
+                        DR[ii,jj,nn] = np.abs(k[ii])/np.linalg.norm(kvec)*N_vec[nn]
 
 
     #Define subclass of GeneralFunction and add meta_parity definition:
@@ -280,27 +265,103 @@ if AddForce == 1:
         def meta_parity(self, axis):
             return -1
 
-    def StandingWaveForce(*args):
+    def Force(*args):
         x 	= args[0].data
         z 	= args[1].data
         t 	= args[2].value
-        k1 	= args[3].value
-        n1 	= args[4].value
-        omega 	= args[5].value
-        Spert0 	= args[6].value
-        Sfact 	= args[7].value
+        #k1 	= args[3].data
+        #n1 	= args[4].data
+        #omega 	= args[5].data
+        #Spert0 	= args[6].value
+        #Sfact 	= args[7].data
 
-        if ForceDecay == 0:
+        if SimpleWave==1 or WaveSpectrum==1:
+            idx_k                   = 3
+            omega_vec               = np.flip(DR[idx_k,:,idxN].flatten(),0)
+            #omegaExact             = omegaWell/2.
+            #omegaExact             = omegaWell
+            #omegaExact             = (omegaWell + delta/4.)
+            omegaExact             = (omegaWell + delta/2.)
+            #omegaExact             = (omegaWell + delta*3/4.)
+            #omegaExact              = (omegaWell + delta*9/10.)
+            sigma                   = delta/2.
+
+            bool1 = omega_vec >= (omegaExact-sigma)
+            bool2 = omega_vec <= (omegaExact+sigma)
+            idxOmega = np.multiply(bool1,bool2)
+
+            omega               = omega_vec[idxOmega]
+            k1                  = np.repeat(k[idx_k],len(omega))
+            n1                  = np.sqrt( (N*np.divide(np.abs(k1),omega))**2 - k1**2 )
+            #print(k1, n1, n[Nz-idxOmega-1], idx_k, (Nz-idxOmega-1), omega, omegaExact)
+
+            a1 = 1.
+            a2 = np.median(n1)
+            a3 = (n1[1]-n1[0])*2
+            gauss = a1*np.exp(-(n1-a2)**2/(2*a3**2))
+            Sfact = 1./gauss
+            #plt.plot(Sfact)
+            #plt.show()
+            #Sfact = np.repeat(1,len(idxOmega))
+
+        if SimpleWave == 1:
             #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
-            return np.real(-1j*Spert0/2./Sfact*np.exp(1j*k1*x)*np.sin(n1*z)*np.exp(-1j*omega*t))
-        if ForceDecay == 1: 
-            #return (n1**2/k1+k1)*Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)*np.exp(-1.*t)
-            return np.real(-1j*Spert0/2./Sfact*np.exp(1j*k1*x)*np.sin(n1*z)*np.exp(-1j*omega*t))*np.exp(-1.*t)
+            force = Spert0/2./Sfact*np.sin(k1*x)*np.sin(n1*z)*np.sin(omega*t)
+        if WaveSpectrum == 1:
+            force = 0
+            for i in range(len(omega)):
+                force += Spert0/2./Sfact[i]*np.sin(k1[i]*x)*np.sin(n1[i]*z)*np.sin(omega[i]*t)
+
+        if GaussianSpectrum == 1:
+            #Initialise Dedalus objects for calculations:
+            force = domain.new_field()
+            force.meta['z']['parity'] = -1
+
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180.txt').view(complex)
+            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_97.txt').view(complex)
+            #tmp = tmp/10.
+
+            #Get wavenumbers for distributed grid:
+            kk = domain.elements(0).flatten()
+            kk_cosine = domain.elements(1).flatten()
+
+            #loop through wavenumber space:
+            #for jj in range(0,len(kk_cosine)):
+            #    for ii in range(0,len(kk)):
+            #        kIdx = np.where(x_basis.wavenumbers == kk[ii])[0][0]
+            #        nIdx = np.where(z_basis.wavenumbers == kk_cosine[jj])[0][0]
+            #        force['c'][ii,jj] = tmp[kIdx,nIdx]
+
+            mask = np.ones((Nx,Nz))
+            kIdxs1 = np.isin(x_basis.wavenumbers, kk, invert=True)
+            kIdxs2 = np.ones((1,int(Nx/2.)), dtype=bool).flatten()
+            kIdxs = np.concatenate((kIdxs1, kIdxs2), axis=None)
+            nIdxs = np.isin(z_basis.wavenumbers, kk_cosine, invert=True)
+            mask[kIdxs,:]=0
+            mask[:,nIdxs]=0
+            force['c'][:,:] = tmp[mask.astype(bool)].reshape((len(kk),len(kk_cosine)))
+            
+
+        if ForceSingleColumn == 1:
+            c1 = 1.
+            c3 = Lx/10.
+            c2 = Lx-c3
+            mask_x = c1*np.exp(-(x-c2)**2/(2*c3**2))
+        if ForceSingleColumn == 0: mask_x = 1
+        if ForceDecay == 1: mask_t = np.exp(-1.*t)
+        if ForceDecay == 0: mask_t = 1
+
+        if SimpleWave==1 or WaveSpectrum==1:
+            return force*mask_x*mask_t
+        if GaussianSpectrum==1: 
+            return force['c']*mask_x*mask_t
 
     #Define a function which will return subclass GF_parity_force, 
-    #which takes function CR as an argument:
-    def Forcing(*args, domain=domain, F=StandingWaveForce):
-        return GF_parity_force(domain, layout='g', func=F, args=args)
+    #which takes function Force as an argument:
+    def Forcing(*args, domain=domain, F=Force):
+        if GaussianSpectrum==1: layout='c'
+        else: layout='g'
+        return GF_parity_force(domain, layout=layout, func=F, args=args)
 
     de.operators.parseables['F'] = Forcing
 
@@ -438,12 +499,12 @@ problem.parameters['cs'] = cs
 problem.parameters['bt'] = bt
 problem.parameters['bs'] = bs
 problem.parameters['Lz'] = Lz
-if AddForce == 1: 
-    problem.parameters['k1'] = k1
-    problem.parameters['n1'] = n1
-    problem.parameters['Spert0'] = Spert0
-    problem.parameters['Sfact'] = Sfact
-    problem.parameters['omega'] = omega
+#if AddForce == 1: 
+#    problem.parameters['k1'] = k1
+#    problem.parameters['n1'] = n1
+#    problem.parameters['Spert0'] = Spert0
+#    problem.parameters['Sfact'] = Sfact
+#    problem.parameters['omega'] = omega
 if compute_p == 1: 
     problem.parameters['rho0'] = rho0
 
@@ -458,8 +519,8 @@ RHS_1 = ""
 if Inviscid == 0:
     if ImplicitDiffusion == 1: LHS_1 += "-nu*L(L(psi))"
     else: RHS_1 += "nu*L(L(psi))"
-if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += 'F(x,z,t,k1,n1,omega,Spert0,Sfact)'
-if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += '+' + 'F(x,z,t,k1,n1,omega,Spert0,Sfact)'
+if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += 'F(x,z,t)'
+if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += '+' + 'F(x,z,t)'
 if Linear == 0: RHS_1 += "-u*dx(L(psi))-w*dz(L(psi))"
 if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1) and AddForce == 1: RHS_1 = "0"
 momentum_eq = LHS_1 + " = " + RHS_1
@@ -641,19 +702,28 @@ if ProblemType == "Layers":
             if Interpolate == 1:
 
                 #Read in Aegir ICs:
-                if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180.txt')
-                if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360.txt')
+                #fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_1.txt')
+                fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced.txt')
+
+                #Add more symmetry to ICs:
+                #fAegir_flipx = np.flipud(fAegir)
+                #fAegir = fAegir + fAegir_flipx
 
                 #check symmetry:
-                #print(RandomSample[:,1])
-                #print(RandomSample[0,:])
+                #plt.contourf(fAegir)
+                #plt.colorbar()
+                #plt.show()
+                #print(fAegir[:,1])
+                #print(fAegir[0,:])
                 #pdb.set_trace()
 
                 #get Aegir coefficients and re-normalise:
-                fhat_Aegir = cst.FFT_FST(Nx, Nz, RandomSample)/(np.float_(Nx))
+                NxAegir = 80
+                NzAegir = 180
+                fhat_Aegir = cst.FFT_FST(NxAegir, NzAegir, fAegir)/(np.float_(NxAegir))
 
-                kk = np.fft.fftfreq(Nx,Lx/Nx)*2.*np.pi # wave numbers used in Aegir
-                kk_cosine = np.arange((Nz))*np.pi/Lz   # wave numbers used in Aegir
+                kk = np.fft.fftfreq(NxAegir,Lx/NxAegir)*2.*np.pi # wave numbers used in Aegir
+                kk_cosine = np.arange((NzAegir))*np.pi/Lz   # wave numbers used in Aegir
 
                 def InterpolateFromAegir(Nx, Nz, xgridAlt, zgridAlt, kk, kk_cosine, uHatNumpy):
                     """
@@ -671,32 +741,32 @@ if ProblemType == "Layers":
                                     fOutput[ix, iz] += np.sin(kk_cosine[j]*zgridAlt[iz])*np.exp(-1j*kk[i]*xgridAlt[ix])*uHatNumpy[i,j]
                     return fOutput.real
 
-                RandomSample_Dedalus = InterpolateFromAegir(Nx, Nz, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
+                fDedalus = InterpolateFromAegir(NxAegir, NzAegir, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
-                if factor == 1: fname = './RandomSample_080_180_Dedalus.txt'
-                if factor == 2: fname = './RandomSample_160_360_Dedalus.txt'
-                np.savetxt(fname, RandomSample_Dedalus) 
+                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt'
+                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
+                if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt'
+                np.savetxt(fname, fDedalus) 
                 #pdb.set_trace()
 
             if MeshTest == 1:
-                if factor == 1./4: RandomSample = np.loadtxt('./RandomSample_020_046.txt')
-                if factor == 1./2: RandomSample = np.loadtxt('./RandomSample_040_090.txt')
-                if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180.txt')
-                if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360.txt')
-                if factor == 4: RandomSample = np.loadtxt('./RandomSample_320_720.txt')
+                if factor == 1./4: fDedalus = np.loadtxt('./RandomPhase_020_046.txt')
+                if factor == 1./2: fDedalus = np.loadtxt('./RandomPhase_040_090.txt')
+                if factor == 1: fDedalus = np.loadtxt('./RandomPhase_080_180.txt')
+                if factor == 2: fDedalus = np.loadtxt('./RandomPhase_160_360.txt')
+                if factor == 4: fDedalus = np.loadtxt('./RandomPhase_320_720.txt')
             else:
-                if factor == 1: RandomSample = np.loadtxt('./RandomSample_080_180_Dedalus.txt')
-                if factor == 2: RandomSample = np.loadtxt('./RandomSample_160_360_Dedalus.txt')
-            RandomSample = RandomSample/np.max(RandomSample)
+                if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt')
+                #if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
+                if factor == 2: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
+            fDedalus = fDedalus/np.max(fDedalus)
         
             #check symmetry:
-            #plt.plot(RandomSample[:,1])
-            #plt.figure()
-            #plt.plot(RandomSample[0,:])
-            #plt.show()
+            #print(fDedalus[:,1])
+            #print(fDedalus[0,:])
             #pdb.set_trace()
 
-            S0 = RandomSample*Spert0*5
+            S0 = fDedalus*Spert0*5
             slices = domain.dist.grid_layout.slices(scales=1) 
             S0 = S0[slices]
             S['g'] = S0

@@ -24,7 +24,7 @@ ProblemType			= 'Layers'
 
 ParkRun 			= -1
 N2				= 1
-#N2				= 2.25
+N2				= 2.25
 #N2				= 4
 #N2				= 6.25
 #N2				= 7.5625
@@ -32,7 +32,7 @@ N2				= 1
 #N2				= 10.5625
 #N2				= 12.25
 #N2				= 14.0625
-#N2				= 16
+N2				= 16
 #N2				= 20.25
 #N2				= 25
 
@@ -65,14 +65,15 @@ listOmega			= 0
 listOmegaGrad			= 0
 listOmegaPhaseSpace		= 0
 IntegrateCapOmega		= 1
+PlotWeightFnc			= 0
 
 contourOmega			= 0
 PlotMainTriads                  = 0
-keyNonWaveModes                 = 0
-keyWaveModes                    = 1
+keyNonWaveModes                 = 1
+keyWaveModes                    = 0
 FindUniqueSet                   = 0
 FindOneAlphaSet                 = 1
-xAxis_k                         = 1
+xAxis_k                         = 0
 xAxis_n                         = 0
 xAxis_r                         = 0
 xAxis_alt                       = 0
@@ -85,6 +86,7 @@ WaveSpeeds			= 0
 ComputePDF			= 1
 ComputeCumulativeDistFnc	= 1
 InteractionCoef			= 1
+PlotInteractCoef		= 0
 SigmaSigma			= 0
 CombineSigmaSigmaWithC 		= 0
 FrequencyAve			= 1
@@ -135,7 +137,7 @@ dz = z[1]-z[0]
 dt = .1
 
 #make analysis during period of step existance:
-dat = np.loadtxt('./stairStartEnd.txt')
+dat = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/stairStartEnd.txt')
 N_vec = dat[0,:]
 stairStart = dat[1,:]
 stairEnd = dat[2,:]
@@ -272,10 +274,10 @@ MarginWidth = 1
 width = A4Width-2*MarginWidth
 height = 4
 #For scaling the A4 plot dimensions:
-ScaleFactor = 1
-#ScaleFactor = 0.7
-width = width*ScaleFactor
-height = height*ScaleFactor
+ScaleFactor1 = 1
+ScaleFactor2 = 1
+width = width*ScaleFactor1
+height = height*ScaleFactor2
 
 
 def spectral_analysis(data,dt2,Welch=True):
@@ -424,27 +426,39 @@ if PlotCDFsVsN == 1:
 
     #for CapOmega limit 0
     #k=0 case:
-    N_IGW_k0_0 = np.array([2160.0,2180.0,2964.0,148.0,112.0,84.0,64.0,112.0,44.0,40.0,36.0,32.0])*2
-    N_MF_k0_0 = np.array([24.0,4.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,0.0,0.0,4.0])*2
+    #N_IGW_k0_0 = np.array([2160.0,2180.0,2964.0,148.0,112.0,84.0,64.0,112.0,44.0,40.0,36.0,32.0])*2
+    #N_MF_k0_0 = np.array([24.0,4.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,0.0,0.0,4.0])*2
+    N_IGW_k0_0 = np.repeat(0,len(Nvec))
+    N_MF_k0_0 = np.repeat(0,len(Nvec))
     #k not 0 case:
     N_IGW_knot0_0 = np.array([144.0,136.0,332.0,152.0,104.0,88.0,56.0,192.0,32.0,24.0,8.0,8.0])
     N_MF_knot0_0 = np.array([400.0,232.0,420.0,280.0,240.0,280.0,216.0,688.0,232.0,208.0,208.0,216.0])
+    #N_IGW_knot0_0 = np.array([144.0,136.0,332.0,...,8.0])
+    #N_MF_knot0_0 = np.array([400.0,232.0,420.0,...,216.0])
 
     #for CapOmega limit 0.001
     #k=0 case:
-    N_IGW_k0_001 = np.array([8763.2,6173.2,5663.3,148.0,112.0,84.0,64.0,112.0,44.0,40.0,36.0,32.0])*2
-    N_MF_k0_001 = np.array([3387.1,1669.0,966.3,607.5,498.0,404.4,325.2,267.1,220.9,194.0,0,4.0])*2
+    #N_IGW_k0_001 = np.array([8763.2,6173.2,5663.3,148.0,112.0,84.0,64.0,112.0,44.0,40.0,36.0,32.0])*2
+    #N_MF_k0_001 = np.array([3387.1,1669.0,966.3,607.5,498.0,404.4,325.2,267.1,220.9,194.0,0,4.0])*2
+    N_IGW_k0_001 = np.array([6603.2,3993.2,2699.3,0,0,0,0,0,0,0,0,0])*2
+    N_MF_k0_001 = np.array([3363.1,1665.0,966.3,607.5,498.0,404.4,325.2,259.1,220.9,194.0,0,0])*2
     #k not 0 case:
     N_IGW_knot0_001 = np.array([634.3,659.6,1578.6,807.1,597.0,594.5,416.9,1344.2,340.0,270.3,158.6,118.4])
     N_MF_knot0_001 = np.array([1807.6,591.9,755.8,402.4,315.5,396.4,289.0,976.9,313.6,269.9,261.4,265.9])
+    #N_IGW_knot0_001 = np.array([634.3,...,118.4])
+    #N_MF_knot0_001 = np.array([1807.6,...,265.9])
 
     #for CapOmega limit 0.01
     #k=0 case:
-    N_IGW_k0_01 = np.array([19288.2,13549.8,11415.9,1307.2,928.2,608.2,465.2,423.9,298.0,252.2,37.3,32.0])*2
-    N_MF_k0_01 = np.array([9340.2,5056.9,3183.5,2223.4,2001.2,1800.8,1641.5,1464.7,1301.4,1172.9,389.9,350.3])*2
+    #N_IGW_k0_01 = np.array([19288.2,13549.8,11415.9,1307.2,928.2,608.2,465.2,423.9,298.0,252.2,37.3,32.0])*2
+    #N_MF_k0_01 = np.array([9340.2,5056.9,3183.5,2223.4,2001.2,1800.8,1641.5,1464.7,1301.4,1172.9,389.9,350.3])*2
+    N_IGW_k0_01 = np.array([17128.2,11369.8,8451.9,1159.2,816.2,524.2,401.2,311.9,254.0,212.2,1.3,0])*2
+    N_MF_k0_01 = np.array([9316.2,5052.9,3183.5,2223.4,2001.2,1800.8,1641.5,1456.7,1301.4,1172.9,389.9,346.3])*2
     #k not 0 case:
     N_IGW_knot0_01 = np.array([1049.0,1111.0,2584.4,1368.4,990.0,995.0,701.9,2263.3,579.9,459.5,281.5,193.4])
-    N_MF_knot0_01 = np.array([2933.0,864.6,1026.4,484.5,367.6,460.0,319.3,1196.4,352.3,300.5,288.0,284.9,])
+    N_MF_knot0_01 = np.array([2933.0,864.6,1026.4,484.5,367.6,460.0,319.3,1196.4,352.3,300.5,288.0,284.9])
+    #N_IGW_knot0_01 = np.array([1049.0,...,193.4])
+    #N_MF_knot0_01 = np.array([2933.0,...,284.9])
 
     #find total counts for each N:
     #for CapOmega limit 0
@@ -522,15 +536,15 @@ if PlotCDFsVsN == 1:
     
     #plot IGW results:
     #for CapOmega limit 0
-    ax1.plot(Nvec,F_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
+    ax1.plot(Nvec,F_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
     #for CapOmega limit 0.001
-    ax1.plot(Nvec,F_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
+    ax1.plot(Nvec,F_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
     #for CapOmega limit 0.01
-    ax1.plot(Nvec,F_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
+    ax1.plot(Nvec,F_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
     #k=0 case:
-    ax1.plot(Nvec, F_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
+    ax1.plot(Nvec, F_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
     #k not 0 case:
-    ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
+    ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
     ax1.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
     ax1.set_title(r'$F_{IGW}$')
@@ -543,15 +557,15 @@ if PlotCDFsVsN == 1:
     #plot mean flow results:
     ax2 = fig.add_subplot(grid[0,1])
     #for CapOmega limit 0
-    ax2.plot(Nvec,F_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
+    ax2.plot(Nvec,F_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
     #for CapOmega limit 0.001
-    ax2.plot(Nvec,F_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
+    ax2.plot(Nvec,F_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
     #for CapOmega limit 0.01
-    ax2.plot(Nvec,F_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
+    ax2.plot(Nvec,F_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
     #k=0 case:
-    ax2.plot(Nvec, F_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+    ax2.plot(Nvec, F_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
     #k not 0 case:
-    ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+    ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2,  label=r'$k\ne0$')
 
     ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
     ax2.set_title(r'$F_{MF}$')
@@ -562,17 +576,18 @@ if PlotCDFsVsN == 1:
     ax2.legend(frameon=False)
 
     #overplot PSD results
-    meanflowarr = np.loadtxt('meanflowarr.txt')
-    psdIGWarr = np.loadtxt('psdIGWarr.txt')
+    meanflowarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+    psdIGWarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
 
     F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
     F_IGW_max = np.max(F_IGW)
     F_IGW = F_IGW/F_IGW_max
     ax1.plot(N_vec,F_IGW, 'ok', fillstyle='none')
 
-
     plt.show()
     pdb.set_trace()
+
+
 
 #Reconstruct State using the Natural Basis:
 for tt in range(0,Nt):
@@ -1540,8 +1555,8 @@ if Resonances == 1:
     if NearResonanceSearch == 1:
         OmegaLimit = 0.
         #OmegaLimit = 0.0001
-        #OmegaLimit = 0.001
-        #OmegaLimit = 0.01
+        OmegaLimit = 0.001
+        OmegaLimit = 0.01
         #OmegaLimit = 0.1
         #OmegaLimit = 1
         #OmegaLimit = 999
@@ -1709,9 +1724,9 @@ if Resonances == 1:
         minOmega2 = np.min(np.abs(OmegaArr[OmegaBool]))
         if var_exists == True:
             minOmega1 = np.min(np.abs(np.array(Omega)))
-            print(minOmega1, minOmega2)
+            print('min omega: ', minOmega1, minOmega2)
         else:
-            print(minOmega2)
+            print('min omega: ', minOmega2)
 
         #min_idxs1 = np.where(OmegaArr==minOmega2)
         #print(min_idxs1)
@@ -1832,10 +1847,11 @@ if Resonances == 1:
                 plt.show()
 
             if IntegrateCapOmega == 1:
-
-                fig0, axs0 = plt.subplots(1,1, figsize=(width,height*2/3.))
-                fig0.subplots_adjust(wspace=0, hspace=0)
-                fig0.set_tight_layout(True)
+                
+                if PlotWeightFnc == 1:
+                    fig0, axs0 = plt.subplots(1,1, figsize=(width,height*2/3.))
+                    fig0.subplots_adjust(wspace=0, hspace=0)
+                    fig0.set_tight_layout(True)
 
                 NT = 4
                 tfact = 6000
@@ -1854,19 +1870,21 @@ if Resonances == 1:
                     capOmegaIntWeights[idxsNaN,i] = 1
                     capOmegaIntWeights[:,i] = np.absolute(capOmegaIntWeights[:,i])
                
-                    axs0.plot(capOmegaIntegral[:,i], 'k' ,linewidth=linewidthvec[i], label=str(int(T[i])) )
+                    if PlotWeightFnc == 1:
+                        axs0.plot(capOmegaIntegral[:,i], 'k' ,linewidth=linewidthvec[i], label=str(int(T[i])) )
  
-                axs0.set_ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
-                axs0.set_xlabel(r'idx')
-                axs0.legend(title=r'$T$ (s)')
-                plt.show()
+                if PlotWeightFnc == 1:
+                    axs0.set_ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
+                    axs0.set_xlabel(r'idx')
+                    axs0.legend(title=r'$T$ (s)')
+                    plt.show()
 
-                plt.figure()
-                plt.plot(capOmegaIntWeights[:,NT-1], 'k', label=str(int(T[i])) )
-                plt.ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
-                plt.xlabel(r'idx')
-                plt.legend(title=r'$T$ (s)')
-                plt.show()
+                    plt.figure()
+                    plt.plot(capOmegaIntWeights[:,NT-1], 'k', label=str(int(T[i])) )
+                    plt.ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
+                    plt.xlabel(r'idx')
+                    plt.legend(title=r'$T$ (s)')
+                    plt.show()
                
 
         #Find unique set of triads ignoring occurences due to different alpha combinations:
@@ -1887,7 +1905,7 @@ if Resonances == 1:
                 tmp6 = (res_sets[:,0:3] == (1,0,1)).all(axis=1).nonzero()[0]
                 tmp7 = (res_sets[:,0:3] == (1,1,0)).all(axis=1).nonzero()[0]
                 tmp8 = (res_sets[:,0:3] == (1,1,1)).all(axis=1).nonzero()[0]
-                #idxs = tmp7
+                #idxs = np.concatenate((tmp4,tmp5))
                 idxs = np.concatenate((tmp1,tmp2,tmp3,tmp6,tmp7,tmp8))
                 #idxs = np.concatenate((tmp1,tmp2,tmp3))
                 #idxs = np.concatenate((tmp6,tmp7,tmp8))
@@ -1959,6 +1977,10 @@ if Resonances == 1:
 
             #Plot symbol transparency parameter:
             alphaC=0.5
+
+
+            count00 = 0
+            count01 = 0
 
             for ii in range(0,Nk2):
 
@@ -2055,11 +2077,18 @@ if Resonances == 1:
                     matrix1[1,1] = 1
                     matrix2[0,0] = kmag1/kmag
                     matrix2[1,1] = 1
-                    interactCoef[ii] = (k1*n2-k2*n1)*\
-                    1./kmag1*eigenvec1[0]*np.dot( (np.mat(matrix1)*np.mat(eigenvec2).reshape((2,1))).reshape((2,)), eigenvec)+\
-                    1./kmag2*eigenvec2[0]*np.dot( (np.mat(matrix2)*np.mat(eigenvec1).reshape((2,1))).reshape((2,)), eigenvec)
+                    interactCoef[ii] = -(k1*n2-k2*n1)*(\
+                    1./kmag1*eigenvec1[0]*np.dot( (np.mat(matrix1)*np.mat(eigenvec2).reshape((2,1))).reshape((2,)), eigenvec)-\
+                    1./kmag2*eigenvec2[0]*np.dot( (np.mat(matrix2)*np.mat(eigenvec1).reshape((2,1))).reshape((2,)), eigenvec))
                     #n.b. np.dot requires vectors to have shape (2,) rather than (2,1), but also we need to give vector 
                     #the shape (2,1) so that inner dimensions agree during the matrix multiplication.
+
+                    #check computation:
+                    #if k1!=0 and k2!=0 and n1!=0 and n2!=0: 
+                    #if round(interactCoef[ii],4)==0: count00 += 1
+                    #if round((k1*n2-k2*n1),4)==0: count01 += 1
+                    #if interactCoef[ii]==0: count00 += 1
+                    #if (k1*n2-k2*n1)==0: count01 += 1
 
                 if SigmaSigma == 1:
                     if alpha1 == 0: sig1 = sigma_1_3D[i1,j1,:]
@@ -2162,6 +2191,8 @@ if Resonances == 1:
                 past_key_modes.append([i,j])
                 #past_modes.append([i1,i2,j1,j2])
 
+            #print(count00,count01)
+
             #print(omega_vec)
             if Plot3D == 0:
                 #xvec = np.arange(Nk*2)                      
@@ -2187,8 +2218,8 @@ if Resonances == 1:
             if ComputePDF == 1:
 
                 #compute PDF sums of IGW and meanflow modes defined using well mode:
-                tmp1 = np.loadtxt('meanflowarr.txt')
-                tmp2 = np.loadtxt('psdIGWarr.txt')
+                tmp1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+                tmp2 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
                 N_vec_tmp = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
                 Nidx = np.where(N_vec_tmp == np.sqrt(N2))
                 wellmode = tmp1[int(Nidx[0]),3]
@@ -2211,7 +2242,10 @@ if Resonances == 1:
                 if InteractionCoef == 1:
                     #Account for zeros from interaction coefficient:
                     interactCoef12 = np.repeat(interactCoef,2)
-                    logVec2 = interactCoef12 != 0
+                    logVec2 = interactCoef12 != 0  
+                    #tmp = np.round(interactCoef12, decimals=5)
+                    #logVec2 = tmp != 0
+
                     logVec3 = np.multiply(logVec1,logVec2)
                     idxsNon0 = np.where(logVec3 != 0)
                     #check operations:
@@ -2245,9 +2279,9 @@ if Resonances == 1:
                 omega12diff = sortedOmega12[1] -  sortedOmega12[0]
                 print('smallest non-zero angular frequency difference: ', omega12diff)
                 
-                print( np.min(kk[kk>0]) )
+                #print( np.min(kk[kk>0]) )
                 domega = np.min(kk[kk>0])/np.sqrt(np.max(kk)**2+np.max(kk_cosine)**2)*np.sqrt(N2)              
-                print(domega)
+                #print(domega)
  
                 omega0 = -2
                 omegaMax = 2.
@@ -2299,8 +2333,8 @@ if Resonances == 1:
                     idxsMF = tmp2[0]
                     sumIGW = np.sum(hist[idxsIGW])
                     sumMF = np.sum(hist[idxsMF])
-                    print(np.sum(hist))
-                    print(sumIGW,sumMF)
+                    print('total counts: ', np.sum(hist))
+                    print('IGW/MF: ', sumIGW,sumMF)
                     IGWFraction = sumIGW/np.sum(hist)
                     MeanflowFraction = sumMF/np.sum(hist)
                     print(IGWFraction,MeanflowFraction)
@@ -2316,7 +2350,7 @@ if Resonances == 1:
                 print(1./(cgx_n_vec[maxIdx]/np.pi))
                 print(0.45/cgx_vec[maxIdx])
 
-            if InteractionCoef == 1:
+            if PlotInteractCoef == 1:
 
                 fig00, ax00 = plt.subplots(1,1, figsize=(width,height))
                 fig00.subplots_adjust(wspace=0.4, hspace=0.)
@@ -2501,7 +2535,7 @@ if Resonances == 1:
                 if keyWaveModes == 1: 
                     rows = int(Nk/2.)
                     row0 = 0
-                    #row0 = int(Nk/2.)
+                    row0 = int(Nk/2.)
                 if keyNonWaveModes == 1: 
                     rows = Nk
                     row0 = 0
