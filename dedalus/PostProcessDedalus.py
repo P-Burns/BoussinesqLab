@@ -61,8 +61,8 @@ N2		= 2.25
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-var_nms = ['psi','S']
-#var_nms = ['psi','S','psi_r','S_r']
+#var_nms = ['psi','S']
+var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -129,7 +129,7 @@ tMean_slide = 0
 #N.B. some data will be lost from start and end of time period.
 #N.B. Choose an odd length to make window symmetric around some t point:
 #Nt_mean = 1801
-Nt_mean = 11
+Nt_mean = 21
 wing = Nt_mean//2
 
 #Choose type of plot:
@@ -202,8 +202,8 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 20
-        #nfiles = 10
+        nfiles = 10
+        #nfiles = 20
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -2023,7 +2023,7 @@ if SpectralAnalysis == 1:
             data = spectralCoef[:,Idx1,Idx2]
 
             xgrid = freqvec*(2*np.pi)
-            #xlim = (0,5)
+            xlim = (0,5)
             ylim = (1e-18,1e+0)
             xlabel = r'$\omega$ (rad/s)'
             if Modulated == 0: ylabel = r'PSD ([$S$]$^2$/(rad/s))'
@@ -2523,8 +2523,11 @@ if TimescaleSeparation == 1:
 #Generic stastical processing:
 if xMean == 1:
     data = x_mean(data)
-    if 'data2' in locals(): data2 = x_mean(data2)
-    #data has shape (Nt,Nz)
+    data = data.transpose()
+    if 'data2' in locals(): 
+        data2 = x_mean(data2)
+        data2 = data2.transpose()
+    #data has shape (Nz,Nt)
 if tMean == 1:
     data = t_mean(data)
     if 'data2' in locals(): data2 = t_mean(data2)
@@ -2635,6 +2638,8 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
             ax1.set_yscale(yscale)
             if 'PlotGrid' not in locals(): PlotGrid=False
             ax1.grid(PlotGrid)
+
+        #Plot labelling section:
         if PlotXZ == 1: 
             ax1.set_xlim(0,Lx)
             ax1.set_xlabel(r'$x$ (m)')
