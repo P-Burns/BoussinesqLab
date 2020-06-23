@@ -75,7 +75,7 @@ ForceDecay		= 0
 PassiveTracer 		= 0
 compute_p		= 0
 
-CoordinateRotation	= 0
+CoordinateRotation	= 1
 nvars			= 2
 
 Linear			= 0
@@ -83,8 +83,8 @@ Linear			= 0
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 1
-w2f_SinglePoint 	= 0
+w2f_state 		= 0
+w2f_SinglePoint 	= 1
 w2f_dt		 	= 1
 w2f_energy		= 0
 
@@ -317,22 +317,29 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/psiHat_080_180.txt').view(complex)
-            k_0  = 3    # The wave number were the energy should be focused
-            m_0  = 14
-            factor = z_basis.wavenumbers[m_0]**2/x_basis.wavenumbers[k_0]+x_basis.wavenumbers[k_0]
-            tmp = tmp/np.max(tmp)*Spert0*g*cs/10
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180.txt').view(complex)
+            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_97.txt').view(complex)
+            #tmp = tmp/10.
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
             kk_cosine = domain.elements(1).flatten()
 
             #loop through wavenumber space:
-            for jj in range(0,len(kk_cosine)):
-                for ii in range(0,len(kk)):
-                    kIdx = np.where(x_basis.wavenumbers == kk[ii])[0][0]
-                    nIdx = np.where(z_basis.wavenumbers == kk_cosine[jj])[0][0]
-                    force['c'][ii,jj] = tmp[kIdx,nIdx]
+            #for jj in range(0,len(kk_cosine)):
+            #    for ii in range(0,len(kk)):
+            #        kIdx = np.where(x_basis.wavenumbers == kk[ii])[0][0]
+            #        nIdx = np.where(z_basis.wavenumbers == kk_cosine[jj])[0][0]
+            #        force['c'][ii,jj] = tmp[kIdx,nIdx]
+
+            mask = np.ones((Nx,Nz))
+            kIdxs1 = np.isin(x_basis.wavenumbers, kk, invert=True)
+            kIdxs2 = np.ones((1,int(Nx/2.)), dtype=bool).flatten()
+            kIdxs = np.concatenate((kIdxs1, kIdxs2), axis=None)
+            nIdxs = np.isin(z_basis.wavenumbers, kk_cosine, invert=True)
+            mask[kIdxs,:]=0
+            mask[:,nIdxs]=0
+            force['c'][:,:] = tmp[mask.astype(bool)].reshape((len(kk),len(kk_cosine)))
             
 
         if ForceSingleColumn == 1:
