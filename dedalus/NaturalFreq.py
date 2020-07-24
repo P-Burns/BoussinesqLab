@@ -25,13 +25,13 @@ ProblemType			= 'Layers'
 ParkRun 			= -1
 N2				= 1
 N2				= 2.25
-#N2				= 4
-#N2				= 6.25
-#N2				= 7.5625
-#N2				= 9
-#N2				= 10.5625
-#N2				= 12.25
-#N2				= 14.0625
+N2				= 4
+N2				= 6.25
+N2				= 7.5625
+N2				= 9
+N2				= 10.5625
+N2				= 12.25
+N2				= 14.0625
 N2				= 16
 #N2				= 20.25
 #N2				= 25
@@ -55,7 +55,6 @@ AnalyseMainBasisParts		= 0
 SpectralAnalysis		= 0
 DispersionRelation		= 1
 
-
 Resonances			= 1
 LinearNonLinear			= 0
 NearResonanceSearch		= 1
@@ -74,7 +73,7 @@ keyWaveModes                    = 0
 FindUniqueSet                   = 0
 FindOneAlphaSet                 = 1
 xAxis_k                         = 0
-xAxis_n                         = 0
+xAxis_n                         = 1
 xAxis_r                         = 0
 xAxis_alt                       = 0
 xAxis_angle                     = 0
@@ -505,7 +504,7 @@ if PlotCDFsVsN == 1:
     F_IGW_01 = np.divide(np.add(N_IGW_k0_01,N_IGW_knot0_01),N_tot_01)
     F_MF_01 = 1 - F_IGW_01
 
-    print(N_vec)
+    print(Nvec)
     print(F_IGW_01)
     print(F_MF_01)
     print( np.add(N_IGW_k0_01,N_MF_k0_01) )
@@ -573,16 +572,18 @@ if PlotCDFsVsN == 1:
     ax2.set_ylabel(r'Contribution to solution (%)')
     ax2.set_xlim(0,6)
     ax2.set_ylim(0,1)
-    ax2.legend(frameon=False)
+    ax2.legend(frameon=False, handlelength=3)
 
-    #overplot PSD results
-    meanflowarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
-    psdIGWarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+    OverplotPSDresults = 0
+    if OverplotPSDresults == 1:
+        #overplot PSD results
+        meanflowarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+        psdIGWarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
 
-    F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
-    F_IGW_max = np.max(F_IGW)
-    F_IGW = F_IGW/F_IGW_max
-    ax1.plot(N_vec,F_IGW, 'ok', fillstyle='none')
+        F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
+        F_IGW_max = np.max(F_IGW)
+        F_IGW = F_IGW/F_IGW_max
+        ax1.plot(N_vec,F_IGW, 'ok', fillstyle='none')
 
     plt.show()
     pdb.set_trace()
@@ -1554,7 +1555,7 @@ if Resonances == 1:
 
     if NearResonanceSearch == 1:
         OmegaLimit = 0.
-        #OmegaLimit = 0.0001
+        OmegaLimit = 0.0001
         OmegaLimit = 0.001
         OmegaLimit = 0.01
         #OmegaLimit = 0.1
@@ -1628,10 +1629,12 @@ if Resonances == 1:
             #Only loop over required points for some k,n:
             idxs_triads_x = np.array(np.where(triad_x_mask[i,:,:] == True))
             idxs_triads_z = np.array(np.where(triad_z_mask[j,:,:] == True))
-      
-            #print(idxs_triads_x)
-            #print(idxs_triads_z)
-            #pdb.set_trace() 
+     
+            #if Nk != 0:
+            #    print(idxs_triads_x)
+            #    print(idxs_triads_z)
+            #    print(kk)
+            #    pdb.set_trace() 
             #plt.figure() 
             #plt.scatter( kk[idxs_triads_x[0,:]], kk[idxs_triads_x[1,:]] )
             #plt.scatter( kk_cosine[idxs_triads_z[0,:]], kk_cosine[idxs_triads_z[1,:]] )
