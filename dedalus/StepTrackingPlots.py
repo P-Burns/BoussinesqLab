@@ -341,6 +341,15 @@ if PertVsN == 1:
     ForceN = -g/rho0*rhoprimeN
     Ratio = ForcePert/ForceN
 
+    dRdN = np.zeros((len(Ratio)))
+    for i in range(0,len(Ratio)):
+        if i == 0:
+            dRdN[i] = (Ratio[i+1]-Ratio[i])/(N_vec[i+1]-N_vec[i])
+        if i != 0 and i != len(Ratio)-1:
+            dRdN[i] = (Ratio[i+1]-Ratio[i-1])/(N_vec[i+1]-N_vec[i-1])
+        if i == len(Ratio)-1:
+            dRdN[i] = (Ratio[i]-Ratio[i-1])/(N_vec[i]-N_vec[i-1])
+
     plt.rcParams.update({'font.size': 22})
     fig=plt.figure(figsize=(width,height))
     fig.set_tight_layout(True)
@@ -350,6 +359,10 @@ if PertVsN == 1:
     ax1.plot([0,max(N_vec)],[1,1],'--k')
     ax1.set_xlabel(r'$N$ (rad/s)')
     ax1.set_ylabel(r'$F_{pert}\,/\, F_{N}$')
+    plt.show()
+
+    plt.figure()
+    plt.plot(N_vec,dRdN)
     plt.show()
 
 

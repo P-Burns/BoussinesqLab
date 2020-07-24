@@ -37,7 +37,7 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -50,7 +50,7 @@ N2		= 2.25
 #N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
-N2 		= 9
+#N2 		= 9
 #N2		= 10.5625
 #N2 		= 12.25
 #N2		= 14.0625
@@ -61,8 +61,8 @@ N2 		= 9
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-#var_nms = ['psi','S']
-var_nms = ['psi','S','psi_r','S_r']
+var_nms = ['psi','S']
+#var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -77,14 +77,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
+dSdz                    = 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -108,8 +108,8 @@ CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
 
-TimescaleSeparation	= 0
-OverlayModulated	= 0
+TimescaleSeparation	= 1
+OverlayModulated	= 1
 IGWmethod 		= 0
 step_prediction		= 0
 
@@ -185,8 +185,10 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced==1 or SinglePoint==1 or Modulated==1:
         if forced == 1:
-            RunName = RunName + '_delta05'
-            #RunName = RunName + '_delta09'
+            RunName = RunName + '_k05n028x10'
+            #RunName = RunName + '_k05n028x2'
+            #RunName = RunName + '_k05n014x5'
+            #RunName = RunName + '_k05n014'
         if SinglePoint == 1:
             #RunName = RunName + '_dt0.01_sp'
             RunName = RunName + '_dt0.005_sp'
@@ -209,13 +211,13 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 7
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
     if SinglePoint == 1: 
-        #dt = 1e-2
-        dt = 5e-3
+        dt = 1e-2
+        #dt = 5e-3
         #dt = 1e-3
 
 if Gusto == 1: dt = 0.004
@@ -228,7 +230,9 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
-    if forced == 1: dt2=0.01
+    if forced == 1: 
+        dt2=0.01
+        #dt2=dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -2209,7 +2213,9 @@ if TimescaleSeparation == 1:
 
     npersegStr = str(nperseg)
     if Modulated == 0: N_vec = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
-    if Modulated==1 or IGWmethod==1: N_vec = np.array((0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5))
+    if Modulated==1 or IGWmethod==1: 
+        #N_vec = np.array((0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5))
+        N_vec = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
     c = 2*np.pi
 
     if Modulated == 1:
@@ -2429,7 +2435,7 @@ if TimescaleSeparation == 1:
             i1b = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{IGW}$')
             i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{IGW}$')
         i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{MF}$')
-        #i4 = ax1.plot(N_vec,meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{well}$')
+        #i4 = ax1.plot(N_vec0meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{well}$')
         ax1.set_xlabel(r'$N$ (rad/s)')
         ax1.set_ylabel(r'$\omega$ (rad/s)')
         ax1.set_xlim(0,6)
