@@ -46,7 +46,7 @@ forced          = 0
 #N2		= 0.09
 #N2		= 0.25
 #N2 		= 1
-N2		= 2.25		
+#N2		= 2.25		
 #N2 		= 4
 #N2		= 6.25
 #N2		= 7.5625
@@ -202,8 +202,8 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 20
-        #nfiles = 10
+        nfiles = 10
+        #nfiles = 20
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -2023,7 +2023,7 @@ if SpectralAnalysis == 1:
             data = spectralCoef[:,Idx1,Idx2]
 
             xgrid = freqvec*(2*np.pi)
-            #xlim = (0,5)
+            xlim = (0,5)
             ylim = (1e-18,1e+0)
             xlabel = r'$\omega$ (rad/s)'
             if Modulated == 0: ylabel = r'PSD ([$S$]$^2$/(rad/s))'
