@@ -209,6 +209,8 @@ if ProblemType == "Layers":
     bs = -1./(rho0*cs)*drho0_dz
     bt = 0.
 
+    print(bs)
+    pdb.set_trace()
 
 #Define governing equations:
 if compute_p==0:
