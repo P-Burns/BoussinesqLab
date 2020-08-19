@@ -18,31 +18,31 @@ import sys
 
 
 #Read in data:
-dir_state = './Results/State_mesh0/'
+dir_state = './Results/meshTest/State_mesh0/'
 fnm = dir_state + 'State_s2' + '.h5'
 hdf5obj = h5py.File(fnm,'r')
 tmp_ = hdf5obj.get('tasks/S')
 S0 = np.array(tmp_)
 
-dir_state = './Results/State_mesh1/'
+dir_state = './Results/meshTest/State_mesh1/'
 fnm = dir_state + 'State_s2' + '.h5'
 hdf5obj = h5py.File(fnm,'r')
 tmp_ = hdf5obj.get('tasks/S')
 S1 = np.array(tmp_)
 
-dir_state = './Results/State_mesh2/'
+dir_state = './Results/meshTest/State_mesh2/'
 fnm = dir_state + 'State_s2' + '.h5'
 hdf5obj = h5py.File(fnm,'r')
 tmp_ = hdf5obj.get('tasks/S')
 S2 = np.array(tmp_)
 
-dir_state = './Results/State_mesh3/'
+dir_state = './Results/meshTest/State_mesh3/'
 fnm = dir_state + 'State_s2' + '.h5'
 hdf5obj = h5py.File(fnm,'r')
 tmp_ = hdf5obj.get('tasks/S')
 S3 = np.array(tmp_)
 
-dir_state = './Results/State_mesh4/'
+dir_state = './Results/meshTest/State_mesh4/'
 fnm = dir_state + 'State_s2' + '.h5'
 hdf5obj = h5py.File(fnm,'r')
 tmp_ = hdf5obj.get('tasks/S')
@@ -96,15 +96,15 @@ z4=domain4.grid(1)[0,:]
 
 
 #Plot results:
-plt.plot(S0[0,int(Nx0/2.),:], z0, 'r-', label=r'4$\Delta x$')
-plt.plot(S1[0,int(Nx1/2.),:], z1, 'm-', label=r'2$\Delta x$')
-plt.plot(S2[0,int(Nx2/2.),:], z2, 'g-', label=r'$\Delta x$=2.5 mm')
-plt.plot(S3[0,int(Nx3/2.),:], z3, 'b-', label=r'$\Delta x$/2')
-plt.plot(S4[0,int(Nx4/2.),:], z4, 'c-', label=r'$\Delta x$/4')
-plt.xlabel(r'$S$ (g/kg)')
+plt.plot(S0[0,int(Nx0/2.),:], z0, ls=':',  lw=2, c='gray', label=r'4$\Delta x$')
+plt.plot(S1[0,int(Nx1/2.),:], z1, ls='-',  lw=2, c='gray', label=r'2$\Delta x$')
+plt.plot(S2[0,int(Nx2/2.),:], z2, ls='-',  lw=3, c='k',    label=r'$\Delta x$=2.5 mm')
+plt.plot(S3[0,int(Nx3/2.),:], z3, ls='-',  lw=2, c='k',    label=r'$\Delta x$/2')
+plt.plot(S4[0,int(Nx4/2.),:], z4, ls=':',  lw=1, c='k',    label=r'$\Delta x$/4')
+plt.xlabel(r'$S^{\prime}$ (g/kg)')
 plt.ylim(0,Lz)
 plt.ylabel(r'$z$ (m)')
-plt.legend()
+plt.legend(frameon=False)
 plt.show()
 
 
