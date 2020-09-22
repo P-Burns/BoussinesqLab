@@ -1,0 +1,24 @@
+#!/bin/bash
+#Script to read and plot data from different model output directories
+#by calling the analysis script PostProcessDedalus.py in a loop and passing
+#into the Python programme the required data directory information etc.
+
+
+#Put list of model output directories into bash array:
+cd /gpfs/ts0/projects/Research_Project-183035/ForcedResults
+shopt -s dotglob
+shopt -s nullglob
+RunNames=(*/)
+cd /gpfs/ts0/home/pb412/dedalus
+
+ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/PostProcessDedalus.py"
+prefix="State";
+suffix="/";
+
+for ((i=1; i<=98; i++))
+do
+    var3=${RunNames[i]#$prefix};
+    var3=${var3%$suffix};
+    echo $var3
+    python3 $ExecPath 30 $var3
+done
