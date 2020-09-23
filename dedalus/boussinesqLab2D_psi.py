@@ -40,11 +40,11 @@ scalePert		= 0
 #N2			= 0.09
 #N2			= 0.25
 #N2			= 1
-N2			= 2.25
+#N2			= 2.25
 #N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
-#N2			= 9
+N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
 #N2			= 14.0625
@@ -318,8 +318,9 @@ if AddForce == 1:
             force.meta['z']['parity'] = -1
 
             #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180.txt').view(complex)
-            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_97.txt').view(complex)
-            #tmp = tmp/10.
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_97.txt').view(complex)
+            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_97_31.txt').view(complex)
+            #tmp = tmp/3
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
