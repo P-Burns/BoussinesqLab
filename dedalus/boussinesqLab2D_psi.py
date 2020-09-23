@@ -38,11 +38,11 @@ ProblemType 		= "Layers"
 ParkRun 		= -1
 scalePert		= 0
 #N2			= 0.09
-#N2			= 0.25
-#N2			= 1
+N2			= 0.25
+N2			= 1
 N2			= 2.25
-#N2			= 4
-#N2			= 6.25
+N2			= 4
+N2			= 6.25
 #N2			= 7.5625
 #N2			= 9
 #N2			= 10.5625
@@ -57,14 +57,14 @@ ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
 ScaleDiffusion 		= 1
 
-ICsRandomPert 		= 0
+ICsRandomPert 		= 1
 ReadICs 		= 1
 Interpolate		= 0
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 1
+AddForce 		= 0
 ForceFullDomain 	= 1
 ForceSingleColumn 	= 0
 SimpleWave		= 0
@@ -75,7 +75,7 @@ ForceDecay		= 0
 PassiveTracer 		= 0
 compute_p		= 0
 
-CoordinateRotation	= 1
+CoordinateRotation	= 0
 nvars			= 2
 
 Linear			= 0
@@ -209,6 +209,8 @@ if ProblemType == "Layers":
     bs = -1./(rho0*cs)*drho0_dz
     bt = 0.
 
+    print(bs)
+    pdb.set_trace()
 
 #Define governing equations:
 if compute_p==0:
@@ -317,9 +319,10 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180.txt').view(complex)
             tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_97.txt').view(complex)
-            #tmp = tmp/10.
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_195.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_97_31.txt').view(complex)
+            tmp = tmp*5.
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
@@ -348,7 +351,10 @@ if AddForce == 1:
             c2 = Lx-c3
             mask_x = c1*np.exp(-(x-c2)**2/(2*c3**2))
         if ForceSingleColumn == 0: mask_x = 1
-        if ForceDecay == 1: mask_t = np.exp(-1.*t)
+        if ForceDecay == 1: 
+            #t_efold = 1./(1/2.)
+            t_efold = 2.
+            mask_t = np.exp(-t_efold*t)
         if ForceDecay == 0: mask_t = 1
 
         if SimpleWave==1 or WaveSpectrum==1:
@@ -702,8 +708,7 @@ if ProblemType == "Layers":
             if Interpolate == 1:
 
                 #Read in Aegir ICs:
-                #fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_1.txt')
-                fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced.txt')
+                fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_1.txt')
 
                 #Add more symmetry to ICs:
                 #fAegir_flipx = np.flipud(fAegir)
@@ -743,8 +748,7 @@ if ProblemType == "Layers":
 
                 fDedalus = InterpolateFromAegir(NxAegir, NzAegir, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
-                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt'
-                #if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
+                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
                 if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt'
                 np.savetxt(fname, fDedalus) 
                 #pdb.set_trace()
@@ -756,8 +760,7 @@ if ProblemType == "Layers":
                 if factor == 2: fDedalus = np.loadtxt('./RandomPhase_160_360.txt')
                 if factor == 4: fDedalus = np.loadtxt('./RandomPhase_320_720.txt')
             else:
-                if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_forced_Dedalus.txt')
-                #if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
+                if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
                 if factor == 2: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
             fDedalus = fDedalus/np.max(fDedalus)
         
@@ -822,7 +825,7 @@ else:
 
 SimDays = 0.
 SimHrs = 0.
-SimMins = 20.
+SimMins = 10.
 SimSecs = 0.
 te = SimDays*(24*60*60) + SimHrs*(60*60) + SimMins*60 + SimSecs
 solver.stop_sim_time = te
@@ -839,10 +842,11 @@ solver.stop_iteration = np.inf
 if (w2f_state == 1 and w2f_SinglePoint == 0) or w2f_energy == 1: write_dt = 1e-1
 
 if w2f_SinglePoint == 1 and w2f_state == 0: 
-    if AddForce == 0: write_dt = 1e-1
+    if AddForce == 0: 
+        write_dt = 1e-2
     if AddForce == 1: 
-        write_dt = 5e-3
-        #write_dt = 1e-2
+        #write_dt = 5e-3
+        write_dt = 1e-2
         #write_dt = 1e-1
 
 # Analysis:
