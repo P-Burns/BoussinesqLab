@@ -24,9 +24,17 @@ import netCDF4 as nc4
 
 
 #Passed variables:
+#(First argument is plot time, second is RunName. 
+#If you need to pass the RunName and don't need the plot time, you still must 
+#pass the plot time in as a dummy variable even though you won't use it).
 if len(sys.argv) > 1:
     tIdx = int(sys.argv[1])
-
+if len(sys.argv) > 2:
+    RunName = str(sys.argv[2])
+    #Extract N2 value of file from name:
+    N2_array_MJ = [0.09, 0.25, 1, 2.25, 4, 6.25, 7.5625, 9, 10.5625, 12.25, 14.0625, 16, 20.25, 25]
+    tmp = RunName.split('_')
+    N2 = N2_array_MJ[int(tmp[1])]
 
 #Program control:
 Gusto		= 0
@@ -37,15 +45,15 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
 forced          = 0
 #N2		= 0.09
-#N2		= 0.25
-#N2 		= 1
+N2		= 0.25
+N2 		= 1
 #N2		= 2.25		
 #N2 		= 4
 #N2		= 6.25
@@ -58,10 +66,11 @@ forced          = 0
 #N2		= 20.25
 #N2		= 25
 
+
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-#var_nms = ['S']
-var_nms = ['psi','S']
+var_nms = ['S']
+#var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
@@ -77,14 +86,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 0
+dSdz                    = 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -108,7 +117,7 @@ CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
 
-TimescaleSeparation	= 1
+TimescaleSeparation	= 0
 OverlayModulated	= 1
 IGWmethod 		= 0
 step_prediction		= 0
@@ -140,15 +149,18 @@ PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
+NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:
-    dir_state = '/home/ubuntu/dedalus/Results/State/'
+  
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
+    #dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
@@ -190,8 +202,8 @@ if VaryN == 1:
             #RunName = RunName + '_k05n014x5'
             #RunName = RunName + '_k05n014'
         if SinglePoint == 1:
-            #RunName = RunName + '_dt0.01_sp'
-            RunName = RunName + '_dt0.005_sp'
+            RunName = RunName + '_dt0.01_sp'
+            #RunName = RunName + '_dt0.005_sp'
         if Modulated == 1 and forced == 0 and SinglePoint == 0:
             RunName = RunName + '_R'
     #dir_state = './Results/' + RunName + '/'
@@ -211,7 +223,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 7
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -382,8 +394,9 @@ kk_cosine = z_basis.wavenumbers
 #Set general plotting parameters assuming A4 page size:
 A4Width = 8.27
 MarginWidth = 1
-width = A4Width-2*MarginWidth
-height = 4
+height = 5
+#width = A4Width-2*MarginWidth
+width = height*1.2
 #For scaling the A4 plot dimensions:
 ScaleFactor = 1
 #ScaleFactor = 0.7
@@ -416,7 +429,8 @@ if Gusto == 0:
 
     for jj in range(0,Nvars):
         for ii in fileIdx:
-            fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
+            #fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
+            fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
             hdf5obj = h5py.File(fnm,'r')
             tmp_ = hdf5obj.get('tasks/'+var_nms[jj])
             idxS = ii*ntPerFile/tq
@@ -896,10 +910,15 @@ if dSdz == 1:
         else: data = d_dz(S_r,Nt,Nx,Nz,z)
 
     if MakePlot == 1:
-        PlotTitle = r'$\partial S/\partial z$ (g/kg/m)'
+        if NoPlotLabels == 0: 
+            PlotTitle = r'$\partial S/\partial z$ (g/kg/m)' + ', ' + RunName
+        else: PlotTitle = ''
         FigNmBase = 'dSdz'
 
-        if filledContour == 1: nlevs = 41
+        if filledContour == 1: 
+            #nlevs = 21
+            nlevs = 41
+            #nlevs = 81
         else: nlevs = 41
 
         if ParkRun == 18: 
@@ -918,6 +937,8 @@ if dSdz == 1:
             if N2==2.25:
                 SzMin = -500
                 SzMax = 500
+                #SzMin = -300
+                #SzMax = 300
             if N2==3.83 or N2==4:
                 if Modulated == 0:
                     SzMin = -1000
@@ -925,17 +946,17 @@ if dSdz == 1:
                 if Modulated == 1:
                     SzMin = np.min(data)
                     SzMax = np.max(data)
-            if N2==6.25:
+            if N2==6.25 or N2==7.5625:
                 SzMin = -1500
                 SzMax = 1500
-            if N2==9:
+            if N2==9 or N2==10.5625:
                 if Modulated == 0:
                     SzMin = -2000
                     SzMax = 2000
                 else:
                     SzMin = np.min(data)
                     SzMax = np.max(data)
-            if N2==12.25:
+            if N2==12.25 or N2==14.0625:
                 SzMin = -2500
                 SzMax = 2500
             if N2==16:
@@ -954,16 +975,15 @@ if dSdz == 1:
         dSz = (SzMax - SzMin)/(nlevs-1)
         clevels = np.arange(nlevs)*dSz + SzMin
         if filledContour == 1: 
-            nlevs = 41
             #cmap = 'PRGn'
             cmap = 'bwr'
+            #cmap = 'tab20b'
         else:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
-        #xlim = (10,20)
         xlim = (0,np.max(t))
-
+        xlim = (0,60)
 
 if dUdz == 1:
     u = d_dz(Psi,Nt,Nx,Nz,z)
@@ -1213,6 +1233,7 @@ if TrackSteps == 1:
         ax1.set_ylabel(r'$z$ (m)')
         ax1.set_ylim(0,Lz)
         ax1.set_xlim(0,np.max(t))
+        #ax1.set_xlim(0,30)
         cb = plt.colorbar(i1, ticks=[0,1])
  
         #ax2 = fig.add_subplot(grid[0,1])
@@ -2219,10 +2240,10 @@ if TimescaleSeparation == 1:
     c = 2*np.pi
 
     if Modulated == 1:
-        fdir = './SpectralAnalysis/modulated/' 
+        fdir = '/home/ubuntu/BoussinesqLab/dedalus/SpectralAnalysis/modulated/' 
         tag_R = '_R'
     else: 
-        fdir = './SpectralAnalysis/unmodulated/' 
+        fdir = '/home/ubuntu/BoussinesqLab/dedalus/SpectralAnalysis/unmodulated/' 
         tag_R = ''
 
     data1 = np.loadtxt(fdir + 'psd_N2_00_25' + '_' + npersegStr + tag_R + '.txt')
@@ -2230,17 +2251,17 @@ if TimescaleSeparation == 1:
     data3 = np.loadtxt(fdir + 'psd_N2_02_25' + '_' + npersegStr + tag_R + '.txt')
     data4 = np.loadtxt(fdir + 'psd_N2_04' + '_' + npersegStr + tag_R + '.txt')
     data5 = np.loadtxt(fdir + 'psd_N2_06_25' + '_' + npersegStr + tag_R + '.txt')
-    if Modulated==0 and IGWmethod==0: data6 = np.loadtxt(fdir + 'psd_N2_07_5625' + '_' + npersegStr + tag_R + '.txt')
+    if IGWmethod==0: data6 = np.loadtxt(fdir + 'psd_N2_07_5625' + '_' + npersegStr + tag_R + '.txt')
     data7 = np.loadtxt(fdir + 'psd_N2_09' + '_' + npersegStr + tag_R + '.txt')
-    if Modulated==0 and IGWmethod==0: data8 = np.loadtxt(fdir + 'psd_N2_10_5625' + '_' + npersegStr + tag_R + '.txt')
+    if IGWmethod==0: data8 = np.loadtxt(fdir + 'psd_N2_10_5625' + '_' + npersegStr + tag_R + '.txt')
     data9 = np.loadtxt(fdir + 'psd_N2_12_25' + '_' + npersegStr + tag_R + '.txt')
-    if Modulated==0 and IGWmethod==0: data10 = np.loadtxt(fdir + 'psd_N2_14_0625' + '_' + npersegStr + tag_R + '.txt')
+    if IGWmethod==0: data10 = np.loadtxt(fdir + 'psd_N2_14_0625' + '_' + npersegStr + tag_R + '.txt')
     data11 = np.loadtxt(fdir + 'psd_N2_16' + '_' + npersegStr + tag_R + '.txt')
     data12 = np.loadtxt(fdir + 'psd_N2_20_25' + '_' + npersegStr + tag_R + '.txt')
     data13 = np.loadtxt(fdir + 'psd_N2_25' + '_' + npersegStr + tag_R + '.txt')
 
     if IGWmethod == 1:
-        fdir_R = './SpectralAnalysis/modulated/'
+        fdir_R = '/home/ubuntu/BoussinesqLab/dedalus/SpectralAnalysis/modulated/'
         data1_R = np.loadtxt(fdir_R + 'psd_N2_00_25' + '_' + npersegStr + '_R' + '.txt')
         data2_R = np.loadtxt(fdir_R + 'psd_N2_01' + '_' + npersegStr + '_R' + '.txt')
         data3_R = np.loadtxt(fdir_R + 'psd_N2_02_25' + '_' + npersegStr + '_R' + '.txt')
@@ -2270,7 +2291,7 @@ if TimescaleSeparation == 1:
     for nn in range(0,Nn):
 
         #get psd data:
-        if Modulated==0 and IGWmethod==0: 
+        if IGWmethod==0: 
             if nn == 0: fhat = data1
             if nn == 1: fhat = data2
             if nn == 2: fhat = data3
@@ -2284,18 +2305,7 @@ if TimescaleSeparation == 1:
             if nn == 10: fhat = data11
             if nn == 11: fhat = data12
             if nn == 12: fhat = data13
-        if Modulated == 1:
-            if nn == 0: fhat = data1
-            if nn == 1: fhat = data2
-            if nn == 2: fhat = data3
-            if nn == 3: fhat = data4
-            if nn == 4: fhat = data5
-            if nn == 5: fhat = data7
-            if nn == 6: fhat = data9
-            if nn == 7: fhat = data11
-            if nn == 8: fhat = data12
-            if nn == 9: fhat = data13
-        if Modulated==0 and IGWmethod==1:
+        if IGWmethod==1:
             if nn == 0: 
                 fhat = data1
                 fhat_R = data1_R
@@ -2402,14 +2412,15 @@ if TimescaleSeparation == 1:
             print(N_vec[nn], fhat[1,lowerBoundIdx]*c, fhat[1,upperBoundIdx]*c)
             #pdb.set_trace()
 
-        #Reverse the search from the upper bound to find the fequency of last IGW peak:
-        psd0 = fhat[0,upperBoundIdx]
-        psd1 = fhat[0,upperBoundIdx-1]
-        lastPeakIdx = upperBoundIdx
-        while psd1 > psd0:
-            lastPeakIdx = lastPeakIdx-1
-            psd0 = fhat[0,lastPeakIdx] 
-            psd1 = fhat[0,lastPeakIdx-1] 
+        if Modulated == 0:
+            #Reverse the search from the upper bound to find the fequency of last IGW peak:
+            psd0 = fhat[0,upperBoundIdx]
+            psd1 = fhat[0,upperBoundIdx-1]
+            lastPeakIdx = upperBoundIdx
+            while psd1 > psd0:
+                lastPeakIdx = lastPeakIdx-1
+                psd0 = fhat[0,lastPeakIdx] 
+                psd1 = fhat[0,lastPeakIdx-1] 
 
         meanflowarr[nn,0] = np.sum( fhat[0,0:psdMinIdx] )
         WellMode = fhat[1,psdMinIdx]
@@ -2432,7 +2443,7 @@ if TimescaleSeparation == 1:
         if Modulated == 0:
             i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{IGW}$')
             i1b = ax1.plot(N_vec,psdIGWarr[:,5], 'k', marker='s', linestyle = 'None', fillstyle='none', label=r'$\omega_{IGW_E}$')
-            i1b = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{IGW}$')
+            i1c = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{IGW}$')
             i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{IGW}$')
         i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{MF}$')
         #i4 = ax1.plot(N_vec0meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{well}$')
@@ -2461,8 +2472,9 @@ if TimescaleSeparation == 1:
         #i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', c='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
 
         if OverlayModulated == 1:
-            data = np.loadtxt('./meanflowarr_modulated.txt')
-            N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5))
+            data = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr_modulated.txt')
+            #N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5))
+            N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
             i10 = ax2.plot(N_vec_mod,data[:,0], 'o', c='grey', fillstyle='none', markersize=10, label=r'PSD($\Delta \omega_{MF\zeta}$)')
 
         #ax2.yaxis.label.set_color('grey')
@@ -2486,10 +2498,10 @@ if TimescaleSeparation == 1:
         plt.show()
 
         #check contributions of IGW signal to mean flow using PSD data:
-        F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
-        plt.figure()
-        plt.plot(N_vec,F_IGW, 'ok')
-        plt.show() 
+        #F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
+        #plt.figure()
+        #plt.plot(N_vec,F_IGW, 'ok')
+        #plt.show() 
 
     if step_prediction == 1:
 
@@ -2634,7 +2646,7 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
             if filledContour == 1:
                 i1=ax1.contourf(xgrid,ygrid,data,clevels,cmap=cmap,extend="both")
                 if 'clabel' not in locals(): clabel=''
-                fig.colorbar(i1,label=clabel)
+                if NoPlotLabels == 0: fig.colorbar(i1,label=clabel)
             else:
                 i1=ax1.contour(xgrid,ygrid,data,clevels,colors=colorvec,linewidths=1,linestyles='-')
                 i1.clabel(clevels, inline=True, fontsize=6)
@@ -2714,9 +2726,22 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
 
-        plt.show()
-        #plt.savefig('plot.png')
-        #plt.close(fig)
+        if NoPlotLabels == 1:
+            ax1.axis('off')
+            
+        #Make sure plot axis labels fit within plot window:
+        plt.tight_layout()
+
+        if len(sys.argv) > 2:
+            tmp = RunName.split('_')
+            #Pad with zeros to correctly order results:
+            tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
+            separator = '_'
+            RunName=separator.join(tmp)
+
+        #plt.show()
+        if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
+        plt.close(fig)
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,
@@ -2794,4 +2819,4 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
             plt.close(fig)
             #plt.show()
 
-pdb.set_trace()
+#pdb.set_trace()
