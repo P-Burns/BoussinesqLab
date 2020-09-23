@@ -24,9 +24,17 @@ import netCDF4 as nc4
 
 
 #Passed variables:
+#(First argument is plot time, second is RunName. 
+#If you need to pass the RunName and don't need the plot time, you still must 
+#pass the plot time in as a dummy variable even though you won't use it).
 if len(sys.argv) > 1:
     tIdx = int(sys.argv[1])
-
+if len(sys.argv) > 2:
+    RunName = str(sys.argv[2])
+    #Extract N2 value of file from name:
+    N2_array_MJ = [0.09, 0.25, 1, 2.25, 4, 6.25, 7.5625, 9, 10.5625, 12.25, 14.0625, 16, 20.25, 25]
+    tmp = RunName.split('_')
+    N2 = N2_array_MJ[int(tmp[1])]
 
 #Program control:
 Gusto		= 0
@@ -37,7 +45,7 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -58,6 +66,7 @@ N2 		= 1
 #N2		= 20.25
 #N2		= 25
 
+
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 var_nms = ['S']
@@ -77,15 +86,15 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 0
-TrackSteps              = 1
+dSdz                    = 1
+TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
@@ -149,7 +158,9 @@ w2f_analysis = 1
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:
-    dir_state = '/home/ubuntu/dedalus/Results/State/'
+  
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
+    #dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
@@ -418,7 +429,8 @@ if Gusto == 0:
 
     for jj in range(0,Nvars):
         for ii in fileIdx:
-            fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
+            #fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
+            fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
             hdf5obj = h5py.File(fnm,'r')
             tmp_ = hdf5obj.get('tasks/'+var_nms[jj])
             idxS = ii*ntPerFile/tq
@@ -899,7 +911,7 @@ if dSdz == 1:
 
     if MakePlot == 1:
         if NoPlotLabels == 0: 
-            PlotTitle = r'$\partial S/\partial z$ (g/kg/m)'
+            PlotTitle = r'$\partial S/\partial z$ (g/kg/m)' + ', ' + RunName
         else: PlotTitle = ''
         FigNmBase = 'dSdz'
 
@@ -934,17 +946,17 @@ if dSdz == 1:
                 if Modulated == 1:
                     SzMin = np.min(data)
                     SzMax = np.max(data)
-            if N2==6.25:
+            if N2==6.25 or N2==7.5625:
                 SzMin = -1500
                 SzMax = 1500
-            if N2==9:
+            if N2==9 or N2==10.5625:
                 if Modulated == 0:
                     SzMin = -2000
                     SzMax = 2000
                 else:
                     SzMin = np.min(data)
                     SzMax = np.max(data)
-            if N2==12.25:
+            if N2==12.25 or N2==14.0625:
                 SzMin = -2500
                 SzMax = 2500
             if N2==16:
@@ -2717,10 +2729,19 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
         if NoPlotLabels == 1:
             ax1.axis('off')
             
+        #Make sure plot axis labels fit within plot window:
+        plt.tight_layout()
 
-        plt.show()
-        #plt.savefig('plot.png')
-        #plt.close(fig)
+        if len(sys.argv) > 2:
+            tmp = RunName.split('_')
+            #Pad with zeros to correctly order results:
+            tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
+            separator = '_'
+            RunName=separator.join(tmp)
+
+        #plt.show()
+        if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
+        plt.close(fig)
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,
@@ -2798,4 +2819,4 @@ if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 an
             plt.close(fig)
             #plt.show()
 
-pdb.set_trace()
+#pdb.set_trace()
