@@ -15,10 +15,13 @@ ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/PostProcessDedalus.py"
 prefix="State";
 suffix="/";
 
-for ((i=1; i<=98; i++))
+for ((i=0; i<=98; i++))
 do
     var3=${RunNames[i]#$prefix};
     var3=${var3%$suffix};
     echo $var3
     python3 $ExecPath 30 $var3
 done
+
+#Combine png files into one pdf:
+montage *.png -mode concatenate -tile 2x3 assembly.pdf
