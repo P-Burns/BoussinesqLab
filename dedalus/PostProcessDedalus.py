@@ -51,20 +51,21 @@ VaryN           = 0
 ParkRun 	= -1
 scalePert	= 0
 forced          = 0
-#N2		= 0.09
-N2		= 0.25
-N2 		= 1
-#N2		= 2.25		
-#N2 		= 4
-#N2		= 6.25
-#N2		= 7.5625
-#N2 		= 9
-#N2		= 10.5625
-#N2 		= 12.25
-#N2		= 14.0625
-#N2		= 16
-#N2		= 20.25
-#N2		= 25
+if VaryN == 1:
+    #N2		= 0.09
+    #N2		= 0.25
+    #N2 	= 1
+     N2		= 2.25		
+    #N2 	= 4
+    #N2		= 6.25
+    #N2		= 7.5625
+    #N2 	= 9
+    #N2		= 10.5625
+    #N2 	= 12.25
+    #N2		= 14.0625
+    #N2		= 16
+    #N2		= 20.25
+    #N2		= 25
 
 
 #User must make sure correct data is read in for some analysis:
@@ -157,8 +158,7 @@ w2f_analysis = 1
 
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
-    #Options when reading data:
-  
+    #Options when reading data:  
     dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
     #dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
@@ -222,7 +222,7 @@ if Gusto == 0:
         StartMin = 1
         nfiles = 30
     else:
-        StartMin = 1
+        StartMin = 8
         nfiles = 1
 
     #Model output/write timestep:
@@ -983,7 +983,8 @@ if dSdz == 1:
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
         xlim = (0,np.max(t))
-        xlim = (0,60)
+        #xlim = (0,60)
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
 
 if dUdz == 1:
     u = d_dz(Psi,Nt,Nx,Nz,z)
