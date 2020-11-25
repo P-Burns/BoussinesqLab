@@ -1,0 +1,2 @@
+#srun -p stq -A Research_Project-183035 --time=00:05:00 plotMultipleN.bsh
+srun -p sq -A Research_Project-183035 --time=02:00:00 plotMultipleN.bsh
