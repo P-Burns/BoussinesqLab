@@ -5,8 +5,8 @@
 
 
 #Put list of model output directories into bash array:
-libAddress="/gpfs/ts0/projects/Research_Project-183035/ForcedResults" 
-cd $libAddress
+libAddress="/gpfs/ts0/projects/Research_Project-183035"
+cd $libAddress/ForcedResults
 shopt -s dotglob
 shopt -s nullglob
 #RunNames=(*/)		#for list of directories
@@ -26,16 +26,18 @@ prefix="State";
 #suffix="/";	#when not copying zip files from the archive
 suffix=".zip";	#when copying zip files from the archive
 
-for ((i=0; i<=0; i++))
+for ((i=0; i<=99; i++))
 do
 
-    if [ ${RunNames[i]} != 'State_5_125_55_31.zip' ]	#if statement to exclude one problem case
+    if [ ${RunNames[i]} != 'State_4_125_55_31.zip' ] && [ ${RunNames[i]} != 'State_5_125_55_31.zip' ];	#if statement to exclude problem case(s)
     then
         #copy file from archive and unzip it before running analysis code:
-        cp $libAddress/${RunNames[i]} $modelAddress/Results
-        cd Results
+        echo "copy zip file from archive..."
+        cp $libAddress/ForcedResults/${RunNames[i]} $libAddress/tmp
+        cd $libAddress/tmp
+        echo "unzipping..."
         unzip ${RunNames[i]}
-        cd ..
+        cd $modelAddress
 
         #Run analysis code:
         var3=${RunNames[i]#$prefix};
@@ -44,7 +46,7 @@ do
         python3 $ExecPath 30 $var3
 
         # Remove case files and start over:
-        rm -r $modelAddress/Results/State_*
+        rm -r $libAddress/tmp/State_*
 
 
         #Simpler code when not copying files from the archive and unzipping etc:
