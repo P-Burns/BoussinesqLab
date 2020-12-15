@@ -45,7 +45,7 @@ FullDomain      = 1
 SinglePoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -94,8 +94,8 @@ Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
-TrackSteps              = 0
+dSdz                    = 0
+TrackSteps              = 1
 TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
@@ -105,7 +105,7 @@ Vorticity               = 0
 KineticE                = 0
 PotentialE              = 0
 Energy             	= 0
-read_energy		= 0
+read_energy		= 1
 check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
@@ -145,7 +145,7 @@ wing = Nt_mean//2
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 1
+PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -153,13 +153,16 @@ filledContour 	= 1
 NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:  
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
+
     #dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
@@ -222,8 +225,8 @@ if Gusto == 0:
         StartMin = 1
         nfiles = 30
     else:
-        StartMin = 8
-        nfiles = 1
+        StartMin = 1
+        nfiles = 30
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -395,8 +398,8 @@ kk_cosine = z_basis.wavenumbers
 A4Width = 8.27
 MarginWidth = 1
 height = 5
-width = A4Width-2*MarginWidth
-#width = height*1.2
+#width = A4Width-2*MarginWidth
+width = height*1.2
 #For scaling the A4 plot dimensions:
 ScaleFactor = 1
 #ScaleFactor = 0.7
@@ -429,11 +432,8 @@ if Gusto == 0:
 
     for jj in range(0,Nvars):
         for ii in fileIdx:
-            if len(sys.argv) > 2: 
-                fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
-            else:
-                fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
-
+            #fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
+            fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
             hdf5obj = h5py.File(fnm,'r')
             tmp_ = hdf5obj.get('tasks/'+var_nms[jj])
             idxS = ii*ntPerFile/tq
@@ -1093,7 +1093,7 @@ if TrackSteps == 1:
     if UseShear == 1: zIdx_offset = 0
 
     #Automatically exclude initial chaos (depends on N2):
-    if FullFields == 1:
+    if FullFields == 1 and forced == 0:
         i = 0
         flag0=1
         while flag0 == 1:
@@ -1103,7 +1103,9 @@ if TrackSteps == 1:
                 offset_t = t[i]
                 flag0 = 0
             i += 1
-    else:
+        print("offset time: ", offset_t)
+
+    if FullFields == 0 and forced == 0:
         if N2 == 0.25:		offset_t = 19.
         if N2 == 1:		offset_t = 8.8
         if N2 == 2.25:		offset_t = 6.7
@@ -1118,8 +1120,7 @@ if TrackSteps == 1:
         if N2 == 20.25:		offset_t = 1.3
         if N2 == 25:		offset_t = 1.1
         tIdx_offset = int(offset_t/dt2)
-
-    print("offset time: ", offset_t)
+        print("offset time: ", offset_t)
 
     #Deprecated code for manually choosing start time for search:
     #if N2 == 0.09: tIdx_offset = int(30./dt2)
@@ -2577,7 +2578,7 @@ if w2f_analysis == 1:
 #significantly reduced, however, it is very hard to make a fully general
 #plotting program for research purposes, which are exploratory. Currently this section 
 #only includes some of the time series analysis plotting.  
-if MakePlot >= 1:
+if (MakePlot==1 and PlotXZ==1) or (MakePlot==1 and PlotTZ==1) or (MakePlot==1 and PlotT==1):
 
     if PlotStairStartEnd == 1:
         dat = np.loadtxt('./stairStartEnd.txt')
@@ -2586,7 +2587,7 @@ if MakePlot >= 1:
         tau0 = dat[1,int(np.array(idxN))]
         tauE = dat[2,int(np.array(idxN))]
 
-    if PlotXZ >= 1:
+    if PlotXZ == 1:
         #We define 3 options here:
         #1) consider spatial field at some t.
         #2) consider spatial field averaged across all t.
@@ -2613,7 +2614,7 @@ if MakePlot >= 1:
         xgrid = x2d
         ygrid = z2d
 
-    if PlotTZ >= 1:
+    if PlotTZ == 1:
         #We define 3 options here:
         #1) consider how a single column evolves over time.
         #2) consider how the average column evolves over time.
@@ -2630,103 +2631,103 @@ if MakePlot >= 1:
         xgrid = t2d_z
         ygrid = z2d_t
 
-    if PlotT >= 1:
-       xIdx = int(Nx/2.)
-       zIdx = int(Nz/2.)
-       data = data[:,xIdx,zIdx]
+    if PlotT == 1:
        if 'xgrid' not in locals(): xgrid = t
-
-    if PlotZ >= 1:
-       xIdx = int(Nx/2.)
-       #tIdx = 67
-       tIdx = 190
-       data = data[tIdx,xIdx,:]
-       if 'zgrid' not in locals(): zgrid = z
 
     if MakeMovie != 1:
             
         fig=plt.figure(figsize=(width,height))
-        if MakePlot == 1:
-            grid = plt.GridSpec(1, 1, wspace=0.0, hspace=0.0)
-            ax1 = fig.add_subplot(grid[0,0])
-        if MakePlot == 2:
+        if 'data2' in locals():
             grid = plt.GridSpec(1, 2, wspace=0.4, hspace=0.0)
             ax1 = fig.add_subplot(grid[0,0])
-            ax2 = fig.add_subplot(grid[0,1])
+        if PlotZ == 1:
+            grid = plt.GridSpec(1, 2, wspace=0.4, hspace=0.0)
+            ax1 = fig.add_subplot(grid[0,0])
+        if 'data2' not in locals() and PlotZ != 1:
+            grid = plt.GridSpec(1, 1, wspace=0.0, hspace=0.0)
+            ax1 = fig.add_subplot(grid[0,0])
 
-        if PlotXZ >= 1 or PlotTZ >= 1: 
+        if PlotT != 1: 
             if filledContour == 1:
                 i1=ax1.contourf(xgrid,ygrid,data,clevels,cmap=cmap,extend="both")
                 if 'clabel' not in locals(): clabel=''
                 if NoPlotLabels == 0: fig.colorbar(i1,label=clabel)
-                if PlotXZ==2 or PlotTZ==2 or (PlotXZ==1 and PlotTZ==1):
-                    i2=ax2.contourf(xgrid,ygrid,data2,clevels2,cmap=cmap,extend="both")
             else:
                 i1=ax1.contour(xgrid,ygrid,data,clevels,colors=colorvec,linewidths=1,linestyles='-')
                 i1.clabel(clevels, inline=True, fontsize=6)
-                if PlotXZ==2 or PlotTZ==2 or (PlotXZ==1 and PlotTZ==1):
-                    i2=ax2.contour(xgrid,ygrid,data2,clevels2,cmap=cmap,extend="both")
-            if PlotT==1:
-                ax2.plot(xgrid,data.flatten(), '-', c='k', linewidth=2)
-            if PlotZ==1:
-                ax2.plot(data.flatten(),zgrid, '-', c='k', linewidth=2)
-
-        if PlotXZ==0 and PlotTZ==0:
-            if PlotT == 1: 
-                i1=ax1.plot(xgrid,data.flatten(), '-', c='k', linewidth=2)
-                if 'yscale' not in locals(): yscale='linear'
-                ax1.set_yscale(yscale)
-                if 'PlotGrid' not in locals(): PlotGrid=False
-                ax1.grid(PlotGrid)
-            if PlotZ == 1:
-                i1=ax1.plot(data.flatten(),zgrid, '-', c='k', linewidth=2)
+        else: 
+            i1=ax1.plot(xgrid,data.flatten(),'.k-')
+            if 'yscale' not in locals(): yscale='linear'
+            ax1.set_yscale(yscale)
+            if 'PlotGrid' not in locals(): PlotGrid=False
+            ax1.grid(PlotGrid)
 
         #Plot labelling section:
-        if MakePlot == 1:
-            if PlotXZ == 1: 
-                ax1.set_xlim(0,Lx)
-                ax1.set_xlabel(r'$x$ (m)')
-                ax1.set_ylim(0,Lz)
-                ax1.set_ylabel(r'$z$ (m)')
-                #ax1.set_title( r'$' + PlotTitle + '$' + ", " + str("%5.1f" % t[tIdx]) + " s" )
-                ax1.set_title(PlotTitle)
-                start, end = ax1.get_xlim()
-                ax1.xaxis.set_ticks((0,0.05,0.1,0.15,0.2))
-            if PlotTZ == 1:
-                if 'xlim' not in locals(): xlim=(0,t[Nt-1])
-                ax1.set_xlim(xlim)
-                ax1.set_xlabel(r'$t$ (s)')
-                ax1.set_ylim(0,Lz)
-                ax1.set_ylabel(r'$z$ (m)')
-                ax1.set_title(PlotTitle)
-                if PlotStairStartEnd==1: 
-                    ax1.plot([tau0,tau0],[0,Lz], c='silver')
-                    ax1.plot([tauE,tauE],[0,Lz], c='silver')
-            if PlotT == 1:
-                if 'xlim' not in locals(): xlim=(np.min(xgrid),np.max(xgrid))
-                if 'ylim' not in locals(): ylim=(np.min(data),np.max(data))
-                ax1.set_xlim(xlim)
-                ax1.set_ylim(ylim)
-                if 'xlabel' not in locals(): xlabel=r'$t$ (s)'
-                if 'ylabel' not in locals(): ylabel=''
-                ax1.set_xlabel(xlabel)
-                ax1.set_ylabel(ylabel)
-                ax1.set_title(PlotTitle)
-            if PlotZ == 1:
-                ax1.set_title( r'$t$ =' + str("%5.1f" % t[tIdx]) + " s" )
-                ax1.set_ylim(0,Lz)
-                ax1.set_xlabel(r'$S$ (g/kg)')
-                ax1.set_ylabel(r'$z$ (m)')
-                #ax1.set_xlim(0,300)
+        if PlotXZ == 1: 
+            ax1.set_xlim(0,Lx)
+            ax1.set_xlabel(r'$x$ (m)')
+            ax1.set_ylim(0,Lz)
+            ax1.set_ylabel(r'$z$ (m)')
+            #ax1.set_title( r'$' + PlotTitle + '$' + ", " + str("%5.1f" % t[tIdx]) + " s" )
+            ax1.set_title(PlotTitle)
+            start, end = ax1.get_xlim()
+            ax1.xaxis.set_ticks((0,0.05,0.1,0.15,0.2))
+        if PlotTZ == 1:
+            if 'xlim' not in locals(): xlim=(0,t[Nt-1])
+            ax1.set_xlim(xlim)
+            ax1.set_xlabel(r'$t$ (s)')
+            ax1.set_ylim(0,Lz)
+            ax1.set_ylabel(r'$z$ (m)')
+            ax1.set_title(PlotTitle)
+            if PlotStairStartEnd==1: 
+                ax1.plot([tau0,tau0],[0,Lz], c='silver')
+                ax1.plot([tauE,tauE],[0,Lz], c='silver')
+        if PlotT == 1:
+            if 'xlim' not in locals(): xlim=(np.min(xgrid),np.max(xgrid))
+            if 'ylim' not in locals(): ylim=(np.min(data),np.max(data))
+            ax1.set_xlim(xlim)
+            ax1.set_ylim(ylim)
+            if 'xlabel' not in locals(): xlabel=r'$t$ (s)'
+            if 'ylabel' not in locals(): ylabel=''
+            ax1.set_xlabel(xlabel)
+            ax1.set_ylabel(ylabel)
+            ax1.set_title(PlotTitle)
+
+        if PlotZ == 1:
+            xIdx1 = int(Nx/2.)
+            #xIdx2 = int(Nx/2.)/2
+            #xIdx3 = int(Nx/2.)*3/2
+            #xIdx4 = 2
+            #xIdx5 = Nx-3
+
+            #ax1.plot([x[xIdx1],x[xIdx1]],[z[0],z[Nz-1]], 'b')
+            #ax1.plot([x[xIdx2],x[xIdx2]],[z[0],z[Nz-1]], 'g')
+            #ax1.plot([x[xIdx3],x[xIdx3]],[z[0],z[Nz-1]], 'c')
+            #ax1.plot([x[xIdx4],x[xIdx4]],[z[0],z[Nz-1]], 'm')
+            #ax1.plot([x[xIdx5],x[xIdx5]],[z[0],z[Nz-1]], 'y')
+
+            ax2 = fig.add_subplot(grid[0,1])
+            ax2.set_title( r'$t$ =' + str("%5.1f" % t[tIdx]) + " s" )
+            ax2.set_ylim(0,Lz)
+            ax2.plot(S[tIdx,xIdx1,:],z, 'k')
+            #ax2.plot(S[tIdx,xIdx2,:],z, 'g')
+            #ax2.plot(S[tIdx,xIdx3,:],z, 'c')
+            #ax2.plot(S[tIdx,xIdx4,:],z, 'm')
+            #ax2.plot(S[tIdx,xIdx5,:],z, 'y')
+
+            ax2.set_xlabel(r'$S$ (g/kg)')
+            #ax2.set_xlim(0,300)
 
         if 'data2' in locals():
+            ax2 = fig.add_subplot(grid[0,1])
+            i2=ax2.contourf(xgrid,ygrid,data2,clevels2,cmap=cmap,extend="both")
             fig.colorbar(i2)
             ax2.set_ylim(0,Lz)
-            if PlotXZ >= 1: 
+            if PlotXZ == 1: 
                 ax2.set_xlim(0,Lx)
                 #ax2.set_title( PlotTitle2 + ", " + str("%5.1f" % t[tIdx]) + " s" )
                 ax2.set_title(PlotTitle2)
-            if PlotTZ >= 1:
+            if PlotTZ == 1:
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
 
@@ -2745,7 +2746,6 @@ if MakePlot >= 1:
 
         #plt.show()
         if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
-        if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
         plt.close(fig)
 
     if MakeMovie == 1:
