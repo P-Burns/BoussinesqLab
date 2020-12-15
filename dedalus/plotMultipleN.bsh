@@ -15,7 +15,7 @@ ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/PostProcessDedalus.py"
 prefix="State";
 suffix="/";
 
-for ((i=1; i<=98; i++))
+for ((i=0; i<=98; i++))
 do
     var3=${RunNames[i]#$prefix};
     var3=${var3%$suffix};
