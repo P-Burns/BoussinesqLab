@@ -23,16 +23,16 @@ from matplotlib.colors import BoundaryNorm
 ProblemType			= 'Layers'
 
 ParkRun 			= -1
-N2				= 1
-N2				= 2.25
-N2				= 4
-N2				= 6.25
+#N2				= 1
+#N2				= 2.25
+#N2				= 4
+#N2				= 6.25
 N2				= 7.5625
-N2				= 9
-N2				= 10.5625
-N2				= 12.25
-N2				= 14.0625
-N2				= 16
+#N2				= 9
+#N2				= 10.5625
+#N2				= 12.25
+#N2				= 14.0625
+#N2				= 16
 #N2				= 20.25
 #N2				= 25
 
@@ -47,13 +47,15 @@ sigma3D 			= 1
 FindMainBasisParts 		= 1
 PlotMainBasisParts 		= 0
 PlotState_MainBasis		= 0
+PlotFastMode1			= 0
+PlotFastMode2			= 0
 PlotSpectrum			= 0
 PlotSigmaSums                   = 0
 ConvergePowerLimit 		= 1
 DedalusTransforms		= 1
 AnalyseMainBasisParts		= 0
 SpectralAnalysis		= 0
-DispersionRelation		= 1
+DispersionRelation		= 0
 
 Resonances			= 1
 LinearNonLinear			= 0
@@ -68,10 +70,11 @@ PlotWeightFnc			= 0
 
 contourOmega			= 0
 PlotMainTriads                  = 0
-keyNonWaveModes                 = 1
-keyWaveModes                    = 0
 FindUniqueSet                   = 0
+FindMaxModes                    = 0
 FindOneAlphaSet                 = 1
+keyNonWaveModes                 = 0
+keyWaveModes                    = 1
 xAxis_k                         = 0
 xAxis_n                         = 1
 xAxis_r                         = 0
@@ -451,13 +454,17 @@ if PlotCDFsVsN == 1:
     #k=0 case:
     #N_IGW_k0_01 = np.array([19288.2,13549.8,11415.9,1307.2,928.2,608.2,465.2,423.9,298.0,252.2,37.3,32.0])*2
     #N_MF_k0_01 = np.array([9340.2,5056.9,3183.5,2223.4,2001.2,1800.8,1641.5,1464.7,1301.4,1172.9,389.9,350.3])*2
+    #N_IGW_k0_01 = np.array([17128.2,11369.8,8451.9,1159.2,816.2,524.2,401.2,311.9,254.0,212.2,1.3,0])*2
+    #N_MF_k0_01 = np.array([9316.2,5052.9,3183.5,2223.4,2001.2,1800.8,1641.5,1456.7,1301.4,1172.9,389.9,346.3])*2
     N_IGW_k0_01 = np.array([17128.2,11369.8,8451.9,1159.2,816.2,524.2,401.2,311.9,254.0,212.2,1.3,0])*2
     N_MF_k0_01 = np.array([9316.2,5052.9,3183.5,2223.4,2001.2,1800.8,1641.5,1456.7,1301.4,1172.9,389.9,346.3])*2
     #k not 0 case:
-    N_IGW_knot0_01 = np.array([1049.0,1111.0,2584.4,1368.4,990.0,995.0,701.9,2263.3,579.9,459.5,281.5,193.4])
-    N_MF_knot0_01 = np.array([2933.0,864.6,1026.4,484.5,367.6,460.0,319.3,1196.4,352.3,300.5,288.0,284.9])
+    #N_IGW_knot0_01 = np.array([1049.0,1111.0,2584.4,1368.4,990.0,995.0,701.9,2263.3,579.9,459.5,281.5,193.4])
+    #N_MF_knot0_01 = np.array([2933.0,864.6,1026.4,484.5,367.6,460.0,319.3,1196.4,352.3,300.5,288.0,284.9])
     #N_IGW_knot0_01 = np.array([1049.0,...,193.4])
     #N_MF_knot0_01 = np.array([2933.0,...,284.9])
+    N_IGW_knot0_01 = np.array([0,0,0,0,0,1228.1,902.6,4453.8,922.5,835.1,748.8,705.8])
+    N_MF_knot0_01 = np.array([0,0,0,0,0,459.8,319.0,1204.0,353.9,300.7,288.7,278.8])
 
     #find total counts for each N:
     #for CapOmega limit 0
@@ -567,7 +574,7 @@ if PlotCDFsVsN == 1:
     ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2,  label=r'$k\ne0$')
 
     ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
-    ax2.set_title(r'$F_{MF}$')
+    ax2.set_title(r'$F_{LFMF}$')
     ax2.set_xlabel(r'$N$ (rad/s)')
     ax2.set_ylabel(r'Contribution to solution (%)')
     ax2.set_xlim(0,6)
@@ -755,7 +762,8 @@ if FindMainBasisParts == 1:
         #ax1.set_ylim(10**(-10),100)
         ax1.set_ylabel('')
         ax1.set_xlabel(r'$t$ (s)')
- 
+        ax1.set_yscale('log') 
+
         #linewidthvec = [3,3,3,3,3,3,3,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
         #linecolorvec = ['k','b','c','g','y','m','r','k','b','c','g','y','m','r'] 
         #linecolorvec = ['black','silver','blue','cyan','lightblue','green','orange','gold','red','m'] 
@@ -795,9 +803,9 @@ if FindMainBasisParts == 1:
         ts 		= 0
 
     if ConvergePowerLimit == 0: 
-        PowerLimit 	= 0.007309772651287766
-        ErrorLimit 	= 1
-        epsilon 	= 2 
+        PowerLimit 	= 0.01
+        ErrorLimit 	= 15
+        epsilon 	= 100
         ts 		= 0
     
     #Iterate until error (denoted epsilon) is smaller than chosen limit (a % error):
@@ -829,11 +837,12 @@ if FindMainBasisParts == 1:
                 f3 = abs(sigma1_3D[ii,jj,:])
 
                 if sum(f1) > PowerLimit:
-                    if PlotMainBasisParts==1 and ConvergePowerLimit == 0:
+                    if PlotMainBasisParts==1 and ConvergePowerLimit==0 and PlotFastMode1==1:
                         label1 = 'sigma_1' + ', ' + '(' + str(lambdaX) + ', ' + str(lambdaZ) + ')'
                         #color1 = linecolorvec[count1]
-                        #ax1.semilogy(t, f1, linewidth=2, linestyle='-', label=label1)
-                        ax1.plot(t, f1, linewidth=2, linestyle='-', label=label1)
+                        data1 = np.abs(sigma_1_3D[ii,jj,:])
+                        #data1 = np.real(sigma_1_3D[ii,jj,:])
+                        ax1.plot(t, data1, linewidth=0.1+0.1*count1, c='k', linestyle='-', label=label1)
 
                     count1 = count1 + 1
 
@@ -841,11 +850,12 @@ if FindMainBasisParts == 1:
                     ns1.append(lambdaZ)
 
                 if (nvars==3) and (sum(f2)>PowerLimit):
-                    if PlotMainBasisParts==1 and ConvergePowerLimit == 0:
+                    if PlotMainBasisParts==1 and ConvergePowerLimit==0:
                         label2 = 'sigma0' + ', ' + '(' + str(lambdaX) + ', ' + str(lambdaZ) + ')'
                         #color2 = linecolorvec[count2]
-                        #ax1.semilogy(t, f2, linewidth=2, linestyle='--', label=label2)
-                        ax1.plot(t, f2, linewidth=2, linestyle='--', label=label2)
+                        data2 = np.abs(sigma0_3D[ii,jj,:])
+                        #data2 = np.real(sigma0_3D[ii,jj,:])
+                        ax1.plot(t, data2, linewidth=2, linestyle='--', label=label2)
 
                     count2 = count2 + 1
 
@@ -856,12 +866,12 @@ if FindMainBasisParts == 1:
                 if (FastMode2==1) and (sum(f3)>PowerLimit):
                     #We need to consider these parts when converging to a PowerLimit, however, 
                     #there is no need to plot these sigma1 parts as they are just the negative of the sigma_1 ones:
-                    PlotFastMode2 = 1
-                    if PlotMainBasisParts==1 and ConvergePowerLimit == 0 and PlotFastMode2 == 1:
+                    if PlotMainBasisParts==1 and ConvergePowerLimit==0 and PlotFastMode2==1:
                         label3 = 'sigma1' + ', ' + '(' + str(lambdaX) + ', ' + str(lambdaZ) + ')'
                         #color3 = linecolorvec[count3]
-                        #ax1.semilogy(t, f3, linewidth=2, linestyle=':', label=label3)
-                        ax1.plot(t, f3, linewidth=2, linestyle=':', label=label3)
+                        data3 = np.abs(sigma1_3D[ii,jj,:])
+                        #data3 = np.real(sigma1_3D[ii,jj,:])
+                        ax1.plot(t, data3, linewidth=2, linestyle=':', label=label3)
 
                     count3 = count3 + 1
 
@@ -1057,6 +1067,7 @@ if FindMainBasisParts == 1:
                          #', ' + '{:5.2f}'.format(PowerLimit) + ', ' + '{:5.2f}'.format(epsilon) + '%' )
         ax2.set_xlim(xlim)
         ax2.set_xlabel(xlabel)
+        ax2.set_ylabel(ylabel)
         ax2.set_ylim(ylim)
         i2 = ax2.contourf(xgrid,ygrid,data2,clevels,cmap=cmap,extend='both')
         fig2.colorbar(i2)
@@ -1555,8 +1566,8 @@ if Resonances == 1:
 
     if NearResonanceSearch == 1:
         OmegaLimit = 0.
-        OmegaLimit = 0.0001
-        OmegaLimit = 0.001
+        #OmegaLimit = 0.0001
+        #OmegaLimit = 0.001
         OmegaLimit = 0.01
         #OmegaLimit = 0.1
         #OmegaLimit = 1
@@ -1710,9 +1721,9 @@ if Resonances == 1:
                                 str1 = str(res_set).strip('[]')
                                 myfile.write("%s\n" % str1)
 
-
                             #print(count0)
                             count0 += 1
+
 
         #check max Omega:
         #print(max(Omega))
@@ -1737,7 +1748,7 @@ if Resonances == 1:
         #Analyse resonant sets in details:
         #Read in all resonant sets:
         res_sets = np.loadtxt(fnm, delimiter=',')
-        
+
         if AnalyseCapOmega == 1 and var_exists == True:
             tmp = np.sort(np.array(Omega))
             Idxs0orabove = np.where(tmp >= 0)
@@ -1855,6 +1866,7 @@ if Resonances == 1:
                     fig0, axs0 = plt.subplots(1,1, figsize=(width,height*2/3.))
                     fig0.subplots_adjust(wspace=0, hspace=0)
                     fig0.set_tight_layout(True)
+                    axs0.set_yscale('log')
 
                 NT = 4
                 tfact = 6000
@@ -1894,7 +1906,6 @@ if Resonances == 1:
         if FindUniqueSet == 1:
             idxs = np.unique(res_sets[:,3:9], axis=0, return_index=True)
             res_sets2 = res_sets[np.sort(idxs[1]),:]
-            #pdb.set_trace()
  
         #Only look at particular (alpha,alpha1,alpha2) combination and take advantage of
         #symmetry in the alpha's:
@@ -1938,6 +1949,12 @@ if Resonances == 1:
                 omega_vec = np.zeros((Nk2))
                 n_vec = np.zeros((Nk2))
                 color_vec = np.zeros((Nk2))
+               
+            if FindMaxModes == 1:
+                i_vec = np.zeros((Nk2))
+                j_vec = np.zeros((Nk2))
+                kmag12ij_vec = np.zeros((Nk2*2)) 
+ 
             if InteractionCoef == 1:
                 interactCoef = np.zeros((Nk2))
             if SigmaSigma == 1:
@@ -1946,7 +1963,6 @@ if Resonances == 1:
                 cgx_vec = np.zeros((Nk))
                 cgx_n_vec = np.zeros((Nk))
                 count1 = 0
-         
 
             if Plot3D == 1:
                 fig = plt.figure()
@@ -2059,6 +2075,16 @@ if Resonances == 1:
                     n12_vec[2*ii+1] = n2 
                     omega_vec[ii] = omega_k
                     n_vec[ii] = n
+                    
+                if FindMaxModes == 1:
+                    i_vec[ii] = i
+                    j_vec[ii] = j
+                    vec1 = np.array([i1,j1])
+                    vec2 = np.array([i2,j2])
+                    kmag1ij = np.linalg.norm(vec1)
+                    kmag2ij = np.linalg.norm(vec2)
+                    kmag12ij_vec[2*ii] = kmag1ij
+                    kmag12ij_vec[2*ii+1] = kmag2ij
 
                 if WaveSpeeds == 1:
                     if ([i,j] not in past_key_modes):
@@ -2196,6 +2222,46 @@ if Resonances == 1:
 
             #print(count00,count01)
 
+            if FindMaxModes == 1:
+                #plt.figure()
+                #plt.plot(k_vec)
+                #plt.show()
+
+                #plt.figure()
+                #plt.plot(n_vec)
+                #plt.show()
+
+                maxModes = np.zeros((Nk))
+                xvec = np.zeros((Nk))
+                count0 = 0
+                past_key_modes = []
+                for ii in range(0,Nk2):
+                    #i = i_vec[ii]
+                    #j = j_vec[ii]
+                    omega = omega_vec[ii]
+                    #if ([i,j] not in past_key_modes):
+                    if (omega not in past_key_modes):
+                        #bool_i = i_vec == i
+                        #bool_j = j_vec == j             
+                        #tmp = np.multiply(bool_i,bool_j)
+                        #bool_ij = np.repeat(tmp,2)
+                        #maxModes[count0] = np.max(kmag12ij_vec[bool_ij])
+
+                        tmp = omega_vec==omega
+                        bool_omega = np.repeat(tmp,2)
+                        maxModes[count0] = np.max(np.abs(omega12_vec[bool_omega]))
+
+                        #vec = np.array([i,j])
+                        #kmag_ij = np.linalg.norm(vec)            
+                        #xvec[count0] = kmag_ij
+                        xvec[count0] = np.abs(omega)
+                        
+
+                        #past_key_modes.append([i,j])
+                        past_key_modes.append(omega)
+                        count0 += 1
+
+
             #print(omega_vec)
             if Plot3D == 0:
                 #xvec = np.arange(Nk*2)                      
@@ -2216,6 +2282,23 @@ if Resonances == 1:
                 ax.set_ylabel(r'$n,n_1,n_2$ (rad/m)')
                 ax.set_zlabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
             plt.show()
+
+
+            if FindMaxModes == 1:
+                #plot results:
+                fig_0 = plt.figure(1, figsize=(width,height))
+                fig_0.set_tight_layout(True)
+                grid_0 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                axs_0 = fig_0.add_subplot(grid_0[0,0])
+                axs_0.plot(xvec,maxModes, '^', c='k')
+                #axs_0.set_xlabel('Wavenumber (non-dimensional) of mode of modulated system')
+                #axs_0.set_ylabel('Max wavenumber (non-dimensional) of linear waves\n associated with some mode of solution')
+                axs_0.set_xlabel('Mode (frequency) of modulated system (rad/s)')
+                axs_0.set_ylabel('Max frequency of linear waves\n associated with some mode of solution (rad/s)')
+                plt.show()
+
+                pdb.set_trace()
+
 
             #Make histograms of triads:
             if ComputePDF == 1:
@@ -2286,8 +2369,8 @@ if Resonances == 1:
                 domega = np.min(kk[kk>0])/np.sqrt(np.max(kk)**2+np.max(kk_cosine)**2)*np.sqrt(N2)              
                 #print(domega)
  
-                omega0 = -2
-                omegaMax = 2.
+                omega0 = -np.sqrt(N2)
+                omegaMax = np.sqrt(N2)
                 Nomega = 400 + 1
                 domega = (omegaMax-omega0)/(Nomega-1)
                 omega_bins = np.arange(Nomega)*domega + omega0
@@ -2300,13 +2383,18 @@ if Resonances == 1:
                 fig.set_tight_layout(True)
                 grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
                 ax1 = fig.add_subplot(grid[0,0])
-                ax1.hist(omega12_vec[idxsNon0], bins=omega_bins, weights=weights[idxsNon0], density=density, color='k' )
+                #logy = True
+                logy = False
+                ax1.hist(omega12_vec[idxsNon0], bins=omega_bins, weights=weights[idxsNon0], density=density, color='k', log=logy)
+                if logy: ax1.set_ylim(1E-1,1E4)
                 ax1.set_xlabel(r'$\omega^{\alpha_1}_{{\bf k}_1},\,\omega^{\alpha_2}_{{\bf k}_2}$ (rad/s)')
                 if density: ax1.set_ylabel(r'PDF')
                 else: ax1.set_ylabel(r'weighted counts')
 
                 ymin,ymax = plt.ylim()
                 xpos = (maxIGWmode-wellmode)*(1./3) + wellmode
+                if logy==0: ypos = ymax/2
+                else: ypos = 1E3
                 #set hatch density:
                 c_h = 3
                 #if keyWaveModes == 1:
@@ -2320,12 +2408,12 @@ if Resonances == 1:
                     #colour and label IGW region:
                     ax1.fill_between([-maxIGWmode,wellmode],0,ymax, facecolor='whitesmoke')
                     ax1.fill_between([wellmode,maxIGWmode],0,ymax, facecolor='whitesmoke')
-                    ax1.text(-xpos, ymax/2, 'IGW', ha='center', va='center', fontsize=12)
-                    ax1.text(xpos, ymax/2, 'IGW', ha='center', va='center', fontsize=12)
+                    ax1.text(-xpos, ypos, 'IGW', ha='center', va='center', fontsize=12)
+                    ax1.text(xpos, ypos, 'IGW', ha='center', va='center', fontsize=12)
                     #colour and label MF region:
                     ax1.fill_between([-wellmode,0],0,ymax, facecolor='silver')
                     ax1.fill_between([0,wellmode],0,ymax, facecolor='silver')                
-                    ax1.text(0, ymax/2, 'MF', ha='center', va='center', fontsize=12)
+                    ax1.text(0, ypos, 'LFMF', ha='center', va='center', fontsize=12)
               
                 plt.show()
 
