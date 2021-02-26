@@ -23,11 +23,11 @@ from matplotlib.colors import BoundaryNorm
 ProblemType			= 'Layers'
 
 ParkRun 			= -1
-#N2				= 1
+N2				= 1
 #N2				= 2.25
 #N2				= 4
 #N2				= 6.25
-N2				= 7.5625
+#N2				= 7.5625
 #N2				= 9
 #N2				= 10.5625
 #N2				= 12.25
@@ -73,8 +73,8 @@ PlotMainTriads                  = 0
 FindUniqueSet                   = 0
 FindMaxModes                    = 0
 FindOneAlphaSet                 = 1
-keyNonWaveModes                 = 0
-keyWaveModes                    = 1
+keyNonWaveModes                 = 1
+keyWaveModes                    = 0
 xAxis_k                         = 0
 xAxis_n                         = 1
 xAxis_r                         = 0
@@ -2383,8 +2383,8 @@ if Resonances == 1:
                 fig.set_tight_layout(True)
                 grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
                 ax1 = fig.add_subplot(grid[0,0])
-                #logy = True
-                logy = False
+                logy = True
+                #logy = False
                 ax1.hist(omega12_vec[idxsNon0], bins=omega_bins, weights=weights[idxsNon0], density=density, color='k', log=logy)
                 if logy: ax1.set_ylim(1E-1,1E4)
                 ax1.set_xlabel(r'$\omega^{\alpha_1}_{{\bf k}_1},\,\omega^{\alpha_2}_{{\bf k}_2}$ (rad/s)')
