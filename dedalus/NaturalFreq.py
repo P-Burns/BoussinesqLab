@@ -23,11 +23,11 @@ from matplotlib.colors import BoundaryNorm
 ProblemType			= 'Layers'
 
 ParkRun 			= -1
-#N2				= 1
+N2				= 1
 #N2				= 2.25
 #N2				= 4
 #N2				= 6.25
-N2				= 7.5625
+#N2				= 7.5625
 #N2				= 9
 #N2				= 10.5625
 #N2				= 12.25
@@ -71,7 +71,7 @@ PlotWeightFnc			= 0
 contourOmega			= 0
 PlotMainTriads                  = 0
 FindUniqueSet                   = 0
-FindMaxModes                    = 0
+FindMaxModes                    = 1
 FindOneAlphaSet                 = 1
 keyNonWaveModes                 = 0
 keyWaveModes                    = 1
