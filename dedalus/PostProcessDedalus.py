@@ -36,13 +36,16 @@ if len(sys.argv) > 2:
     tmp = RunName.split('_')
     N2 = N2_array_MJ[int(tmp[1])]
 
+
+
 #Program control:
 Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 1
+FullDomain      = 0
 SinglePoint	= 0
+MultiPoint	= 1
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
 VaryN           = 0
@@ -50,7 +53,7 @@ VaryN           = 0
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 0
+forced          = 1
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
@@ -87,14 +90,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 Density			= 0
-StateS_2                = 0
+StateS_2                = 1
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
+dSdz                    = 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -110,7 +113,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
@@ -145,7 +148,7 @@ wing = Nt_mean//2
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 1
+PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -153,13 +156,16 @@ filledContour 	= 1
 NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 1
+w2f_analysis = 0
 
 
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:  
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
+
     #dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
@@ -212,23 +218,25 @@ if VaryN == 1:
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
-    secPerFile = 60.
+    #secPerFile = 60.
+    secPerFile = 60.003
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
-        StartMin = 1
+        StartMin = 2
         nfiles = 10
-        #nfiles = 20
+        nfiles = 20
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
-        StartMin = 8
-        nfiles = 1
+        StartMin = 1
+        nfiles = 30
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
-    if SinglePoint == 1: 
-        dt = 1e-2
+    if SinglePoint==1 or MultiPoint==1: 
+        #dt = 1e-2
+        dt = 0.009
         #dt = 5e-3
         #dt = 1e-3
 
@@ -243,8 +251,8 @@ if Gusto == 1: dt = 0.004
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
     if forced == 1: 
-        dt2=0.01
-        #dt2=dt
+        dt2=0.2
+        dt2=dt*10
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -321,6 +329,12 @@ if SinglePoint == 1:
     xIdx = int(Nx/2.)
     zIdx = int(Nz/2.)
 
+if MultiPoint == 1:
+    Nx2 = 3
+    Nz2 = 3
+    xIdx = (np.array([1./4,1./2,3./4])*Nx).astype('int')
+    zIdx = (np.array([1./4,1./2,3./4])*Nz).astype('int')
+    #print(xIdx,zIdx)
 
 #Set physical constants and related objects:
 g = 9.81
@@ -420,7 +434,7 @@ if Gusto == 0:
         if 'PE_tot' in var_nms: PE_tot = np.zeros((Nt,1,1))
         if 'PE_L' in var_nms: PE_L = np.zeros((Nt,1,1))
         if 'KE_tot' in var_nms: KE_tot = np.zeros((Nt,1,1))
-    if SinglePoint==1:
+    if SinglePoint==1 or MultiPoint==1:
         if 'psi' in var_nms: Psi = np.zeros((Nt,Nx2,Nz2))
         if 'T' in var_nms: T = np.zeros((Nt,Nx2,Nz2))
         if 'S' in var_nms: S = np.zeros((Nt,Nx2,Nz2))
@@ -441,18 +455,22 @@ if Gusto == 0:
 
             #Prognostic variables:
             if var_nms[jj] == 'psi':
-                if FullDomain == 1: Psi[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
-                else: Psi[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if FullDomain==1: Psi[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
+                if SinglePoint==1: Psi[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if MultiPoint==1: Psi[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
             if var_nms[jj] == 'S':
-                if FullDomain == 1: S[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
-                else: S[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if FullDomain==1: S[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
+                if SinglePoint==1: S[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if MultiPoint==1: S[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
             #Modulated fields:
             if var_nms[jj] == 'S_r':
-                if FullDomain == 1: S_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
-                else: S_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if FullDomain==1: S_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
+                if SinglePoint: S_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if MultiPoint==1: S_r[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
             if var_nms[jj] == 'psi_r':
-                if FullDomain == 1: Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
-                else: Psi_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if FullDomain==1: Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
+                if SinglePoint==1: Psi_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
+                if MultiPoint==1: Psi_r[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
 
             #Energy variables:
             if var_nms[jj] == 'PE_tot':
@@ -1083,14 +1101,21 @@ if TrackSteps == 1:
     tmp2 = np.zeros((Nt))
     tmp3 = np.zeros((Nt,50))
     tmp4 = np.zeros((Nt,50))
+    tmp5 = np.zeros((Nt,50))
+    if forced == 1:
+        tmp6 = np.zeros((Nt))		#to compute d_dt(number of steps)
+        tmp7 = np.zeros((Nt,50))	#to compute d_dt(step depth)
+        tmp8 = np.zeros((Nt,50))	#to compute d_dt(mid step point)
 
-    #Exclude boundary layer effects:
-    if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
-    if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
-    if UseShear == 1: zIdx_offset = 0
+    if forced == 0:
+        #Exclude boundary layer effects:
+        if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
+        if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
+        if UseShear == 1: zIdx_offset = 0
+    if forced == 1: zIdx_offset = 0
 
     #Automatically exclude initial chaos (depends on N2):
-    if FullFields == 1:
+    if FullFields == 1 and forced == 0:
         i = 0
         flag0=1
         while flag0 == 1:
@@ -1100,7 +1125,9 @@ if TrackSteps == 1:
                 offset_t = t[i]
                 flag0 = 0
             i += 1
-    else:
+        print("offset time: ", offset_t)
+
+    if FullFields == 0 and forced == 0:
         if N2 == 0.25:		offset_t = 19.
         if N2 == 1:		offset_t = 8.8
         if N2 == 2.25:		offset_t = 6.7
@@ -1115,8 +1142,7 @@ if TrackSteps == 1:
         if N2 == 20.25:		offset_t = 1.3
         if N2 == 25:		offset_t = 1.1
         tIdx_offset = int(offset_t/dt2)
-
-    print("offset time: ", offset_t)
+        print("offset time: ", offset_t)
 
     #Deprecated code for manually choosing start time for search:
     #if N2 == 0.09: tIdx_offset = int(30./dt2)
@@ -1131,6 +1157,8 @@ if TrackSteps == 1:
     #if N2 == 20.25: tIdx_offset = int(1.5/dt2)
     #if N2 == 25: tIdx_offset = int(1./dt2)
     #tIdx_offset = 0
+
+    if forced == 1: tIdx_offset = 0
 
     if UseShear == 0: 
         #epsilon = -np.min(data)
@@ -1153,9 +1181,14 @@ if TrackSteps == 1:
         for tt in range(0,Nt):        
             for ii in range(0,Nx):
                 for jj in range(0+zIdx_offset,Nz-zIdx_offset):
-                    if (data[tt,ii,jj] <= 0) or UseShear==1:         
-                        if UseShear == 0: logical1 = abs(data[tt,ii,jj]) <= epsilon
-                        if UseShear == 1: logical1 = abs(data[tt,ii,jj]) >= epsilon
+                    if forced == 0: logical0 = (data[tt,ii,jj] <= 0) or UseShear==1
+                    if forced == 1: logical0 = True
+                    if logical0:
+                        if forced == 0: 
+                            if UseShear == 0: logical1 = abs(data[tt,ii,jj]) <= epsilon
+                            if UseShear == 1: logical1 = abs(data[tt,ii,jj]) >= epsilon
+                        if forced == 1: logical1 = abs(data[tt,ii,jj]) <= epsilon or data[tt,ii,jj] > 0
+                        
                         if logical1 == True: 
                             tmp1[tt,ii,jj] = True
                         else:
@@ -1173,17 +1206,41 @@ if TrackSteps == 1:
                     flag = 0
                     if count != 0:
                         dz = z[jj]-z[j0]
+                        z_mid = dz/2. + z[j0]
                         Fz_mean = np.mean(data[tt,xIdx,j0:jj])
                         tmp3[tt,count-1]=dz
                         tmp4[tt,count-1]=Fz_mean
+                        tmp5[tt,count-1]=z_mid
                 if (count==1) and (flag==1) and (jj==Nz-zIdx_offset-1):
                     dz = z[jj]-z[j0]
+                    z_mid = dz/2. + z[j0]
                     Fz_mean = np.mean(data[tt,xIdx,j0:jj])
                     tmp3[tt,count-1]=dz
                     tmp4[tt,count-1]=Fz_mean
+                    tmp5[tt,count-1]=z_mid
 
             tmp2[tt] = count
- 
+
+        if forced == 1:
+            #We need to start a new time loop again here due to the stencil used 
+            #for computing time gradients.
+            for tt in range(0,Nt):
+                if tt != 0 and tt != (Nt-1):
+                    tmp6[tt] = (tmp2[tt+1]-tmp2[tt-1])/(2*dt2)
+                    for nn in range(0,count):
+                        tmp7[tt,nn] = (tmp3[tt+1,nn]-tmp3[tt-1,nn])/(2*dt2)
+                        tmp8[tt,nn] = (tmp5[tt+1,nn]-tmp5[tt-1,nn])/(2*dt2)
+                if tt == 0:
+                    tmp6[tt] = (tmp2[tt+1]-tmp2[tt])/dt2
+                    for nn in range(0,count):
+                        tmp7[tt,nn] = (tmp3[tt+1,nn]-tmp3[tt,nn])/dt2
+                        tmp8[tt,nn] = (tmp5[tt+1,nn]-tmp5[tt,nn])/dt2
+                if tt == (Nt-1):
+                    tmp6[tt] = (tmp2[tt]-tmp2[tt-1])/dt2
+                    for nn in range(0,count):
+                        tmp7[tt,nn] = (tmp3[tt,nn]-tmp3[tt-1,nn])/dt2
+                        tmp8[tt,nn] = (tmp5[tt,nn]-tmp5[tt-1,nn])/dt2
+
         MaxSteps1 = np.max(tmp2[tIdx_offset:])
         print('max # steps: ', MaxSteps1, MaxSteps0, ' epsilon: ', epsilon)
 
@@ -1195,11 +1252,19 @@ if TrackSteps == 1:
         step_count = tmp2
         step_dz = tmp3
         step_dS = tmp4
+        if forced == 1:
+           d_dt_step = tmp6
+           d_dt_stepDz = tmp7
+           d_dt_step_z = tmp8
         #print('array update: ', count0)
 
         if (count0 == 0) and (MaxSteps1==MaxSteps0): MaxSteps1 = 1
 
         #Stop 'while' loop:
+        #Essentially this avoids using the while loop which was initially designed
+        #to try searching for steps by refining epsilon until the max number of steps
+        #was found. However, this approach was deprecated in favour of using a fixed epsilon for 
+        #for each run set at 0.9*bs (i.e. 10% lower than background stratification for all runs).
         MaxSteps1 = MaxSteps0-1 
         count0 += 1
 
@@ -1219,6 +1284,14 @@ if TrackSteps == 1:
         np.savetxt(fnm1,step_count)
         np.savetxt(fnm2,step_dz)
         np.savetxt(fnm3,step_dS)
+        if forced == 1:
+            fnm4 = dir_TrackSteps + 'd_dt_step.txt'
+            fnm5 = dir_TrackSteps + 'd_dt_stepDz.txt'
+            fnm6 = dir_TrackSteps + 'd_dt_step_z.txt'
+            np.savetxt(fnm4,d_dt_step)
+            np.savetxt(fnm5,d_dt_stepDz)
+            np.savetxt(fnm6,d_dt_step_z)
+
 
     if MakePlot == 1:
         fig=plt.figure(figsize=(width,height))
@@ -1229,7 +1302,7 @@ if TrackSteps == 1:
         xgrid = t2d_z
         ygrid = z2d_t
         i1 = ax1.contourf(xgrid,ygrid,plot_data, 1, colors=['white','black'])
-        ax1.plot([t[tIdx_offset],t[tIdx_offset]],[0,Lz],'grey')
+        if forced == 0: ax1.plot([t[tIdx_offset],t[tIdx_offset]],[0,Lz],'grey')
         ax1.set_xlabel(r'$t$ (s)')
         ax1.set_ylabel(r'$z$ (m)')
         ax1.set_ylim(0,Lz)
@@ -1247,7 +1320,9 @@ if TrackSteps == 1:
         #ax3.set_xlabel('Number of steps')
         #ax3.set_ylabel('Count')
 
-        plt.show()
+        #plt.show()
+        FigNmBase = 'TrackSteps'
+        plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png') 
 
 
 if TrackInterfaces == 1:
@@ -1989,8 +2064,8 @@ if SpectralAnalysis == 1:
     print('analysis timestep: ', dt2)
     print('frequency resolution: ', np.min(freqvec[1:]))
 
-    intPSD = np.trapz(spectralCoef.flatten(),freqvec)
-    print("integral of PSD: ", intPSD)
+    #intPSD = np.trapz(spectralCoef.flatten(),freqvec)
+    #print("integral of PSD: ", intPSD)
 
     if w2f_analysis == 1:
         if FullDomain == 1:
@@ -2026,7 +2101,7 @@ if SpectralAnalysis == 1:
         #yscale = 'linear'
         PlotGrid = False
 
-        if PSD_vs_N_plot == 0 and CheckPSD == 0:
+        if PSD_vs_N_plot==0 and CheckPSD==0 and MultiPoint==0:
             if PlotBigMode == 1:
                 #plot dominant frequencies across domain: 
                 rangeF = 1.5
@@ -2227,6 +2302,20 @@ if SpectralAnalysis == 1:
             ax1.legend()
             plt.show()
 
+        if MultiPoint == 1:
+            fig1 = plt.figure(figsize=(width,height))
+            grid1 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+            ax1 = fig1.add_subplot(grid1[0,0])
+
+            xgrid = freqvec*(2*np.pi)
+
+            for ii in range(0,Nx2):
+                for jj in range(0,Nz2):
+                    ax1.semilogy(xgrid,spectralCoef[:,ii,jj])
+
+            ax1.set_xlim(0,5)
+            fig1.savefig('tmp.png')
+            plt.close(fig1)
 
 if TimescaleSeparation == 1:
 
