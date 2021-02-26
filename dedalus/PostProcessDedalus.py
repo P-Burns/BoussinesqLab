@@ -56,19 +56,19 @@ scalePert	= 0
 forced          = 1
 if VaryN == 1:
     #N2		= 0.09
-    #N2		= 0.25
+    N2		= 0.25
     N2 		= 1
-    #N2		= 2.25		
-    #N2 	= 4
-    #N2		= 6.25
-    #N2		= 7.5625
-    #N2 	= 9
-    #N2		= 10.5625
-    #N2 	= 12.25
-    #N2		= 14.0625
-    #N2		= 16
-    #N2		= 20.25
-    #N2		= 25
+    N2		= 2.25		
+    N2 		= 4
+    N2		= 6.25
+    N2		= 7.5625
+    N2 		= 9
+    N2		= 10.5625
+    N2 		= 12.25
+    N2		= 14.0625
+    N2		= 16
+    N2		= 20.25
+    N2		= 25
 
 
 #User must make sure correct data is read in for some analysis:
@@ -77,7 +77,7 @@ var_nms = ['S']
 #var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-#var_nms = ['S','S_r']
+var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -121,7 +121,7 @@ CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
 
-TimescaleSeparation	= 0
+TimescaleSeparation	= 1
 OverlayModulated	= 1
 IGWmethod 		= 0
 step_prediction		= 0
@@ -149,14 +149,14 @@ wing = Nt_mean//2
 MakePlot 	= 1
 PlotXZ 		= 0
 PlotTZ 		= 0
-PlotT 		= 0
+PlotT 		= 1
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
 NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -1875,10 +1875,10 @@ if StateS == 1:
             nlevs = 41
             if Modulated == 1:
                 PlotTitle = r'$\zeta$ (g/kg)'
-                #SMin = -.02
-                #SMax = .02
-                SMin = -.2
-                SMax = .2
+                SMin = -.02
+                SMax = .02
+                #SMin = -.2
+                #SMax = .2
             if Modulated == 0:
                 PlotTitle = r'$S$ (g/kg)'
                 SMin = -20
@@ -2133,6 +2133,7 @@ if SpectralAnalysis == 1:
             if Modulated == 0: ylabel = r'PSD ([$S$]$^2$/(rad/s))'
             if Modulated == 1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
             PlotTitle = ''
+            FigNmBase = 'psd_'
 
         if PSD_mod_unmod_plot == 1:
             fig1 = plt.figure(figsize=(width,height))
@@ -2720,9 +2721,10 @@ if MakePlot >= 1:
         ygrid = z2d_t
 
     if PlotT >= 1:
-       xIdx = int(Nx/2.)
-       zIdx = int(Nz/2.)
-       data = data[:,xIdx,zIdx]
+       if SpectralAnalysis == 0:
+           xIdx = int(Nx/2.)
+           zIdx = int(Nz/2.)
+           data = data[:,xIdx,zIdx]
        if 'xgrid' not in locals(): xgrid = t
 
     if PlotZ >= 1:
@@ -2835,6 +2837,8 @@ if MakePlot >= 1:
         #plt.show()
         if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
         if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
+        if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
+        if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
         plt.close(fig)
 
     if MakeMovie == 1:
