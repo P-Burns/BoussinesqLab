@@ -46,7 +46,7 @@ sigma3D 			= 1
 
 FindMainBasisParts 		= 1
 PlotMainBasisParts 		= 0
-PlotState_MainBasis		= 0
+PlotState_MainBasis		= 1
 PlotFastMode1			= 0
 PlotFastMode2			= 0
 PlotSpectrum			= 0
@@ -68,15 +68,15 @@ listOmegaPhaseSpace		= 0
 IntegrateCapOmega		= 1
 PlotWeightFnc			= 0
 
-contourOmega			= 0
+contourOmega			= 1
 PlotMainTriads                  = 0
 FindUniqueSet                   = 0
-FindMaxModes                    = 0
+FindMaxModes                    = 1
 FindOneAlphaSet                 = 1
 keyNonWaveModes                 = 1
 keyWaveModes                    = 0
 xAxis_k                         = 0
-xAxis_n                         = 1
+xAxis_n                         = 0
 xAxis_r                         = 0
 xAxis_alt                       = 0
 xAxis_angle                     = 0
@@ -86,6 +86,8 @@ xAxis_cg_z                      = 0
 ManualColors			= 0
 WaveSpeeds			= 0
 ComputePDF			= 1
+ExamineHISTn12			= 0
+ExamineHISTomega12		= 0
 ComputeCumulativeDistFnc	= 1
 InteractionCoef			= 1
 PlotInteractCoef		= 0
@@ -274,7 +276,9 @@ if sigma3D == 1:
 A4Width = 8.27
 MarginWidth = 1
 width = A4Width-2*MarginWidth
-height = 4
+#height = 7 
+height = 5
+#height = 4
 #For scaling the A4 plot dimensions:
 ScaleFactor1 = 1
 ScaleFactor2 = 1
@@ -428,43 +432,44 @@ if PlotCDFsVsN == 1:
 
     #for CapOmega limit 0
     #k=0 case:
-    #N_IGW_k0_0 = np.array([2160.0,2180.0,2964.0,148.0,112.0,84.0,64.0,112.0,44.0,40.0,36.0,32.0])*2
-    #N_MF_k0_0 = np.array([24.0,4.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,0.0,0.0,4.0])*2
     N_IGW_k0_0 = np.repeat(0,len(Nvec))
     N_MF_k0_0 = np.repeat(0,len(Nvec))
+    #-------------------------
     #k not 0 case:
-    N_IGW_knot0_0 = np.array([144.0,136.0,332.0,152.0,104.0,88.0,56.0,192.0,32.0,24.0,8.0,8.0])
-    N_MF_knot0_0 = np.array([400.0,232.0,420.0,280.0,240.0,280.0,216.0,688.0,232.0,208.0,208.0,216.0])
-    #N_IGW_knot0_0 = np.array([144.0,136.0,332.0,...,8.0])
-    #N_MF_knot0_0 = np.array([400.0,232.0,420.0,...,216.0])
+    #Error limit 10%:
+    N_IGW_knot0_0 = np.array([144.0,136.0,208.0,264.0,228.0,248.0,184.0,184.0,184.0,160.0,160.0,124.0])
+    N_MF_knot0_0 = np.array([400.0,232.0,240.0,280.0,236.0,280.0,216.0,216.0,232.0,208.0,208.0,148.0])
 
     #for CapOmega limit 0.001
     #k=0 case:
-    #N_IGW_k0_001 = np.array([8763.2,6173.2,5663.3,148.0,112.0,84.0,64.0,112.0,44.0,40.0,36.0,32.0])*2
-    #N_MF_k0_001 = np.array([3387.1,1669.0,966.3,607.5,498.0,404.4,325.2,267.1,220.9,194.0,0,4.0])*2
-    N_IGW_k0_001 = np.array([6603.2,3993.2,2699.3,0,0,0,0,0,0,0,0,0])*2
-    N_MF_k0_001 = np.array([3363.1,1665.0,966.3,607.5,498.0,404.4,325.2,259.1,220.9,194.0,0,0])*2
+    #Error limit 10%:
+    N_IGW_k0_001 = np.array([6605.8,3993.2,2699.3,1958.2,1674.9,1427.5,1275.5,1154.6,439.8,379.9,753.1,219.1])*2
+    N_MF_k0_001 = np.array([3363.1,1665.0,966.3,607.5,498.0,404.4,325.2,259.1,0,0,145.8,0])*2
+    #-------------------------
     #k not 0 case:
-    N_IGW_knot0_001 = np.array([634.3,659.6,1578.6,807.1,597.0,594.5,416.9,1344.2,340.0,270.3,158.6,118.4])
-    N_MF_knot0_001 = np.array([1807.6,591.9,755.8,402.4,315.5,396.4,289.0,976.9,313.6,269.9,261.4,265.9])
-    #N_IGW_knot0_001 = np.array([634.3,...,118.4])
-    #N_MF_knot0_001 = np.array([1807.6,...,265.9])
+    #Error limit 10%:
+    N_IGW_knot0_001 = np.array([646.1,666.2,852.7,976.3,751.8,785.6,581.0,551.4,598.4,539.8,477.5,311.1])
+    N_MF_knot0_001 = np.array([1795.8,585.3,419.5,402.4,309.5,396.4,289.0,303.1,315.0,269.9,261.4,184.6])
 
     #for CapOmega limit 0.01
     #k=0 case:
-    #N_IGW_k0_01 = np.array([19288.2,13549.8,11415.9,1307.2,928.2,608.2,465.2,423.9,298.0,252.2,37.3,32.0])*2
-    #N_MF_k0_01 = np.array([9340.2,5056.9,3183.5,2223.4,2001.2,1800.8,1641.5,1464.7,1301.4,1172.9,389.9,350.3])*2
-    #N_IGW_k0_01 = np.array([17128.2,11369.8,8451.9,1159.2,816.2,524.2,401.2,311.9,254.0,212.2,1.3,0])*2
-    #N_MF_k0_01 = np.array([9316.2,5052.9,3183.5,2223.4,2001.2,1800.8,1641.5,1456.7,1301.4,1172.9,389.9,346.3])*2
-    N_IGW_k0_01 = np.array([17128.2,11369.8,8451.9,1159.2,816.2,524.2,401.2,311.9,254.0,212.2,1.3,0])*2
-    N_MF_k0_01 = np.array([9316.2,5052.9,3183.5,2223.4,2001.2,1800.8,1641.5,1456.7,1301.4,1172.9,389.9,346.3])*2
+    #Error limit 15% for N2=12.25:
+    #N_IGW_k0_01 = 
+    #N_MF_k0_01 =
+    #Error limit 10%:
+    N_IGW_k0_01 = np.array([17212.2,11344.0,8451.9,6348.5,5345.1,4589.0,4221.1,4043.6,1579.1,1431.6,2656.1,1103.4])*2
+    N_MF_k0_01 = np.array([9312.6,5029.3,3183.5,2243.9,1993.8,1794.8,1630.8,1457.6,544.6,482.4,982.8,346.3])*2
+    #Error limit 5%:
+    #N_IGW_k0_01 = np.array([18356.1,11503.8,8804.0,6348.5,5345.1,4589.0,4221.1,4175.6,3713.0,3306.8,2765.4,2265.2])*2
+    #N_MF_k0_01 = np.array([9527.8,5051.9,3204.1,2243.9,1993.8,1794.8,1630.8,1457.6,1307.1,1177.4,982.9,860.2])*2
+    #-------------------------
     #k not 0 case:
-    #N_IGW_knot0_01 = np.array([1049.0,1111.0,2584.4,1368.4,990.0,995.0,701.9,2263.3,579.9,459.5,281.5,193.4])
-    #N_MF_knot0_01 = np.array([2933.0,864.6,1026.4,484.5,367.6,460.0,319.3,1196.4,352.3,300.5,288.0,284.9])
-    #N_IGW_knot0_01 = np.array([1049.0,...,193.4])
-    #N_MF_knot0_01 = np.array([2933.0,...,284.9])
-    N_IGW_knot0_01 = np.array([0,0,0,0,0,1228.1,902.6,4453.8,922.5,835.1,748.8,705.8])
-    N_MF_knot0_01 = np.array([0,0,0,0,0,459.8,319.0,1204.0,353.9,300.7,288.7,278.8])
+    #Error limit 10%:
+    N_IGW_knot0_01 = np.array([1280.6,868.1,2804.2,2165.2,748.5,587.8,499.0,4453.8,515.6,506.8,5789.3,705.8])
+    N_MF_knot0_01 = np.array([3395.4,397.7,1081.3,687.1,208.8,211.1,201.0,1204.0,216.4,209.8,1671.7,278.8])
+    #Error limit 5%:
+    #N_IGW_knot0_01 = np.array([1869.1,1609.5,8971.8,2165.2,748.5,587.8,499.0,15520.4,9966.9,4744.8,14608.1,11531.0])
+    #N_MF_knot0_01 = np.array([4582.8,1262.0,2455.3,687.1,208.8,211.1,201.0,4033.7,2621.6,1340.3,3954.3,3377.1])
 
     #find total counts for each N:
     #for CapOmega limit 0
@@ -511,11 +516,13 @@ if PlotCDFsVsN == 1:
     F_IGW_01 = np.divide(np.add(N_IGW_k0_01,N_IGW_knot0_01),N_tot_01)
     F_MF_01 = 1 - F_IGW_01
 
-    print(Nvec)
+    print(N_tot_01)
+    print(" ")
+    print(N_IGW_knot0_01)
+    print(" ")
+    print(np.add(N_IGW_k0_01,N_IGW_knot0_01)) 
+    print(" ")
     print(F_IGW_01)
-    print(F_MF_01)
-    print( np.add(N_IGW_k0_01,N_MF_k0_01) )
-    print( np.add(N_IGW_knot0_01,N_MF_knot0_01) )
 
     #check effect of varying near-resonance limit for N2=12.25 rad/s case:
     #limit_vec = [0.0001,0.001,0.01]
@@ -542,15 +549,15 @@ if PlotCDFsVsN == 1:
     
     #plot IGW results:
     #for CapOmega limit 0
-    ax1.plot(Nvec,F_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
+    ax1.plot(Nvec,F_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
     #for CapOmega limit 0.001
-    ax1.plot(Nvec,F_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
+    ax1.plot(Nvec,F_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
     #for CapOmega limit 0.01
-    ax1.plot(Nvec,F_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
+    ax1.plot(Nvec,F_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
     #k=0 case:
-    ax1.plot(Nvec, F_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+    ax1.plot(Nvec, F_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
     #k not 0 case:
-    ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+    ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
 
     ax1.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
     ax1.set_title(r'$F_{IGW}$')
@@ -558,28 +565,28 @@ if PlotCDFsVsN == 1:
     ax1.set_ylabel(r'Contribution to solution (%)')
     ax1.set_xlim(0,6)
     ax1.set_ylim(0,1)
-    ax1.legend(frameon=False)
+    ax1.legend(frameon=False, loc=2, handlelength=3)
 
     #plot mean flow results:
     ax2 = fig.add_subplot(grid[0,1])
     #for CapOmega limit 0
-    ax2.plot(Nvec,F_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
+    ax2.plot(Nvec,F_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
     #for CapOmega limit 0.001
-    ax2.plot(Nvec,F_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
+    ax2.plot(Nvec,F_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
     #for CapOmega limit 0.01
-    ax2.plot(Nvec,F_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
+    ax2.plot(Nvec,F_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
     #k=0 case:
-    ax2.plot(Nvec, F_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
+    ax2.plot(Nvec, F_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
     #k not 0 case:
-    ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2,  label=r'$k\ne0$')
+    ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
     ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
-    ax2.set_title(r'$F_{LFMF}$')
+    ax2.set_title(r'$F_{MF}$')
     ax2.set_xlabel(r'$N$ (rad/s)')
     ax2.set_ylabel(r'Contribution to solution (%)')
     ax2.set_xlim(0,6)
     ax2.set_ylim(0,1)
-    ax2.legend(frameon=False, handlelength=3)
+    ax2.legend(frameon=False, loc=1)
 
     OverplotPSDresults = 0
     if OverplotPSDresults == 1:
@@ -797,8 +804,19 @@ if FindMainBasisParts == 1:
             SpectralCoef1       = np.zeros((Nz,Nt))
  
         #PowerLimit  	= 0.1
-        PowerLimit  	= 0.01
-        ErrorLimit  	= 15
+        #PowerLimit  	= 0.01
+        tmp             = np.zeros((Nx,Nz))
+        for jj in range(0,Nz):
+            for ii in range(0,int(Nx/2)):
+                tmp1 = sum(np.abs(sigma_1_3D[ii,jj,:]))
+                tmp2 = sum(np.abs(sigma1_3D[ii,jj,:]))
+                tmp[ii,jj] = np.max([tmp1,tmp2])
+        PowerLimit = np.max(tmp)
+        print(PowerLimit)
+
+        #ErrorLimit  	= 15
+        ErrorLimit  	= 10
+        #ErrorLimit  	= 5
         epsilon     	= 100
         ts 		= 0
 
@@ -836,7 +854,7 @@ if FindMainBasisParts == 1:
                 if nvars == 3: f2 = abs(sigma0_3D[ii,jj,:])
                 f3 = abs(sigma1_3D[ii,jj,:])
 
-                if sum(f1) > PowerLimit:
+                if sum(f1) >= PowerLimit:
                     if PlotMainBasisParts==1 and ConvergePowerLimit==0 and PlotFastMode1==1:
                         label1 = 'sigma_1' + ', ' + '(' + str(lambdaX) + ', ' + str(lambdaZ) + ')'
                         #color1 = linecolorvec[count1]
@@ -849,7 +867,7 @@ if FindMainBasisParts == 1:
                     ks1.append(lambdaX)
                     ns1.append(lambdaZ)
 
-                if (nvars==3) and (sum(f2)>PowerLimit):
+                if (nvars==3) and (sum(f2) >= PowerLimit):
                     if PlotMainBasisParts==1 and ConvergePowerLimit==0:
                         label2 = 'sigma0' + ', ' + '(' + str(lambdaX) + ', ' + str(lambdaZ) + ')'
                         #color2 = linecolorvec[count2]
@@ -863,7 +881,7 @@ if FindMainBasisParts == 1:
                     ns2.append(lambdaZ)
 
                 FastMode2=1
-                if (FastMode2==1) and (sum(f3)>PowerLimit):
+                if (FastMode2==1) and (sum(f3) >= PowerLimit):
                     #We need to consider these parts when converging to a PowerLimit, however, 
                     #there is no need to plot these sigma1 parts as they are just the negative of the sigma_1 ones:
                     if PlotMainBasisParts==1 and ConvergePowerLimit==0 and PlotFastMode2==1:
@@ -977,6 +995,12 @@ if FindMainBasisParts == 1:
  
                     f0_hat = np.mean(tmp_state['c'], axis=0)
                     f1_hat = np.mean(tmp_estimate['c'], axis=0)
+                    #tmp = np.where( tmp_state['c'] == np.max(tmp_state['c']) )
+                    #print(tmp)
+                    #idx0 = int(tmp[0])
+                    #print(idx0)
+                    #f0_hat = tmp_state['c'][idx0,:]
+                    #f1_hat = tmp_estimate['c'][idx0,:]
 
                     SpectralCoef0[:,tt] = abs(f0_hat)**2
                     SpectralCoef1[:,tt] = abs(f1_hat)**2
@@ -1056,7 +1080,9 @@ if FindMainBasisParts == 1:
 
         i1 = ax1.contourf(xgrid,ygrid,data1,clevels,cmap=cmap,extend='both')
         fig1.colorbar(i1)
-        plt.show()
+        #plt.show()
+        fig1.savefig('full_' + str(N2) + '.png')
+        plt.close(fig1)
 
         fig2 = plt.figure(figsize=(width,height))
         grid2 = plt.GridSpec(1, 1, wspace=0.0, hspace=0.0)
@@ -1135,8 +1161,10 @@ if FindMainBasisParts == 1:
                 y = 0.425-dz_txt*(i-40)
             ax2.annotate(labels2[i], xy=(x,y), xytext=(x,y), ha=ha, size=8) 
 
-        plt.show() 
-        #pdb.set_trace()
+        #plt.show() 
+        fig2.savefig('estimate_' + str(N2) + '.png')
+        plt.close(fig2)
+       # pdb.set_trace()
  
     if PlotSpectrum == 1:
         tIdx = int(Nt/2.)
@@ -1565,7 +1593,7 @@ if Resonances == 1:
 
 
     if NearResonanceSearch == 1:
-        OmegaLimit = 0.
+        #OmegaLimit = 0.
         #OmegaLimit = 0.0001
         #OmegaLimit = 0.001
         OmegaLimit = 0.01
@@ -2281,7 +2309,10 @@ if Resonances == 1:
                 ax.set_xlabel(r'$k,k_1,k_2$ (rad/m)')
                 ax.set_ylabel(r'$n,n_1,n_2$ (rad/m)')
                 ax.set_zlabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
-            plt.show()
+
+            plt.savefig('tmp1.png')
+            plt.close()
+            #plt.show()
 
 
             if FindMaxModes == 1:
@@ -2354,12 +2385,63 @@ if Resonances == 1:
                 hist, bin_edges = np.histogram(n12_vec[idxsNon0], bins=kk_cosine, weights=weights[idxsNon0], density=density)
                 MaxCountIdx1 = np.where(hist==np.max(hist))
                 print('most common bin: ', bin_edges[MaxCountIdx1])
+                #[20.94395102,20.94395102,20.94395102,20.94395102,13.96263402,13.96263402,13.96263402,13.96263402,0,0,0,0]
+
                 plt.hist(n12_vec[idxsNon0], bins=kk_cosine, weights=weights[idxsNon0], density=density, color='k' )
                 plt.xlabel(r'$n_1,\,n_2$ (rad/m)')
                 if density: plt.ylabel(r'PDF')
                 else: plt.ylabel(r'weighted counts') 
-                plt.show()
+                #plt.show()
+                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_near_01_HISTn12_dt01' + '.png')
+                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_near_01_HISTn12_dt01' + '.png')
+                plt.close()
 
+                if ExamineHISTn12 == 1:
+
+                    #Compute gradient of histogram to find edge of peak in histogram:
+                    dn = kk_cosine[1]-kk_cosine[0]
+                    #print(kk_cosine)
+                    #print(bin_edges)
+                    dNdn = np.zeros(len(hist))
+                    for i in range(0,len(hist)):
+                        if i==0: dNdn[i] = (hist[i+1]-hist[i])/dn
+                        if i!=0 and i!=len(hist)-1: dNdn[i] = (hist[i+1]-hist[i-1])/(2*dn)
+                        if i==len(hist)-1: dNdn[i] = (hist[i]-hist[i-1])/dn
+
+                    plt.plot(kk_cosine[0:len(dNdn)],dNdn,'.k-')
+                    plt.xlabel(r'$n$ (rad/m)')
+                    plt.ylabel(r'Gradient')
+
+                    #To search for edge of the peak in the histogram first smooth the gradients 
+                    #to avoid inconsistent results:
+                    #print(len(dNdn))
+                    ydat = smooth(dNdn,window_len=5,window='flat')
+                    plt.plot(kk_cosine,ydat[0:len(kk_cosine)], c = 'gray')
+
+                    #Find minimum to define start of search for the edge:
+                    #n.b. smoothing displaces minimum point but this helps the search 
+                    #(i.e. we need to start from minima in smoothed array rather than 
+                    #from minima in the original data):
+                    minIdx = np.where(ydat==np.min(ydat))
+                    minIdx = int(minIdx[0])
+                    #To find peak in original data (not used in the search method):
+                    minIdx0 = np.where(dNdn==np.min(dNdn))
+                    minIdx0 = int(minIdx0[0])
+
+                    #Now search for edge of peak in histogram starting from minimum point. The 
+                    #smoothed data is first normalised by the minimum to help keep the search consistent 
+                    #across different N (i.e, varying histogram peak sizes):
+                    count00 = 0
+                    dNdnLimit = 0.1
+                    while np.abs(ydat[minIdx+count00]/np.min(ydat))>dNdnLimit:
+                        count00 += 1  
+
+                    #print(kk_cosine[minIdx+count00])
+                    plt.title(str(kk_cosine[minIdx0]) + ', ' + str(kk_cosine[minIdx+count00]))
+                    plt.plot([kk_cosine[minIdx+count00],kk_cosine[minIdx+count00]],[np.min(dNdn),np.max(dNdn)], '--k')
+                    plt.savefig('dNdn_' + str(N2) + '_01' + '.png')
+                    plt.close()
+                    #plt.show()
 
                 sortedOmega12 = np.unique(np.sort(omega12_vec[idxsNon0]))
                 omega12diff = sortedOmega12[1] -  sortedOmega12[0]
@@ -2414,8 +2496,61 @@ if Resonances == 1:
                     ax1.fill_between([-wellmode,0],0,ymax, facecolor='silver')
                     ax1.fill_between([0,wellmode],0,ymax, facecolor='silver')                
                     ax1.text(0, ypos, 'LFMF', ha='center', va='center', fontsize=12)
-              
-                plt.show()
+             
+                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_near_01_HISTomega12_dt01' + '.png')
+                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_near_01_HISTomega12_dt01' + '.png')
+                plt.close()
+                #plt.show()
+
+                if ExamineHISTomega12 == 1:
+
+                    #Compute gradient of histogram to find edge of peak in histogram:
+                    d_omega = bin_edges[1]-bin_edges[0]
+                    dNdomega = np.zeros(len(hist))
+                    for i in range(0,len(hist)):
+                        if i==0: dNdomega[i] = (hist[i+1]-hist[i])/d_omega
+                        if i!=0 and i!=len(hist)-1: dNdomega[i] = (hist[i+1]-hist[i-1])/(2*d_omega)
+                        if i==len(hist)-1: dNdomega[i] = (hist[i]-hist[i-1])/d_omega
+
+                    plt.plot(bin_edges[0:len(dNdomega)],dNdomega,'.k-')
+                    plt.xlabel(r'$\omega$ (rad/s)')
+                    plt.ylabel(r'Gradient')
+
+                    #To search for edge of the peak in the histogram first smooth the gradients 
+                    #to avoid inconsistent results:
+                    ydat = smooth(dNdomega,window_len=20,window='flat')
+                    plt.plot(bin_edges,ydat[0:len(bin_edges)], c = 'gray')
+
+                    #Find minimum to define start of search for the edge:
+                    #n.b. smoothing displaces minimum point but this helps the search 
+                    #(i.e. we need to start from minima in smoothed array rather than 
+                    #from minima in the original data). Search is for positive frequencies and 
+                    #restricted to avoid peaks close to N:
+                    idx0 = int(len(ydat)/2.)
+                    minIdx = np.where(ydat[idx0:idx0+30]==np.min(ydat[idx0:30+idx0]))
+                    minIdx = int(minIdx[0]) + idx0
+                    #To find peak in original data (not used in the search method):
+                    minIdx0 = np.where(dNdomega[idx0:idx0+30]==np.min(dNdomega[idx0:idx0+30]))
+                    minIdx0 = int(minIdx0[0]) + idx0
+
+                    #Now search for edge of peak in histogram starting from minimum point for positive frequencies. The 
+                    #smoothed data is first normalised by the minimum to help keep the search consistent 
+                    #across different N (i.e, varying histogram peak sizes):
+                    count00 = 0
+                    gradLimit = 0.1
+                    #gradLimit = 0.01
+                    while np.abs(ydat[minIdx+count00]/ydat[minIdx])>gradLimit:
+                        count00 += 1
+
+                    #print(kk_cosine[minIdx+count00])
+                    plt.title(str(bin_edges[minIdx0]) + ', ' + str(bin_edges[minIdx+count00]))
+                    plt.plot([bin_edges[minIdx+count00],bin_edges[minIdx+count00]],[np.min(dNdomega),np.max(dNdomega)], '--k')
+                    plt.show()
+                    pdb.set_trace()
+                    plt.savefig('dNdomega_' + str(N2) + '_01' + '.png')
+                    plt.close()
+                    #plt.show()
+
 
                 if ComputeCumulativeDistFnc == 1:
                     tmp1 = np.where(np.abs(bin_edges) > wellmode)
@@ -2626,7 +2761,7 @@ if Resonances == 1:
                 if keyWaveModes == 1: 
                     rows = int(Nk/2.)
                     row0 = 0
-                    row0 = int(Nk/2.)
+                    #row0 = int(Nk/2.)
                 if keyNonWaveModes == 1: 
                     rows = Nk
                     row0 = 0

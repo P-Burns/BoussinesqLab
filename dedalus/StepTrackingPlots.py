@@ -28,7 +28,6 @@ Median 		= 0
 PertVsN		= 1
 ParkStepSize	= 0
 
-
 #define useful function:
 def round_down(num, divisor):
     return num - (num%divisor)
@@ -38,9 +37,9 @@ def round_down(num, divisor):
 N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
 name_vec = ['StateN2_00_25','StateN2_01','StateN2_02_25','StateN2_04','StateN2_06_25','StateN2_07_5625',\
           'StateN2_09','StateN2_10_5625','StateN2_12_25','StateN2_14_0625','StateN2_16','StateN2_20_25','StateN2_25']
+
 dt2 = 0.1
 t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
-
 t_offset_vec = (t_offset_vec0/dt2).astype(int)
 #t_offset_vec = np.arange(len(N_vec))*0
 Nmins = 8
@@ -50,7 +49,6 @@ t = np.arange(Nt)*dt2
 steps_arr = np.zeros((Nt,len(N_vec)))
 steps_dz = np.zeros((Nt,50,len(N_vec)))
 steps_dS = np.zeros((Nt,50,len(N_vec)))
-
 
 #Read in data:
 for i in range(0,len(N_vec)):    
@@ -65,7 +63,6 @@ for i in range(0,len(N_vec)):
     steps_arr[t_offset_vec[i]:idxE,i] = tmp1[t_offset_vec[i]:]
     steps_dz[t_offset_vec[i]:idxE,:,i] = tmp2[t_offset_vec[i]:,:]
     steps_dS[t_offset_vec[i]:idxE,:,i] = tmp3[t_offset_vec[i]:,:]
-
 
 if AddGusto == 1:
     N_vec_gusto = [0.5,1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
@@ -364,6 +361,7 @@ if PertVsN == 1:
     plt.figure()
     plt.plot(N_vec,dRdN)
     plt.show()
+
 
 
 plt.show()
