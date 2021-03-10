@@ -24,9 +24,9 @@ ProblemType			= 'Layers'
 
 ParkRun 			= -1
 N2				= 1
-#N2				= 2.25
-#N2				= 4
-#N2				= 6.25
+N2				= 2.25
+N2				= 4
+N2				= 6.25
 #N2				= 7.5625
 #N2				= 9
 #N2				= 10.5625
@@ -46,7 +46,7 @@ sigma3D 			= 1
 
 FindMainBasisParts 		= 1
 PlotMainBasisParts 		= 0
-PlotState_MainBasis		= 1
+PlotState_MainBasis		= 0
 PlotFastMode1			= 0
 PlotFastMode2			= 0
 PlotSpectrum			= 0
@@ -68,26 +68,27 @@ listOmegaPhaseSpace		= 0
 IntegrateCapOmega		= 1
 PlotWeightFnc			= 0
 
-contourOmega			= 1
+contourOmega			= 0
 PlotMainTriads                  = 0
 FindUniqueSet                   = 0
 FindMaxModes                    = 1
 FindOneAlphaSet                 = 1
-keyNonWaveModes                 = 0
-keyWaveModes                    = 1
-xAxis_k                         = 0
-xAxis_n                         = 0
-xAxis_r                         = 0
-xAxis_alt                       = 0
+keyNonWaveModes                 = 1
+keyWaveModes                    = 0
+xAxis_k                         = 1
+xAxis_n                         = 1
+xAxis_r                         = 1
+xAxis_alt                       = 1
 xAxis_angle                     = 0
-xAxis_c                         = 0
-xAxis_cg_x                      = 0
-xAxis_cg_z                      = 0
+xAxis_c                         = 1
+xAxis_cgx                       = 1
+xAxis_cgz                       = 1
 ManualColors			= 0
-WaveSpeeds			= 0
+MainWaveSpeeds			= 0
 ComputePDF			= 1
 ExamineHISTn12			= 0
 ExamineHISTomega12		= 0
+StepStructureSearch		= 1
 ComputeCumulativeDistFnc	= 1
 InteractionCoef			= 1
 PlotInteractCoef		= 0
@@ -1595,8 +1596,8 @@ if Resonances == 1:
     if NearResonanceSearch == 1:
         #OmegaLimit = 0.
         #OmegaLimit = 0.0001
-        #OmegaLimit = 0.001
-        OmegaLimit = 0.01
+        OmegaLimit = 0.001
+        #OmegaLimit = 0.01
         #OmegaLimit = 0.1
         #OmegaLimit = 1
         #OmegaLimit = 999
@@ -1972,8 +1973,15 @@ if Resonances == 1:
 
             #Initialise arrarys for historgram plots:
             if ComputePDF == 1 or InteractionCoef == 1 or SigmaSigma == 1:
+                n12_vec = np.zeros((Nk2*2))
+                kmag12_vec = np.zeros((Nk2*2))
+                alt12_vec = np.zeros((Nk2*2))
                 omega12_vec = np.zeros((Nk2*2))
-                n12_vec = np.zeros((Nk2*2))          
+                cgx12_vec = np.zeros((Nk2*2))
+                cgz12_vec = np.zeros((Nk2*2))
+                c12_vec = np.zeros((Nk2*2)) 
+                nsum12_vec = np.zeros((Nk2*2))
+
                 omega_vec = np.zeros((Nk2))
                 n_vec = np.zeros((Nk2))
                 color_vec = np.zeros((Nk2))
@@ -1987,7 +1995,7 @@ if Resonances == 1:
                 interactCoef = np.zeros((Nk2))
             if SigmaSigma == 1:
                 sigmaSigma = np.zeros((Nk2,Nt))*1j
-            if WaveSpeeds == 1:
+            if MainWaveSpeeds == 1:
                 cgx_vec = np.zeros((Nk))
                 cgx_n_vec = np.zeros((Nk))
                 count1 = 0
@@ -2024,6 +2032,19 @@ if Resonances == 1:
 
             #Plot symbol transparency parameter:
             alphaC=0.5
+
+            #Initialise panel plot:
+            fig = plt.figure(1, figsize=(width*1.5,height*1.5))
+            fig.set_tight_layout(True)
+            grid = plt.GridSpec(3, 3, wspace=0.5, hspace=0.5)
+            ax1 = fig.add_subplot(grid[0,0])
+            ax2 = fig.add_subplot(grid[0,1])
+            ax3 = fig.add_subplot(grid[0,2])
+            ax4 = fig.add_subplot(grid[1,0])
+            ax5 = fig.add_subplot(grid[1,1])
+            ax6 = fig.add_subplot(grid[1,2])
+            ax7 = fig.add_subplot(grid[2,0])
+            ax8 = fig.add_subplot(grid[2,1])
 
 
             count00 = 0
@@ -2093,14 +2114,29 @@ if Resonances == 1:
                     cg_x2 = 0
                     cg_z2 = 0
 
-                if xAxis_angle == 1: angle = np.dot(kvec1,kvec2)/(kmag1*kmag2)
+                if xAxis_angle==1: 
+                    angle = np.dot(kvec1,kvec2)/(kmag1*kmag2)
 
                 #Save data for histograms:
                 if ComputePDF == 1 or InteractionCoef == 1:
+                    n12_vec[2*ii] = n1
+                    n12_vec[2*ii+1] = n2
+                    kmag12_vec[2*ii] = kmag1
+                    kmag12_vec[2*ii+i] = kmag2
+                    alt12_vec[2*ii] = alt1
+                    alt12_vec[2*ii+1] = alt2
                     omega12_vec[2*ii] = omega_k1
                     omega12_vec[2*ii+1] = omega_k2
-                    n12_vec[2*ii] = n1
-                    n12_vec[2*ii+1] = n2 
+                    cgx12_vec[2*ii] = cg_x1
+                    cgx12_vec[2*ii+1] = cg_x2
+                    cgz12_vec[2*ii] = cg_z1
+                    cgz12_vec[2*ii+1] = cg_z2
+                    c12_vec[2*ii] = c1
+                    c12_vec[2*ii+1] = c2
+                    nsum12_vec[2*ii] = n1 + n2
+                    nsum12_vec[2*ii+1] = n1 + n2	#We see that both entries are the same.  This is to simplify the code below for weighting 
+ 							#the histograms. Below we take only every other entry to avoid the duplication.
+
                     omega_vec[ii] = omega_k
                     n_vec[ii] = n
                     
@@ -2114,7 +2150,7 @@ if Resonances == 1:
                     kmag12ij_vec[2*ii] = kmag1ij
                     kmag12ij_vec[2*ii+1] = kmag2ij
 
-                if WaveSpeeds == 1:
+                if MainWaveSpeeds == 1:
                     if ([i,j] not in past_key_modes):
                         Idx = count1
                         cgx_vec[Idx] = cg_x
@@ -2205,38 +2241,39 @@ if Resonances == 1:
                 lw = 0.5
 
                 if Plot3D == 0:
+
                     if xAxis_k == 1:
-                        plt.plot([k1,k2],[omega_k1,omega_k2],\
+                        ax1.plot([k1,k2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(k,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                        ax1.plot(k,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
                     if xAxis_n == 1:
-                        plt.plot([n1,n2],[omega_k1,omega_k2],\
+                        ax2.plot([n1,n2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(n,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                        ax2.plot(n,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
                     if xAxis_r == 1:
-                        plt.plot([kmag1,kmag2],[omega_k1,omega_k2],\
+                        ax3.plot([kmag1,kmag2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(kmag,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                        ax3.plot(kmag,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
                     if xAxis_alt == 1:
-                        plt.plot([alt1,alt2],[omega_k1,omega_k2],\
+                        ax4.plot([alt1,alt2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(alt,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                        ax4.plot(alt,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
                     if xAxis_angle == 1:
-                        plt.plot([angle1,angle2],[omega_k1,omega_k2],\
+                        ax5.plot([angle1,angle2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(angle,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                        ax5.plot(angle,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
                     if xAxis_c == 1:
-                        plt.plot([c1,c2],[omega_k1,omega_k2],\
+                        ax6.plot([c1,c2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(c,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
-                    if xAxis_cg_x == 1:
-                        plt.plot([cg_x1,cg_x2],[omega_k1,omega_k2],\
+                        ax6.plot(c,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                    if xAxis_cgx == 1:
+                        ax7.plot([cg_x1,cg_x2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(cg_x,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
-                    if xAxis_cg_z == 1:
-                        plt.plot([cg_z1,cg_z2],[omega_k1,omega_k2],\
+                        ax7.plot(cg_x,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                    if xAxis_cgz == 1:
+                        ax8.plot([cg_z1,cg_z2],[omega_k1,omega_k2],\
                         color=color, marker='o', markersize=symsize[ii], alpha=alphaC, linestyle=linestyle, linewidth=lw, fillstyle=fill)
-                        plt.plot(cg_z,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
+                        ax8.plot(cg_z,omega_k, color=color, marker='o', markersize=15, fillstyle='none')
 
                 if Plot3D == 1:
                     #ax.plot([k,k1,k2,k], [n,n1,n2,n], [omega_k,omega_k1,omega_k2,omega_k], color=color, marker='o', markersize=symsize)
@@ -2261,74 +2298,89 @@ if Resonances == 1:
 
                 maxModes = np.zeros((Nk))
                 xvec = np.zeros((Nk))
-                count0 = 0
+                count_0 = 0
                 past_key_modes = []
                 for ii in range(0,Nk2):
-                    #i = i_vec[ii]
-                    #j = j_vec[ii]
+                    i = i_vec[ii]
+                    j = j_vec[ii]
                     omega = omega_vec[ii]
-                    #if ([i,j] not in past_key_modes):
-                    if (omega not in past_key_modes):
-                        #bool_i = i_vec == i
-                        #bool_j = j_vec == j             
-                        #tmp = np.multiply(bool_i,bool_j)
-                        #bool_ij = np.repeat(tmp,2)
-                        #maxModes[count0] = np.max(kmag12ij_vec[bool_ij])
+                    if ([i,j] not in past_key_modes):
+                    #if (omega not in past_key_modes):
+                        bool_i = i_vec==i
+                        bool_j = j_vec==j             
+                        tmp = np.multiply(bool_i,bool_j)
+                        bool_ij = np.repeat(tmp,2)
+                        #maxModes[count_0] = np.max(kmag12ij_vec[bool_ij])
 
-                        tmp = omega_vec==omega
-                        bool_omega = np.repeat(tmp,2)
-                        maxModes[count0] = np.max(np.abs(omega12_vec[bool_omega]))
+                        #tmp = omega_vec==omega
+                        #bool_omega = np.repeat(tmp,2)
+                        #maxModes[count_0] = np.max(np.abs(omega12_vec[bool_omega]))
+                        #tmp_max = np.max(np.abs(omega12_vec[bool_ij]))
+                        tmp_max = np.max(omega12_vec[bool_ij])
+                        maxModes[count_0] = tmp_max
 
-                        #vec = np.array([i,j])
-                        #kmag_ij = np.linalg.norm(vec)            
-                        #xvec[count0] = kmag_ij
-                        xvec[count0] = np.abs(omega)
+                        #vec = np.array([i,j]) 
+                        #kmag_ij = np.linalg.norm(vec) 
+                        #xvec[count_0] = kmag_ij
+                        #angle = np.arctan2(j,i)*180/np.pi
+                        #xvec[count_0] = angle
+                        xvec[count_0] = omega
                         
 
-                        #past_key_modes.append([i,j])
-                        past_key_modes.append(omega)
-                        count0 += 1
-
+                        past_key_modes.append([i,j])
+                        #past_key_modes.append(omega)
+                        count_0 += 1
 
             #print(omega_vec)
             if Plot3D == 0:
                 #xvec = np.arange(Nk*2)                      
                 #plt.scatter(kmag_vec,omega_vec, c='k')
 
-                if xAxis_r == 1: plt.xlabel(r'$|\mathbf{k}|,|\mathbf{k}_1|,|\mathbf{k}_2|$ (rad/m)')
-                if xAxis_k == 1: plt.xlabel(r'$k,k_1,k_2$ (rad/m)')
-                if xAxis_n == 1: plt.xlabel(r'$n,n_1,n_2$ (rad/m)')
-                if xAxis_alt == 1: plt.xlabel(r'$\cos(\phi),\cos(\phi_1),\cos(\phi_2)$')
-                if xAxis_c == 1: plt.xlabel(r'$c=\omega/|\mathbf{k}|$ (m/s)')
-                if xAxis_cg_x == 1: plt.xlabel(r'$c_{g_{x}}$ (m/s)')
-                if xAxis_cg_z == 1: plt.xlabel(r'$c_{g_{z}}$ (m/s)')
+                if xAxis_k == 1: 
+                    ax1.set_xlabel(r'$k,k_1,k_2$ (rad/m)')
+                    ax1.set_ylabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
+                if xAxis_n == 1: ax2.set_xlabel(r'$n,n_1,n_2$ (rad/m)')
+                if xAxis_r == 1: ax3.set_xlabel(r'$|\mathbf{k}|,|\mathbf{k}_1|,|\mathbf{k}_2|$ (rad/m)')
+                if xAxis_alt == 1: 
+                    ax4.set_xlabel(r'$\cos(\phi),\cos(\phi_1),\cos(\phi_2)$')
+                    ax4.set_ylabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
+                if xAxis_c == 1: ax6.set_xlabel(r'$c=\omega/|\mathbf{k}|$ (m/s)')
+                if xAxis_cgx == 1: 
+                    ax7.set_xlabel(r'$c_{g_{x}}$ (m/s)')
+                    ax7.set_ylabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
+                if xAxis_cgz == 1: ax8.set_xlabel(r'$c_{g_{z}}$ (m/s)')
                 #plt.ylabel(r'$\omega/(2\pi)$')
-                plt.ylabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
             if Plot3D == 1:
                 ax.view_init(elev=130, azim=30)
                 ax.set_xlabel(r'$k,k_1,k_2$ (rad/m)')
                 ax.set_ylabel(r'$n,n_1,n_2$ (rad/m)')
                 ax.set_zlabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
 
-            plt.savefig('tmp1.png')
-            plt.close()
+            if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'triads' + '.png')
+            if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'triads' + '.png')
+            plt.close(fig)
             #plt.show()
 
 
             if FindMaxModes == 1:
                 #plot results:
+                print(xvec)
                 fig_0 = plt.figure(1, figsize=(width,height))
                 fig_0.set_tight_layout(True)
                 grid_0 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
                 axs_0 = fig_0.add_subplot(grid_0[0,0])
-                axs_0.plot(xvec,maxModes, '^', c='k')
+                axs_0.scatter(xvec,maxModes, marker='^', c='k')
                 #axs_0.set_xlabel('Wavenumber (non-dimensional) of mode of modulated system')
                 #axs_0.set_ylabel('Max wavenumber (non-dimensional) of linear waves\n associated with some mode of solution')
                 axs_0.set_xlabel('Mode (frequency) of modulated system (rad/s)')
                 axs_0.set_ylabel('Max frequency of linear waves\n associated with some mode of solution (rad/s)')
-                plt.show()
+            
+                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'MaxModes' + '.png')
+                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'MaxModes' + '.png')
+                plt.close() 
+                #plt.show()
 
-                pdb.set_trace()
+                #pdb.set_trace()
 
 
             #Make histograms of triads:
@@ -2381,67 +2433,6 @@ if Resonances == 1:
                 colors = np.repeat(color_vec,2)
 
                 density = False
-
-                hist, bin_edges = np.histogram(n12_vec[idxsNon0], bins=kk_cosine, weights=weights[idxsNon0], density=density)
-                MaxCountIdx1 = np.where(hist==np.max(hist))
-                print('most common bin: ', bin_edges[MaxCountIdx1])
-                #[20.94395102,20.94395102,20.94395102,20.94395102,13.96263402,13.96263402,13.96263402,13.96263402,0,0,0,0]
-
-                plt.hist(n12_vec[idxsNon0], bins=kk_cosine, weights=weights[idxsNon0], density=density, color='k' )
-                plt.xlabel(r'$n_1,\,n_2$ (rad/m)')
-                if density: plt.ylabel(r'PDF')
-                else: plt.ylabel(r'weighted counts') 
-                #plt.show()
-                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_near_01_HISTn12_dt01' + '.png')
-                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_near_01_HISTn12_dt01' + '.png')
-                plt.close()
-
-                if ExamineHISTn12 == 1:
-
-                    #Compute gradient of histogram to find edge of peak in histogram:
-                    dn = kk_cosine[1]-kk_cosine[0]
-                    #print(kk_cosine)
-                    #print(bin_edges)
-                    dNdn = np.zeros(len(hist))
-                    for i in range(0,len(hist)):
-                        if i==0: dNdn[i] = (hist[i+1]-hist[i])/dn
-                        if i!=0 and i!=len(hist)-1: dNdn[i] = (hist[i+1]-hist[i-1])/(2*dn)
-                        if i==len(hist)-1: dNdn[i] = (hist[i]-hist[i-1])/dn
-
-                    plt.plot(kk_cosine[0:len(dNdn)],dNdn,'.k-')
-                    plt.xlabel(r'$n$ (rad/m)')
-                    plt.ylabel(r'Gradient')
-
-                    #To search for edge of the peak in the histogram first smooth the gradients 
-                    #to avoid inconsistent results:
-                    #print(len(dNdn))
-                    ydat = smooth(dNdn,window_len=5,window='flat')
-                    plt.plot(kk_cosine,ydat[0:len(kk_cosine)], c = 'gray')
-
-                    #Find minimum to define start of search for the edge:
-                    #n.b. smoothing displaces minimum point but this helps the search 
-                    #(i.e. we need to start from minima in smoothed array rather than 
-                    #from minima in the original data):
-                    minIdx = np.where(ydat==np.min(ydat))
-                    minIdx = int(minIdx[0])
-                    #To find peak in original data (not used in the search method):
-                    minIdx0 = np.where(dNdn==np.min(dNdn))
-                    minIdx0 = int(minIdx0[0])
-
-                    #Now search for edge of peak in histogram starting from minimum point. The 
-                    #smoothed data is first normalised by the minimum to help keep the search consistent 
-                    #across different N (i.e, varying histogram peak sizes):
-                    count00 = 0
-                    dNdnLimit = 0.1
-                    while np.abs(ydat[minIdx+count00]/np.min(ydat))>dNdnLimit:
-                        count00 += 1  
-
-                    #print(kk_cosine[minIdx+count00])
-                    plt.title(str(kk_cosine[minIdx0]) + ', ' + str(kk_cosine[minIdx+count00]))
-                    plt.plot([kk_cosine[minIdx+count00],kk_cosine[minIdx+count00]],[np.min(dNdn),np.max(dNdn)], '--k')
-                    plt.savefig('dNdn_' + str(N2) + '_01' + '.png')
-                    plt.close()
-                    #plt.show()
 
                 sortedOmega12 = np.unique(np.sort(omega12_vec[idxsNon0]))
                 omega12diff = sortedOmega12[1] -  sortedOmega12[0]
@@ -2551,7 +2542,6 @@ if Resonances == 1:
                     plt.close()
                     #plt.show()
 
-
                 if ComputeCumulativeDistFnc == 1:
                     tmp1 = np.where(np.abs(bin_edges) > wellmode)
                     tmp2 = np.where(np.abs(bin_edges) <= wellmode)
@@ -2565,8 +2555,247 @@ if Resonances == 1:
                     MeanflowFraction = sumMF/np.sum(hist)
                     print(IGWFraction,MeanflowFraction)
 
+                if StepStructureSearch==1:
 
-            if WaveSpeeds == 1:
+                    Nbins = 200
+                    log_y = True
+
+                    fig = plt.figure(1, figsize=(width*1.5,height*1.5))
+                    fig.set_tight_layout(True)
+                    grid = plt.GridSpec(3, 3, wspace=0.5, hspace=0.5)
+                   
+                    #Vertical wavenumber:
+                    hist, bin_edges_n12 = np.histogram(n12_vec[idxsNon0], bins=kk_cosine, weights=weights[idxsNon0], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+ 
+                    ax1 = fig.add_subplot(grid[0,0])
+                    ax1.hist(n12_vec[idxsNon0], bins=kk_cosine, weights=weights[idxsNon0], density=density, color='k', log=log_y)
+                    ax1.set_xlabel(r'$n_1,\,n_2$ (rad/m)')
+                    if density: ax1.set_ylabel(r'PDF')
+                    else: ax1.set_ylabel(r'weighted counts')
+                    ax1.set_title(str(round(bin_edges_n12[MaxCountIdx1],2)))
+                    if log_y: ax1.set_ylim(1E-1,1E4)
+
+                    #Wavevector magnitude:
+                    kmag_max = np.max(kmag12_vec[idxsNon0])
+                    bins = np.arange(Nbins)*kmag_max/(Nbins-1)
+                    hist, bin_edges = np.histogram(kmag12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+
+                    ax2 = fig.add_subplot(grid[0,1])
+                    ax2.hist(kmag12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density, color='k', log=log_y)
+                    ax2.set_xlabel(r'$|k|_1,\,|k|_2$ (rad/m)')
+                    #if density: ax2.set_ylabel(r'PDF')
+                    #else: ax2.set_ylabel(r'weighted counts')
+                    ax2.set_title(str(round(bin_edges[MaxCountIdx1],2)))
+                    if log_y: ax2.set_ylim(1E-1,1E4)
+
+                    #Wavevector angle to horizontal:
+                    alt_max = np.max(alt12_vec[idxsNon0])
+                    alt_min = np.min(alt12_vec[idxsNon0])
+                    bins = np.arange(Nbins)*(alt_max-alt_min)/(Nbins-1) + alt_min
+                    hist, bin_edges = np.histogram(alt12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+
+                    #Relate most common angle to vertical wavenumber:
+                    print(bin_edges[MaxCountIdx1])
+                    print(np.min(alt12_vec),np.max(alt12_vec))
+                    offset = np.abs((bin_edges[1]-bin_edges[0]))
+                    offset = np.abs((bin_edges[1]-bin_edges[0]))
+                    bool1 = alt12_vec > (bin_edges[MaxCountIdx1]-offset)
+                    bool2 = alt12_vec < (bin_edges[MaxCountIdx1]+offset)
+                    bool3 = np.multiply(bool1,bool2)
+                    idxs = np.where(bool3==1)
+                    n12_unique = np.unique(n12_vec[idxs])
+                    print(idxs)
+                    print(np.unique(alt12_vec[idxs]))
+                    print(n12_unique)
+
+                    ax3 = fig.add_subplot(grid[0,2])
+                    ax3.hist(alt12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density, color='k', log=log_y)
+                    ax3.set_xlabel(r'$\cos(\phi_1),\cos(\phi_2)$')
+                    #if density: ax3.set_ylabel(r'PDF')
+                    #else: ax3.set_ylabel(r'weighted counts')
+                    ax3.set_title(str(round(bin_edges[MaxCountIdx1],4)) + ' , ' + str(round(np.mean(n12_unique),4)) + ' , ' + str(round(np.max(n12_unique),4)))
+                    if log_y: ax3.set_ylim(1E-1,1E4)
+
+                    #Phase speed:
+                    c_max = np.max(c12_vec[idxsNon0])
+                    c_min = np.min(c12_vec[idxsNon0])
+                    bins = np.arange(Nbins)*(c_max-c_min)/(Nbins-1)+c_min
+                    hist, bin_edges = np.histogram(c12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+
+                    #Relate most common phase speed to vertical wavenumber:
+                    print(bin_edges[MaxCountIdx1])
+                    print(np.min(c12_vec),np.max(c12_vec))
+                    offset = np.abs((bin_edges[1]-bin_edges[0]))
+                    bool1 = c12_vec > (bin_edges[MaxCountIdx1]-offset)
+                    bool2 = c12_vec < (bin_edges[MaxCountIdx1]+offset)
+                    bool3 = np.multiply(bool1,bool2)
+                    idxs = np.where(bool3==1)
+                    n12_unique = np.unique(n12_vec[idxs])
+                    print(idxs)
+                    print(np.unique(c12_vec[idxs]))
+                    print(n12_unique)
+
+                    ax4 = fig.add_subplot(grid[1,0])
+                    ax4.hist(c12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density, color='k', log=log_y)
+                    ax4.set_xlabel(r'$c_1,\,c_2$ (m/s)')
+                    if density: ax4.set_ylabel(r'PDF')
+                    else: ax4.set_ylabel(r'weighted counts')
+                    ax4.set_title(str(round(bin_edges[MaxCountIdx1],4)) + ' , ' + str(round(np.mean(n12_unique),4)) + ' , ' + str(round(np.max(n12_unique),4))) 
+                    if log_y: ax4.set_ylim(1E-1,1E4)
+
+                    #Horizontal group speed:
+                    cgx_max = np.max(cgx12_vec[idxsNon0])
+                    cgx_min = np.min(cgx12_vec[idxsNon0])
+                    bins = np.arange(Nbins)*(cgx_max-cgx_min)/(Nbins-1) + cgx_min
+                    hist, bin_edges = np.histogram(cgx12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+
+                    #Relate most common horizontal group speed to vertical wavenumber:
+                    print(bin_edges[MaxCountIdx1])
+                    print(np.min(cgx12_vec),np.max(cgx12_vec))
+                    offset = np.abs((bin_edges[1]-bin_edges[0]))
+                    bool1 = cgx12_vec > (bin_edges[MaxCountIdx1]-offset)
+                    bool2 = cgx12_vec < (bin_edges[MaxCountIdx1]+offset)
+                    bool3 = np.multiply(bool1,bool2)
+                    idxs = np.where(bool3==1)
+                    n12_unique = np.unique(n12_vec[idxs])
+                    print(idxs)
+                    print(np.unique(c12_vec[idxs]))
+                    print(n12_unique)
+
+                    ax5 = fig.add_subplot(grid[1,1])
+                    ax5.hist(cgx12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density, color='k', log=log_y)
+                    ax5.set_xlabel(r'$cgx_1,\,cgx_2$ (m/s)')
+                    #if density: ax5.set_ylabel(r'PDF')
+                    #else: ax5.set_ylabel(r'weighted counts')
+                    ax5.set_title(str(round(bin_edges[MaxCountIdx1],4)) + ' , ' + str(round(np.mean(n12_unique),4)) + ' , ' + str(round(np.max(n12_unique),4)))
+                    if log_y: ax5.set_ylim(1E-1,1E4)
+
+                    #Vertical group speed:
+                    cgz_max = np.max(cgz12_vec[idxsNon0])
+                    cgz_min = np.min(cgz12_vec[idxsNon0])
+                    bins = np.arange(Nbins)*(cgz_max-cgz_min)/(Nbins-1) + cgz_min
+                    hist, bin_edges = np.histogram(cgz12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+                    #print('most common group speed bin: ', bin_edges[MaxCountIdx1])
+                    #print('most common associated n bin: ', bin_edges_n12[MaxCountIdx1])
+
+                    #Relate most common vertical group speed to vertical wavenumber:
+                    print(bin_edges[MaxCountIdx1])
+                    print(np.min(cgz12_vec),np.max(cgz12_vec))
+                    offset = np.abs((bin_edges[1]-bin_edges[0]))
+                    bool1 = cgz12_vec > (bin_edges[MaxCountIdx1]-offset)
+                    bool2 = cgz12_vec < (bin_edges[MaxCountIdx1]+offset)
+                    bool3 = np.multiply(bool1,bool2)
+                    idxs = np.where(bool3==1)
+                    n12_unique = np.unique(n12_vec[idxs])
+                    print(idxs)
+                    print(np.unique(c12_vec[idxs]))
+                    print(n12_unique)
+
+                    ax6 = fig.add_subplot(grid[1,2])
+                    ax6.hist(cgz12_vec[idxsNon0], bins=bins, weights=weights[idxsNon0], density=density, color='k', log=log_y)
+                    ax6.set_xlabel(r'$cgz_1,\,cgz_2$ (m/s)')
+                    #if density: ax6.set_ylabel(r'PDF')
+                    #else: ax6.set_ylabel(r'weighted counts')
+                    ax6.set_title(str(round(bin_edges[MaxCountIdx1],4)) + ' , ' + str(round(np.mean(n12_unique),4)) + ' , ' + str(round(np.max(n12_unique),4)))
+                    if log_y: ax6.set_ylim(1E-1,1E4)
+
+
+                    #Sum of vertical wavenumbers:
+                    #First deal with duplication whilst retaining weighting for histogram.  Make a copy of 
+                    #the logical array and then set every other entry to zero to remove duplication from histogram:
+                    idxsNon0_ = np.array(idxsNon0[0])
+                    idxsNon0_[::2] = 0
+                    print(idxsNon0_.shape)
+
+                    nsum_max = np.max(nsum12_vec[idxsNon0_])
+                    nsum_min = np.min(nsum12_vec[idxsNon0_])
+                    bins = np.arange(Nbins)*(nsum_max-nsum_min)/(Nbins-1) + nsum_min
+                    hist, bin_edges = np.histogram(nsum12_vec[idxsNon0_], bins=bins, weights=weights[idxsNon0_], density=density)
+                    MaxCountIdx1 = np.where(hist==np.max(hist))[0]
+                    if len(MaxCountIdx1)>1: MaxCountIdx1 = int(np.max(MaxCountIdx1))
+                    else: MaxCountIdx1 = int(MaxCountIdx1)
+                    #print('most common n-sum speed bin: ', bin_edges[MaxCountIdx1])
+
+                    ax7 = fig.add_subplot(grid[2,0])
+                    ax7.hist(nsum12_vec[idxsNon0_], bins=bins, weights=weights[idxsNon0_], density=density, color='k', log=log_y)
+                    ax7.set_xlabel(r'$n_1+n_2$ (rad/m)')
+                    if density: ax7.set_ylabel(r'PDF')
+                    else: ax7.set_ylabel(r'weighted counts')
+                    ax7.set_title(str(round(bin_edges[MaxCountIdx1],4)))
+                    if log_y: ax7.set_ylim(1E-1,1E4)
+
+
+                    if keyNonWaveModes==1: fig.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'histograms' + '.png')
+                    if keyWaveModes==1: fig.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'histograms' + '.png')
+                    plt.close(fig)
+
+                    if ExamineHISTn12 == 1:
+
+                        #Compute gradient of histogram to find edge of peak in histogram:
+                        dn = kk_cosine[1]-kk_cosine[0]
+                        #print(kk_cosine)
+                        #print(bin_edges)
+                        dNdn = np.zeros(len(hist))
+                        for i in range(0,len(hist)):
+                            if i==0: dNdn[i] = (hist[i+1]-hist[i])/dn
+                            if i!=0 and i!=len(hist)-1: dNdn[i] = (hist[i+1]-hist[i-1])/(2*dn)
+                            if i==len(hist)-1: dNdn[i] = (hist[i]-hist[i-1])/dn
+
+                        plt.plot(kk_cosine[0:len(dNdn)],dNdn,'.k-')
+                        plt.xlabel(r'$n$ (rad/m)')
+                        plt.ylabel(r'Gradient')
+
+                        #To search for edge of the peak in the histogram first smooth the gradients 
+                        #to avoid inconsistent results:
+                        #print(len(dNdn))
+                        ydat = smooth(dNdn,window_len=5,window='flat')
+                        plt.plot(kk_cosine,ydat[0:len(kk_cosine)], c = 'gray')
+
+                        #Find minimum to define start of search for the edge:
+                        #n.b. smoothing displaces minimum point but this helps the search 
+                        #(i.e. we need to start from minima in smoothed array rather than 
+                        #from minima in the original data):
+                        minIdx = np.where(ydat==np.min(ydat))
+                        minIdx = int(minIdx[0])
+                        #To find peak in original data (not used in the search method):
+                        minIdx0 = np.where(dNdn==np.min(dNdn))
+                        minIdx0 = int(minIdx0[0])
+
+                        #Now search for edge of peak in histogram starting from minimum point. The 
+                        #smoothed data is first normalised by the minimum to help keep the search consistent 
+                        #across different N (i.e, varying histogram peak sizes):
+                        count00 = 0
+                        dNdnLimit = 0.1
+                        while np.abs(ydat[minIdx+count00]/np.min(ydat))>dNdnLimit:
+                            count00 += 1
+
+                        #print(kk_cosine[minIdx+count00])
+                        plt.title(str(kk_cosine[minIdx0]) + ', ' + str(kk_cosine[minIdx+count00]))
+                        plt.plot([kk_cosine[minIdx+count00],kk_cosine[minIdx+count00]],[np.min(dNdn),np.max(dNdn)], '--k')
+                        plt.savefig('dNdn_' + str(N2) + '_01' + '.png')
+                        plt.close()
+                        #plt.show()
+
+
+            if MainWaveSpeeds == 1:
                 maxIdx = np.where(cgx_vec==np.max(cgx_vec))
                 plt.plot(cgx_n_vec,cgx_vec)
                 plt.show()
