@@ -73,11 +73,11 @@ if VaryN == 1:
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-var_nms = ['S']
+#var_nms = ['S']
 #var_nms = ['psi','S']
-#var_nms = ['psi','S','psi_r','S_r']
+var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-var_nms = ['S','S_r']
+#var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -114,6 +114,7 @@ ForwardTransform     	= 0
 CoefficientSpace	= 0
 
 SpectralAnalysis        = 1
+AnalyseS                = 1
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
@@ -149,14 +150,14 @@ wing = Nt_mean//2
 MakePlot 	= 1
 PlotXZ 		= 0
 PlotTZ 		= 0
-PlotT 		= 1
+PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
 NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -218,13 +219,12 @@ if VaryN == 1:
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
-    #secPerFile = 60.
-    secPerFile = 60.003
+    secPerFile = 60.
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
-        StartMin = 2
+        StartMin = 1
         nfiles = 10
-        nfiles = 20
+        nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -252,7 +252,7 @@ if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0:
     if forced == 0: dt2=0.2
     if forced == 1: 
         dt2=0.2
-        #dt2=dt*10
+        dt2=dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -447,8 +447,16 @@ if Gusto == 0:
                 fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
             else:
                 fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
-
             hdf5obj = h5py.File(fnm,'r')
+
+            #with h5py.File(fnm,'r') as hdf5obj:
+            #    base_items = list(hdf5obj.items())
+            #    print(base_items)
+            #    g1 = hdf5obj.get('tasks')
+            #    g1_items = list(g1.items())
+            #    print(g1_items)
+            #pdb.set_trace()
+
             tmp_ = hdf5obj.get('tasks/'+var_nms[jj])
             idxS = ii*ntPerFile/tq
             idxE = (ii+1)*ntPerFile/tq
@@ -460,20 +468,16 @@ if Gusto == 0:
             if var_nms[jj] == 'psi':
                 if FullDomain==1 or MultiPoint==1: Psi[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint==1: Psi[idxS:idxE] = np.array(tmp_)[::int(tq)]
-                #if MultiPoint==1: Psi[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
             if var_nms[jj] == 'S':
                 if FullDomain==1 or MultiPoint==1: S[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint==1: S[idxS:idxE] = np.array(tmp_)[::int(tq)]
-                #if MultiPoint==1: S[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
             #Modulated fields:
             if var_nms[jj] == 'S_r':
                 if FullDomain==1 or MultiPoint==1: S_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint: S_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
-                #if MultiPoint==1: S_r[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
             if var_nms[jj] == 'psi_r':
                 if FullDomain==1 or MultiPoint==1: Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint==1: Psi_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
-                #if MultiPoint==1: Psi_r[idxS:idxE,:,:] = np.reshape(np.array(tmp_)[:,:,::int(tq)],(idxE-idxS,Nx2,Nz2), order='F')
 
             #Energy variables:
             if var_nms[jj] == 'PE_tot':
@@ -679,7 +683,7 @@ def spectral_analysis(data,dt2,Welch=True):
                 ts_hat2 = psd[fIdx:int(nperseg/2.)+1]
                 #Find dominant frequencies:
                 idx = np.where( ts_hat2 == max(ts_hat2) )
-                BigMode[ii,jj] = freqvec[idx[0] + fIdx]
+                #BigMode[ii,jj] = freqvec[idx[0] + fIdx]
 
     return spectralCoef, freqvec, nperseg;
 
@@ -695,9 +699,15 @@ if FullFields == 1 and Gusto == 0:
 
 if Density == 1:
     #calculate density using a linear equation of state where rho=rho(S):
-    S0 = np.mean(S)
-    rho = rho0*(1 + cs*(S-S0))
-    #print(np.min(rho))
+    if Modulated == 0:
+        S0 = np.mean(S)
+        rho = rho0*(1 + cs*(S-S0))
+        #print(np.min(rho),np.max(rho))
+    if Modulated == 1:
+        S0 = np.mean(S_r)
+        rho_r = rho0*(1 + cs*(S_r-S0))
+        #print(np.min(rho_r),np.max(rho_r))
+
     #pdb.set_trace()
 
 
@@ -1006,6 +1016,51 @@ if dSdz == 1:
         #xlim = (0,np.max(t))
         xlim = (0,60)
         xlim = ((StartMin-1)*secPerFile,np.max(t))
+
+if drhodz == 1:
+
+    if Gusto == 0:
+        if Modulated == 0: data = d_dz(rho,Nt,Nx,Nz,z)
+        else: data = d_dz(rho_r,Nt,Nx,Nz,z)
+
+    if MakePlot == 1:
+        if NoPlotLabels == 0:
+            PlotTitle = r'$\partial\rho/\partial z$ (kg m$^{-3}$ m$^{-1}$)' + ', ' + RunName
+        else: PlotTitle = ''
+        FigNmBase = 'drhodz'
+
+        if filledContour == 1:
+            #nlevs = 21
+            nlevs = 41
+            #nlevs = 81
+        else: nlevs = 41
+
+        if ParkRun < 0:
+            if N2==0.1 or N2==0.25 or N2==0.09:
+                rhozMin = -100
+                rhozMax = 100
+            if N2==1:
+                rhozMin = -300
+                rhozMax = 300
+            if N2==2.25:
+                rhozMin = -500
+                rhozMax = 500
+                #rhozMin = -300
+                #rhozMax = 300
+        drhoz = (rhozMax - rhozMin)/(nlevs-1)
+        clevels = np.arange(nlevs)*drhoz + rhozMin
+        if filledContour == 1:
+            #cmap = 'PRGn'
+            cmap = 'bwr'
+            #cmap = 'tab20b'
+        else:
+            col1 = ['k']*(int(nlevs/2.-1))
+            col2 = ['grey']*(int(nlevs/2.))
+            colorvec = col1+col2
+        xlim = (0,np.max(t))
+        #xlim = (0,60)
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
+
 
 if dUdz == 1:
     u = d_dz(Psi,Nt,Nx,Nz,z)
@@ -2051,10 +2106,12 @@ if ForwardTransform == 1:
 
 
 if SpectralAnalysis == 1:
-    if Modulated == 0: 
-        data = S2
-        #data = Psi
-    if Modulated == 1: data = S_r
+    if AnalyseS == 1:
+        if Modulated == 0: data = S2
+        if Modulated == 1: data = S_r
+    if AnalyseS == 0:
+        if Modulated == 0: data = Psi
+        if Modulated == 1: data = Psi_r
 
     #idx0 = int(10./dt2)
     #tmp = data[idx0:,:,:]
@@ -2307,19 +2364,57 @@ if SpectralAnalysis == 1:
             plt.show()
 
         if MultiPoint == 1:
-            fig1 = plt.figure(figsize=(width,height))
-            grid1 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
-            ax1 = fig1.add_subplot(grid1[0,0])
+            fig1 = plt.figure(figsize=(width*1.5,height))
+            #fig1.set_tight_layout(True)
+            grid1 = plt.GridSpec(1, 2, wspace=0.4, hspace=0.)
+            ax0 = fig1.add_subplot(grid1[0,0])
+            ax1 = fig1.add_subplot(grid1[0,1])
 
             xgrid = freqvec*(2*np.pi)
+            
+            linewvec = [1,2,3,1,2,3,1,2,3]
+            colorvec = ['k','k','k','gray','gray','gray','silver','silver','silver']
+            ltypevec = ['-','-','-','-','-','-','-','-','-']
 
+            countA = 0
             for ii in range(0,Nx2):
                 for jj in range(0,Nz2):
-                    ax1.semilogy(xgrid,spectralCoef[:,ii,jj])
 
-            ax1.set_xlim(0,5)
-            fig1.savefig('tmp.png')
+                    label = '(' + str(round(x[xIdx[jj]],2)) + ',' + str(round(z[zIdx[(Nx2-1)-ii]],2)) + ')'
+                    ax0.plot(t,data[:,ii,jj], linewidth=linewvec[countA], linestyle=ltypevec[countA], color=colorvec[countA], label=label)
+                    ax1.semilogy(xgrid,spectralCoef[:,ii,jj], linewidth=linewvec[countA],  linestyle=ltypevec[countA], color=colorvec[countA], label=label)
+                    countA += 1
+
+            ax0.set_xlabel(r'$t$ (s)')
+            ax1.legend(frameon=False,fontsize=10)
+            ax1.set_xlim(0,4)
+            ax1.set_xlabel(r'$\omega$ (rad/s)')
+            ax1.set_ylabel(r'PSD')
+            if AnalyseS==0 and Modulated==0: 
+                ax0.set_ylim(-.004,.002)
+                ax0.set_ylabel(r'$\psi$')
+            if AnalyseS==0 and Modulated==1:
+                #ax0.set_ylim(-.004,.002)
+                ax0.set_ylabel(r'$\psi_r$')
+            if AnalyseS == 1 and Modulated==0:
+                ax1.set_ylim(1e-11,1e2)
+                ax0.set_ylabel(r'$S$')            
+            if AnalyseS == 1 and Modulated==1:
+                #ax1.set_ylim(1e-14,1e-2)
+                ax0.set_ylabel(r'$\zeta$')            
+            if AnalyseS==1:
+                if Modulated==0: fig1.savefig('psd_S' + RunName + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Sr' + RunName + '_multip.png')
+            if AnalyseS==0:
+                if Modulated==0: fig1.savefig('psd_Psi' + RunName + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Psi_r' + RunName + '_multip.png')
             plt.close(fig1)
+
+            if w2f_analysis==1:
+                if AnalyseS==1: np.savetxt('ts_S' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+                if AnalyseS==0: np.savetxt('ts_psi' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+
+
 
 if TimescaleSeparation == 1:
 
