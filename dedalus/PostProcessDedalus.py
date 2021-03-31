@@ -43,39 +43,39 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
+FullDomain      = 1
 SinglePoint	= 0
-MultiPoint	= 1
+MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 1
+forced          = 0
 if VaryN == 1:
     #N2		= 0.09
     N2		= 0.25
-    N2 		= 1
+    #N2 	= 1
     N2		= 2.25		
-    N2 		= 4
-    N2		= 6.25
-    N2		= 7.5625
-    N2 		= 9
-    N2		= 10.5625
-    N2 		= 12.25
-    N2		= 14.0625
-    N2		= 16
-    N2		= 20.25
-    N2		= 25
+    #N2 	= 4
+    #N2		= 6.25
+    #N2		= 7.5625
+    #N2 	= 9
+    #N2		= 10.5625
+    #N2 	= 12.25
+    #N2		= 14.0625
+    #N2		= 16
+    #N2		= 20.25
+    #N2		= 25
 
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-#var_nms = ['S']
+var_nms = ['S']
 #var_nms = ['psi','S']
-var_nms = ['psi','S','psi_r','S_r']
+#var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -90,14 +90,15 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
-Density			= 0
-StateS_2                = 1
+Density			= 1
+StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
+drhodz			= 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -113,7 +114,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 AnalyseS                = 1
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
@@ -149,7 +150,7 @@ wing = Nt_mean//2
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 0
+PlotTZ 		= 1
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -157,7 +158,7 @@ filledContour 	= 1
 NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 1
+w2f_analysis = 0
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -230,7 +231,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 30
+        nfiles = 2
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -1025,7 +1026,7 @@ if drhodz == 1:
 
     if MakePlot == 1:
         if NoPlotLabels == 0:
-            PlotTitle = r'$\partial\rho/\partial z$ (kg m$^{-3}$ m$^{-1}$)' + ', ' + RunName
+            PlotTitle = r'$\partial\rho/\partial z$ (kg m$^{-4}$)'
         else: PlotTitle = ''
         FigNmBase = 'drhodz'
 
@@ -1057,9 +1058,9 @@ if drhodz == 1:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
-        xlim = (0,np.max(t))
-        #xlim = (0,60)
-        xlim = ((StartMin-1)*secPerFile,np.max(t))
+        #xlim = (0,np.max(t))
+        #xlim = ((StartMin-1)*secPerFile,np.max(t))
+        xlim = (0,60)
 
 
 if dUdz == 1:

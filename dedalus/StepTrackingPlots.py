@@ -170,7 +170,7 @@ for i in range(0,len(N_vec)-5):
     #axs0[i,2].set_xlim(1e-10,5e03)
     #axs0[i,2].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
 
-#Plot mean of distributions:
+#Plot mean of distributions with step prediction:
 fig1, axs1 = plt.subplots(1,3, figsize=(width,height*2/3.))
 fig1.subplots_adjust(wspace=0.75, hspace=0.)
 fig1.set_tight_layout(True)
@@ -190,26 +190,26 @@ axs1[0].set_ylabel(r'Average # of steps')
 #m1 = c1 + c2*np.asarray(N_vec)
 #axs1[1,0].plot(N_vec, m1,'-k')
 
-data1 = steps_dz
-data1[data1 == 0] = np.nan
-if Mean == 1: means1 = np.nanmean(data1.reshape((Nt*50,len(N_vec))), axis=0)
-if Median == 1: means1 = np.nanmedian(data1.reshape((Nt*50,len(N_vec))), axis=0)
-std1 = np.nanstd(data1.reshape((Nt*50,len(N_vec))), axis=0)
-axs1[1].plot(N_vec, means1, '.k')
-axs1[1].fill_between(N_vec, means1-std1, means1 + std1, color='gray', alpha=0.4)
-axs1[1].set_xlabel(r'$N$ (rad/s)')
-axs1[1].set_ylabel(r'$\overline{h_s}$ (m)')
+#data1 = steps_dz
+#data1[data1 == 0] = np.nan
+#if Mean == 1: means1 = np.nanmean(data1.reshape((Nt*50,len(N_vec))), axis=0)
+#if Median == 1: means1 = np.nanmedian(data1.reshape((Nt*50,len(N_vec))), axis=0)
+#std1 = np.nanstd(data1.reshape((Nt*50,len(N_vec))), axis=0)
+#axs1[1].plot(N_vec, means1, '.k')
+#axs1[1].fill_between(N_vec, means1-std1, means1 + std1, color='gray', alpha=0.4)
+#axs1[1].set_xlabel(r'$N$ (rad/s)')
+#axs1[1].set_ylabel(r'$\overline{h_s}$ (m)')
 
-data2 = steps_dS
-data2[data2 == 0] = np.nan
-if Mean == 1: means2 = np.nanmean(data2.reshape((Nt*50,len(N_vec))), axis=0)
-if Median == 1: means2 = np.nanmedian(data2.reshape((Nt*50,len(N_vec))), axis=0)
-std2 = np.nanstd(data2.reshape((Nt*50,len(N_vec))), axis=0)
-axs1[2].plot(N_vec, means2, '.k')
-axs1[2].fill_between(N_vec, means2-std2, means2 + std2, color='gray', alpha=0.4)
-axs1[2].set_xlabel(r'$N$ (rad/s)')
-axs1[2].set_ylabel(r'$\overline{\overline{S_z}}$ (g/kg/m)')
-axs1[2].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+#data2 = steps_dS
+#data2[data2 == 0] = np.nan
+#if Mean == 1: means2 = np.nanmean(data2.reshape((Nt*50,len(N_vec))), axis=0)
+#if Median == 1: means2 = np.nanmedian(data2.reshape((Nt*50,len(N_vec))), axis=0)
+#std2 = np.nanstd(data2.reshape((Nt*50,len(N_vec))), axis=0)
+#axs1[2].plot(N_vec, means2, '.k')
+#axs1[2].fill_between(N_vec, means2-std2, means2 + std2, color='gray', alpha=0.4)
+#axs1[2].set_xlabel(r'$N$ (rad/s)')
+#axs1[2].set_ylabel(r'$\overline{\overline{S_z}}$ (g/kg/m)')
+#axs1[2].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
 
 if AddGusto == 1:
     data0_g = steps_arr_gusto
@@ -220,21 +220,42 @@ if AddGusto == 1:
     axs1[0].plot(N_vec_gusto, means0_g, 'ok', fillstyle='none')
     axs1[0].fill_between(N_vec_gusto, means0_g-std0_g, means0_g + std0_g, color='gray', alpha=0.4)
 
-    data1_g = steps_dz_gusto
-    data1_g[data1_g == 0] = np.nan
-    if Mean == 1: means1_g = np.nanmean(data1_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
-    if Median == 1: means1_g = np.nanmedian(data1_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
-    std1_g = np.nanstd(data1_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
-    axs1[1].plot(N_vec_gusto, means1_g, 'ok', fillstyle='none')
-    axs1[1].fill_between(N_vec_gusto, means1_g-std1_g, means1_g + std1_g, color='gray', alpha=0.4)
+    #data1_g = steps_dz_gusto
+    #data1_g[data1_g == 0] = np.nan
+    #if Mean == 1: means1_g = np.nanmean(data1_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
+    #if Median == 1: means1_g = np.nanmedian(data1_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
+    #std1_g = np.nanstd(data1_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
+    #axs1[1].plot(N_vec_gusto, means1_g, 'ok', fillstyle='none')
+    #axs1[1].fill_between(N_vec_gusto, means1_g-std1_g, means1_g + std1_g, color='gray', alpha=0.4)
 
-    data2_g = steps_dS_gusto
-    data2_g[data2_g == 0] = np.nan
-    if Mean == 1: means2_g = np.nanmean(data2_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
-    if Median == 1: means2_g = np.nanmedian(data2_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
-    std2_g = np.nanstd(data2_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
-    axs1[2].plot(N_vec_gusto, means2_g, 'ok', fillstyle='none')
-    axs1[2].fill_between(N_vec_gusto, means2_g-std2_g, means2_g + std2_g, color='gray', alpha=0.4)
+    #data2_g = steps_dS_gusto
+    #data2_g[data2_g == 0] = np.nan
+    #if Mean == 1: means2_g = np.nanmean(data2_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
+    #if Median == 1: means2_g = np.nanmedian(data2_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
+    #std2_g = np.nanstd(data2_g.reshape((Nt2*50,len(N_vec_gusto))), axis=0)
+    #axs1[2].plot(N_vec_gusto, means2_g, 'ok', fillstyle='none')
+    #axs1[2].fill_between(N_vec_gusto, means2_g-std2_g, means2_g + std2_g, color='gray', alpha=0.4)
+
+#Plot step prediction:
+omega_well = np.loadtxt('../BoussinesqLab/dedalus/meanflowarr.txt')[:,3]
+Nvec = np.loadtxt('../BoussinesqLab/dedalus/steptracking_means.txt')[0,:]
+#print(Nvec)
+Nsteps = np.loadtxt('../BoussinesqLab/dedalus/steptracking_means.txt')[1,:]
+
+axs1[1].plot(Nvec,omega_well,'o', color='k')
+axs1[1].set_xlabel(r'$N$ (rad/s)')
+axs1[1].set_ylabel(r'$\omega_{well}$ (rad/s)')
+
+m1 = -1.74 + 8.41*omega_well #linear model from R code.
+axs1[2].plot(omega_well,Nsteps, 'o', c='k')
+axs1[2].plot(omega_well,m1, c='k')
+axs1[2].set_xlabel(r'$\omega_{well}$ (rad/s)')
+axs1[2].set_ylabel(r'Average # of steps')
+
+plt.show()
+
+
+
 
 
 if ParkStepSize==1:
