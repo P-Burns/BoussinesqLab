@@ -163,7 +163,7 @@ w2f_analysis = 0
 if VaryN == 0:
     #Options when reading data:  
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    dir_state =  '/home/ubuntu/dedalus/Results/State_6_125_13_31/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
     #dir_state = '/home/ubuntu/dedalus/Results/State/'
