@@ -14,10 +14,12 @@ saveFig = 0
 
 
 #Initialise arrays:
-N_vec = np.array([.3,.5,1.,1.5,2.,2.5,2.75,3,3.25,3.5,3.75,4,4.5,5])
+N_vec = np.array([.3,.5,1.,1.5,2.,2.5,2.75,3.,3.25,3.5,3.75,4.,4.5,5.])
 Ns = len(N_vec)
 force_vec = np.array([13,55,90,125,167,216,286]) #this vector corresponds to file names that approximate n_vec
 H = 0.45
+L = 0.2
+k = 4.*(2*np.pi)/L
 n_vec = np.array([2,8,13,18,24,31,41])*np.pi/H #central vertical wavenumber of Gaussian force
 Forces = len(force_vec)
 #Initialise arrays to analyse results as a function of N and the force parameter:
@@ -29,6 +31,13 @@ c1 = np.zeros((Ns,Forces))
 c2 = np.zeros((Ns,Forces))
 #Also create a mask array to identify/plot parameter space of no steps.
 mask = np.zeros((Ns,Forces),dtype='bool')
+
+#Look at relationship between induced force and Natural frequency 
+#as cause of step instability:
+d1 = np.zeros((Ns,Forces))
+#Look at ratio of external force to background restoring force:
+d2 = np.zeros((Ns,Forces))
+
 
 #Time parameters:
 dt = 0.1
@@ -60,6 +69,8 @@ Nfiles = len(sys.argv)-1
 #Main loop to read in data from results directories and save 
 #computed diagnositcs in arrays for plotting/analysis:
 for ff in range(0,Nfiles):
+
+    #print(ff)
 
     #Construct data root directory
     RunName = sys.argv[ff+1]
@@ -95,7 +106,7 @@ for ff in range(0,Nfiles):
     #Look at when there are no steps:
     if np.min(steps_t)==0:
         idxs = np.where(steps_t==0)[0]
-        print(np.min(idxs), np.max(idxs), np.min(np.diff(idxs)), np.max(np.diff(idxs)) )
+        #print(np.min(idxs), np.max(idxs), np.min(np.diff(idxs)), np.max(np.diff(idxs)) )
     
     #Set time points with no steps to NaN so that the averages aren't 
     #biased by varying time periods of no steps (e.g. with N). For the 2D array, steps_dz, this also 
@@ -115,6 +126,10 @@ for ff in range(0,Nfiles):
     steps_dz_abs_ave = np.zeros((Nt))
     ddt_stepsDz_abs_ave = np.zeros((Nt))
     ddt_steps_z_abs_ave = np.zeros((Nt))
+
+    #External force parameters:
+    epsilon_t = 20 
+    Force = np.sqrt(epsilon_t)
 
     for tt in range(0,Nt):
         if steps_t[tt] != 0:
@@ -146,6 +161,17 @@ for ff in range(0,Nfiles):
         c1[idxN,idxForce] = 0
         c2[idxN,idxForce] = 0
         mask[idxN,idxForce] = True
+
+    #Compute ratio of induced force frequency to Natural frequency:
+    k0mag = np.sqrt(k*k+n_vec[idxForce]*n_vec[idxForce])
+    omegaForce = np.abs(k)/k0mag*N_vec[idxN]
+    print(omegaForce/N_vec[idxN])
+    if omegaForce/N_vec[idxN]==0: pdb.set_trace()
+    d1[idxN,idxForce] = omegaForce/N_vec[idxN]
+
+    #Compute ratio of external force to background restoring force:
+    d2[idxN,idxForce] = Force/N_vec[idxN]/(2*np.pi)
+
 
     #Plot time series results:
     if t_series==1:    
@@ -265,7 +291,6 @@ for ff in range(0,Nfiles):
 #Plot results 
 fig = plt.figure(figsize=(width,height))
 fig.set_tight_layout(True)
-cmap = 'Purples'
 
 #Contour plots:
 #grid = plt.GridSpec(1, 3, wspace=0., hspace=0.)
@@ -309,10 +334,10 @@ cmap = 'ocean'
 
 
 #Find no step points:
-idxs = np.where(mask==1)
+maskIdxs = np.where(mask==1)
 #print(idxs)
-yvec2 = N_vec[idxs[0]]
-xvec2 = n_vec[idxs[1]]
+yvec2 = N_vec[maskIdxs[0]]
+xvec2 = n_vec[maskIdxs[1]]
 #print(xvec2)
 #print(yvec2)
 
@@ -397,3 +422,106 @@ plt.savefig('stability.png')
 plt.close()
 
 
+
+
+#Plot relationship between induced force and Natural frequency:
+fig = plt.figure(figsize=(width,height))
+fig.set_tight_layout(True)
+
+interp = 'none'
+rows = 2
+columns = 2
+meshwidth=0.1
+snap=True
+
+fig.add_subplot(rows,columns,1)
+plt.pcolormesh(xvec,yvec,d1, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
+plt.xlim(0,400)
+plt.ylim(0,6)
+plt.colorbar()
+plt.scatter(xvec2,yvec2, marker='+', s=10, color='k')
+plt.title(r'$d_1$')
+plt.xlabel(r'$n$ (rad/m)')
+plt.ylabel(r'$N$ (rad/s)')
+
+maskIdxs = np.where(mask==0)
+fig.add_subplot(rows,columns,2)
+plt.scatter(s1[maskIdxs[0],maskIdxs[1]].flatten(),d1[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_1$')
+plt.ylabel(r'$d_1$')
+
+fig.add_subplot(rows,columns,3)
+plt.scatter(s2[maskIdxs[0],maskIdxs[1]].flatten(),d1[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_2$')
+plt.ylabel(r'$d_1$')
+
+fig.add_subplot(rows,columns,4)
+plt.scatter(s3[maskIdxs[0],maskIdxs[1]].flatten(),d1[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_3$')
+plt.ylabel(r'$d_1$')
+
+plt.savefig('d1.png')
+plt.close()
+
+
+#Plot relationship between number of steps and central vertical wavenumber of force:
+fig = plt.figure(figsize=(width,height))
+fig.set_tight_layout(True)
+
+narr = np.zeros((Ns,Forces))
+for i in range(0,Ns): narr[i,:] = n_vec
+
+fig.add_subplot(1,1,1)
+plt.scatter(c2[maskIdxs[0],maskIdxs[1]].flatten(),narr[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$c_2$')
+plt.ylabel(r'$n_0$')
+
+plt.savefig('c2_vs_n0.png')
+plt.close()
+
+
+#Look at relationship between layer features and ratio of induced force to Natural frequency:
+fig = plt.figure(figsize=(width,height))
+fig.set_tight_layout(True)
+
+interp = 'none'
+rows = 2
+columns = 3
+meshwidth=0.1
+snap=True
+
+fig.add_subplot(rows,columns,1)
+plt.pcolormesh(xvec,yvec,d2, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
+plt.xticks(n_vec[::2])
+plt.xlim(0,400)
+plt.ylim(0,6)
+plt.colorbar()
+plt.scatter(xvec2,yvec2, marker='+', s=10, color='k')
+plt.title(r'$d_2$')
+plt.xlabel(r'$n$ (rad/m)')
+plt.ylabel(r'$N$ (rad/s)')
+
+fig.add_subplot(rows,columns,2)
+plt.plot(N_vec,Force/N_vec,'-ok')
+plt.plot([np.min(N_vec),np.max(N_vec)],[1,1],'--k')
+plt.xlabel(r'$N$ (rad/s)')
+plt.ylabel(r'$F/N$')
+
+maskIdxs = np.where(mask==0)
+fig.add_subplot(rows,columns,4)
+plt.scatter(s1[maskIdxs[0],maskIdxs[1]].flatten(),d2[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_1$')
+plt.ylabel(r'$d_2$')
+
+fig.add_subplot(rows,columns,5)
+plt.scatter(s2[maskIdxs[0],maskIdxs[1]].flatten(),d2[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_2$')
+plt.ylabel(r'$d_2$')
+
+fig.add_subplot(rows,columns,6)
+plt.scatter(s3[maskIdxs[0],maskIdxs[1]].flatten(),d2[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_3$')
+plt.ylabel(r'$d_2$')
+
+plt.savefig('d2.png')
+plt.close()
