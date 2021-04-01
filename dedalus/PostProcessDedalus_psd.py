@@ -43,39 +43,39 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 1
+FullDomain      = 0
 SinglePoint	= 0
-MultiPoint	= 0
+MultiPoint	= 1
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 0
+forced          = 1
 if VaryN == 1:
     #N2		= 0.09
     N2		= 0.25
-    #N2 	= 1
+    N2 		= 1
     N2		= 2.25		
-    #N2 	= 4
-    #N2		= 6.25
-    #N2		= 7.5625
-    #N2 	= 9
-    #N2		= 10.5625
-    #N2 	= 12.25
-    #N2		= 14.0625
-    #N2		= 16
-    #N2		= 20.25
-    #N2		= 25
+    N2 		= 4
+    N2		= 6.25
+    N2		= 7.5625
+    N2 		= 9
+    N2		= 10.5625
+    N2 		= 12.25
+    N2		= 14.0625
+    N2		= 16
+    N2		= 20.25
+    N2		= 25
 
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-var_nms = ['S']
+#var_nms = ['S']
 #var_nms = ['psi','S']
-#var_nms = ['psi','S','psi_r','S_r']
+var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -90,15 +90,14 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
-Density			= 1
-StateS_2                = 0
+Density			= 0
+StateS_2                = 1
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
-drhodz			= 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -114,7 +113,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 AnalyseS                = 1
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
@@ -150,7 +149,7 @@ wing = Nt_mean//2
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 1
+PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -158,14 +157,14 @@ filledContour 	= 1
 NoPlotLabels    = 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:  
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    dir_state =  '/home/ubuntu/dedalus/Results/State_6_125_13_31/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
     #dir_state = '/home/ubuntu/dedalus/Results/State/'
@@ -231,7 +230,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 30
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -700,15 +699,9 @@ if FullFields == 1 and Gusto == 0:
 
 if Density == 1:
     #calculate density using a linear equation of state where rho=rho(S):
-    if Modulated == 0:
-        S0 = np.mean(S)
-        rho = rho0*(1 + cs*(S-S0))
-        #print(np.min(rho),np.max(rho))
-    if Modulated == 1:
-        S0 = np.mean(S_r)
-        rho_r = rho0*(1 + cs*(S_r-S0))
-        #print(np.min(rho_r),np.max(rho_r))
-
+    S0 = np.mean(S)
+    rho = rho0*(1 + cs*(S-S0))
+    #print(np.min(rho))
     #pdb.set_trace()
 
 
@@ -1017,51 +1010,6 @@ if dSdz == 1:
         #xlim = (0,np.max(t))
         xlim = (0,60)
         xlim = ((StartMin-1)*secPerFile,np.max(t))
-
-if drhodz == 1:
-
-    if Gusto == 0:
-        if Modulated == 0: data = d_dz(rho,Nt,Nx,Nz,z)
-        else: data = d_dz(rho_r,Nt,Nx,Nz,z)
-
-    if MakePlot == 1:
-        if NoPlotLabels == 0:
-            PlotTitle = r'$\partial\rho/\partial z$ (kg m$^{-4}$)'
-        else: PlotTitle = ''
-        FigNmBase = 'drhodz'
-
-        if filledContour == 1:
-            #nlevs = 21
-            nlevs = 41
-            #nlevs = 81
-        else: nlevs = 41
-
-        if ParkRun < 0:
-            if N2==0.1 or N2==0.25 or N2==0.09:
-                rhozMin = -100
-                rhozMax = 100
-            if N2==1:
-                rhozMin = -300
-                rhozMax = 300
-            if N2==2.25:
-                rhozMin = -500
-                rhozMax = 500
-                #rhozMin = -300
-                #rhozMax = 300
-        drhoz = (rhozMax - rhozMin)/(nlevs-1)
-        clevels = np.arange(nlevs)*drhoz + rhozMin
-        if filledContour == 1:
-            #cmap = 'PRGn'
-            cmap = 'bwr'
-            #cmap = 'tab20b'
-        else:
-            col1 = ['k']*(int(nlevs/2.-1))
-            col2 = ['grey']*(int(nlevs/2.))
-            colorvec = col1+col2
-        #xlim = (0,np.max(t))
-        #xlim = ((StartMin-1)*secPerFile,np.max(t))
-        xlim = (0,60)
-
 
 if dUdz == 1:
     u = d_dz(Psi,Nt,Nx,Nz,z)
