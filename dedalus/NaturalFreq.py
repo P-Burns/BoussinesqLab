@@ -73,14 +73,6 @@ PlotMainTriads                  = 0
 FindUniqueSet                   = 0
 FindMaxModes                    = 1
 FindOneAlphaSet                 = 1
-<<<<<<< HEAD
-keyNonWaveModes                 = 1
-keyWaveModes                    = 0
-xAxis_k                         = 0
-xAxis_n                         = 0
-xAxis_r                         = 0
-xAxis_alt                       = 0
-=======
 keyNonWaveModes                 = 0
 keyWaveModes                    = 1
 PlotTriads			= 0
@@ -88,7 +80,6 @@ xAxis_k                         = 1
 xAxis_n                         = 1
 xAxis_r                         = 1
 xAxis_alt                       = 1
->>>>>>> f32a207a3ceaf0836d66bd114694c4c8fc0e4cb8
 xAxis_angle                     = 0
 xAxis_c                         = 1
 xAxis_cgx                       = 1
