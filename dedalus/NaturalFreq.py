@@ -19,18 +19,21 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import BoundaryNorm
 
 
+plt.rcParams.update({'font.size': 14})
+
+
 #Program control:
 ProblemType			= 'Layers'
 
 ParkRun 			= -1
 N2				= 1
-N2				= 2.25
-N2				= 4
-N2				= 6.25
-N2				= 7.5625
+#N2				= 2.25
+#N2				= 4
+#N2				= 6.25
+#N2				= 7.5625
 #N2				= 9
-#N2				= 10.5625
-#N2				= 12.25
+#N2				= 10.5625 
+#N2				= 12.25 
 #N2				= 14.0625
 #N2				= 16
 #N2				= 20.25
@@ -47,6 +50,7 @@ sigma3D 			= 1
 FindMainBasisParts 		= 1
 PlotMainBasisParts 		= 0
 PlotState_MainBasis		= 0
+Density				= 0
 PlotFastMode1			= 0
 PlotFastMode2			= 0
 PlotSpectrum			= 0
@@ -73,8 +77,8 @@ PlotMainTriads                  = 0
 FindUniqueSet                   = 0
 FindMaxModes                    = 1
 FindOneAlphaSet                 = 1
-keyNonWaveModes                 = 0
-keyWaveModes                    = 1
+keyNonWaveModes                 = 1
+keyWaveModes                    = 0
 PlotTriads			= 0
 xAxis_k                         = 1
 xAxis_n                         = 1
@@ -86,11 +90,11 @@ xAxis_cgx                       = 1
 xAxis_cgz                       = 1
 ManualColors			= 0
 MainWaveSpeeds			= 0
-ComputePDF			= 1
+ComputePDF			= 0
 PlotHistOmega12			= 0
 ExamineHISTomega12		= 0
 ExamineHISTn12			= 0
-StepStructureSearch		= 1
+StepStructureSearch		= 0
 ComputeCumulativeDistFnc	= 1
 InteractionCoef			= 1
 PlotInteractCoef		= 0
@@ -279,9 +283,7 @@ if sigma3D == 1:
 A4Width = 8.27
 MarginWidth = 1
 width = A4Width-2*MarginWidth
-#height = 7 
-height = 5
-#height = 4
+height = width/1.3
 #For scaling the A4 plot dimensions:
 ScaleFactor1 = 1
 ScaleFactor2 = 1
@@ -806,8 +808,6 @@ if FindMainBasisParts == 1:
             SpectralCoef0	= np.zeros((Nz,Nt))
             SpectralCoef1       = np.zeros((Nz,Nt))
  
-        #PowerLimit  	= 0.1
-        #PowerLimit  	= 0.01
         tmp             = np.zeros((Nx,Nz))
         for jj in range(0,Nz):
             for ii in range(0,int(Nx/2)):
@@ -816,6 +816,10 @@ if FindMainBasisParts == 1:
                 tmp[ii,jj] = np.max([tmp1,tmp2])
         PowerLimit = np.max(tmp)
         print(PowerLimit)
+
+        #Check effect of short-circuiting search by setting a large 
+        #power limit such that there is only 1 iteration in the search loop:
+        #PowerLimit  	= 0.01
 
         #ErrorLimit  	= 15
         ErrorLimit  	= 10
@@ -1060,12 +1064,18 @@ if FindMainBasisParts == 1:
             ylabel = r'$z$ (m)'
             xlim = (0,Lx)
             ylim = (0,Lz)
+        if Density == 1:
+            data1 = rho0*cs*data1
+            data2 = rho0*cs*data2
 
         fig1 = plt.figure(figsize=(width,height))
+        fig1.tight_layout()
         grid1 = plt.GridSpec(1, 1, wspace=0.0, hspace=0.0)
         ax1 = fig1.add_subplot(grid1[0,0])
-        if Modulated == 0: ax1.set_title(r'$S$ (g/kg)' )
-        if Modulated == 1: ax1.set_title(r'$\zeta$ (g/kg)' )
+        if Modulated == 0 and Density==0: ax1.set_title(r'$S$ (g/kg)' )
+        if Modulated == 0 and Density==1: ax1.set_title(r'$\rho$ (kg m$^{-3}$)' )
+        if Modulated == 1 and Density==0: ax1.set_title(r'$\zeta$ (g/kg)' )
+        if Modulated == 1 and Density==1: ax1.set_title(r'$\zeta$ (kg m$^{-3}$)' )
         ax1.set_xlim(xlim)
         ax1.set_xlabel(xlabel)
         ax1.set_ylim(ylim)
@@ -1081,6 +1091,8 @@ if FindMainBasisParts == 1:
         #cmap = 'PRGn'
         cmap = 'bwr'
 
+        
+
         i1 = ax1.contourf(xgrid,ygrid,data1,clevels,cmap=cmap,extend='both')
         fig1.colorbar(i1)
         #plt.show()
@@ -1088,10 +1100,13 @@ if FindMainBasisParts == 1:
         plt.close(fig1)
 
         fig2 = plt.figure(figsize=(width,height))
+        fig2.tight_layout()
         grid2 = plt.GridSpec(1, 1, wspace=0.0, hspace=0.0)
         ax2 = fig2.add_subplot(grid2[0,0])
-        if Modulated == 0: ax2.set_title(r'Estimate of $S$ (g/kg)')
-        if Modulated == 1: ax2.set_title(r'Estimate of $\zeta$ (g/kg)')
+        if Modulated == 0 and Density==0: ax2.set_title(r'Estimate of $S$ (g/kg)')
+        if Modulated == 0 and Density==1: ax2.set_title(r'Estimate of $\rho$ (kg m$^{-3}$)')
+        if Modulated == 1 and Density==0: ax2.set_title(r'Estimate of $\zeta$ (g/kg)')
+        if Modulated == 1 and Density==1: ax2.set_title(r'Estimate of $\zeta$ (kg m$^{-3}$)' )
                          #'{:2d}'.format(count1) + ', ' + '{:2d}'.format(count3) +\
                          #', ' + '{:5.2f}'.format(PowerLimit) + ', ' + '{:5.2f}'.format(epsilon) + '%' )
         ax2.set_xlim(xlim)
@@ -2124,7 +2139,7 @@ if Resonances == 1:
                     n12_vec[2*ii] = n1
                     n12_vec[2*ii+1] = n2
                     kmag12_vec[2*ii] = kmag1
-                    kmag12_vec[2*ii+i] = kmag2
+                    kmag12_vec[2*ii+1] = kmag2
                     alt12_vec[2*ii] = alt1
                     alt12_vec[2*ii+1] = alt2
                     omega12_vec[2*ii] = omega_k1
@@ -2293,12 +2308,17 @@ if Resonances == 1:
 
             if FindMaxModes == 1:
                 #plt.figure()
-                #plt.plot(k_vec)
+                #plt.plot(i_vec)
                 #plt.show()
 
                 #plt.figure()
-                #plt.plot(n_vec)
+                #plt.plot(j_vec)
                 #plt.show()
+   
+                #plt.figure()
+                #plt.plot(omega_vec)
+                #plt.show()
+                #pdb.set_trace()
 
                 maxModes = np.zeros((Nk))
                 xvec = np.zeros((Nk))
@@ -2310,18 +2330,31 @@ if Resonances == 1:
                     omega = omega_vec[ii]
                     if ([i,j] not in past_key_modes):
                     #if (omega not in past_key_modes):
-                        bool_i = i_vec==i
-                        bool_j = j_vec==j             
-                        tmp = np.multiply(bool_i,bool_j)
-                        bool_ij = np.repeat(tmp,2)
+                        #bool_i = i_vec==i
+                        #bool_j = j_vec==j             
+                        #tmp = np.multiply(bool_i,bool_j)
+                        #bool_ij = np.repeat(tmp,2)
                         #maxModes[count_0] = np.max(kmag12ij_vec[bool_ij])
 
-                        #tmp = omega_vec==omega
+                        if omega >= 0:
+                            bool1 = omega_vec <= omega
+                            bool2 = omega_vec >= 0
+                            tmp = np.multiply(bool1,bool2)
+                            bool_omega = np.repeat(tmp,2)
+                            maxModes[count_0] = np.max(omega12_vec[bool_omega])
+                        if omega < 0:
+                            bool1 = omega_vec >= omega
+                            bool2 = omega_vec < 0
+                            tmp = np.multiply(bool1,bool2)
+                            bool_omega = np.repeat(tmp,2)
+                            maxModes[count_0] = np.min(omega12_vec[bool_omega])
+
+                        #tmp = np.abs(omega_vec) <= np.abs(omega)
                         #bool_omega = np.repeat(tmp,2)
                         #maxModes[count_0] = np.max(np.abs(omega12_vec[bool_omega]))
                         #tmp_max = np.max(np.abs(omega12_vec[bool_ij]))
-                        tmp_max = np.max(omega12_vec[bool_ij])
-                        maxModes[count_0] = tmp_max
+                        #tmp_max = np.max(omega12_vec[bool_ij])
+                        #maxModes[count_0] = tmp_max
 
                         #vec = np.array([i,j]) 
                         #kmag_ij = np.linalg.norm(vec) 
