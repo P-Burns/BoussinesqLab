@@ -37,13 +37,14 @@ ProblemType 		= "Layers"
 #ParkRun 		= 18   #for Park et al run 18
 ParkRun 		= -1
 scalePert		= 0
-N2			= 0.25
-N2			= 1
-N2			= 2.25
-N2			= 4
-N2			= 6.25
-#N2			= 7.5625
-N2			= 9
+#N2			= 0.09
+#N2			= 0.25
+#N2			= 1
+#N2			= 2.25
+#N2			= 4
+#N2			= 6.25
+N2			= 7.5625
+#N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
 #N2			= 14.0625
@@ -56,14 +57,14 @@ ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
 ScaleDiffusion 		= 1
 
-ICsRandomPert 		= 1
+ICsRandomPert 		= 0
 ReadICs 		= 1
 Interpolate		= 0
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 0
+AddForce 		= 1
 ForceFullDomain 	= 1
 ForceSingleColumn 	= 0
 SimpleWave		= 0
@@ -84,7 +85,7 @@ domain3D		= 0
 w2f_grid 		= 0
 w2f_state 		= 0
 w2f_SinglePoint 	= 1
-w2f_dt		 	= 1
+w2f_dt		 	= 0
 w2f_energy		= 0
 
 
@@ -208,8 +209,9 @@ if ProblemType == "Layers":
     bs = -1./(rho0*cs)*drho0_dz
     bt = 0.
 
-    print(bs)
-    pdb.set_trace()
+    #print(bs)
+    #pdb.set_trace()
+
 
 #Define governing equations:
 if compute_p==0:
@@ -318,10 +320,7 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_97.txt').view(complex)
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_157_195.txt').view(complex)
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_97_31.txt').view(complex)
-            tmp = tmp*5.
+            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
@@ -820,11 +819,12 @@ if Restart == 1:
     # Load restart file
     write, dt = solver.load_state('Results/' + dir_state + '/State_s10.h5', -1)
 else:
-    dt = 1./600.
+    #dt = 1./600.
+    dt = 8e-3
 
 SimDays = 0.
 SimHrs = 0.
-SimMins = 10.
+SimMins = 1.
 SimSecs = 0.
 te = SimDays*(24*60*60) + SimHrs*(60*60) + SimMins*60 + SimSecs
 solver.stop_sim_time = te
@@ -845,8 +845,9 @@ if w2f_SinglePoint == 1 and w2f_state == 0:
         write_dt = 1e-2
     if AddForce == 1: 
         #write_dt = 5e-3
-        write_dt = 1e-2
+        #write_dt = 1e-2
         #write_dt = 1e-1
+        write_dt = 8e-3
 
 # Analysis:
 file_nt = 60./write_dt	#Each file contains 1 min of data
