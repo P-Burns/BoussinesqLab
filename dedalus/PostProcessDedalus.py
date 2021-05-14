@@ -46,32 +46,33 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 1
-SinglePoint	= 0
+FullDomain      = 0
+SinglePoint	= 1
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
 forced          = 0
+N2		= 7.5625
 if VaryN == 1:
     #N2		= 0.09
-    N2		= 0.25
-    N2		= 1
-    N2		= 2.25		
-    N2		= 4
-    N2		= 6.25
+    #N2		= 0.25
+    #N2		= 1
+    #N2		= 2.25		
+    #N2		= 4
+    #N2		= 6.25
     N2		= 7.5625
-    N2          = 9
-    N2		= 10.5625
-    N2 	        = 12.25
-    N2		= 14.0625
-    N2		= 16
-    N2		= 20.25
-    N2		= 25
+    #N2          = 9
+    #N2		= 10.5625
+    #N2         = 12.25
+    #N2		= 14.0625
+    #N2		= 16
+    #N2		= 20.25
+    #N2		= 25
 
 
 #User must make sure correct data is read in for some analysis:
@@ -93,9 +94,9 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
-StateS                  = 0
+StateS                  = 1
 StateS_2                = 0
 Buoyancy		= 0
 Density			= 0
@@ -110,7 +111,7 @@ TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
 dUdz                    = 0
-Richardson              = 1
+Richardson              = 0
 Froude			= 0
 Reynolds	 	= 0
 Vorticity               = 0
@@ -157,14 +158,14 @@ tMean_slide = 0
 Nt_mean = 21
 wing = Nt_mean//2
 
-FieldMaxMin = 1
+FieldMaxMin = 0
 
 
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
 PlotTZ 		= 0
-PlotT 		= 0
+PlotT 		= 1
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
@@ -179,10 +180,10 @@ w2f_analysis = 0
 if VaryN == 0:
     #Options when reading data:  
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
-    #dir_state = '/home/ubuntu/dedalus/Results/State/'
+    dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
@@ -245,12 +246,14 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
-    if SinglePoint==1: dt = 1e-2
-    if MultiPoint==1: dt = 0.008
+    if SinglePoint==1: 
+        #dt = 1e-2
+        dt = 8e-3
+    if MultiPoint==1: dt = 8e-3
 
 if Gusto == 1: dt = 0.004
 
@@ -269,7 +272,7 @@ elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     dt2 = dt
-    dt2 = 0.1
+    #dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.02
@@ -3067,7 +3070,7 @@ if MakePlot >= 1:
         ygrid = z2d_t
 
     if PlotT >= 1:
-       if SpectralAnalysis == 0:
+       if SpectralAnalysis == 0 and SinglePoint==0:
            xIdx = int(Nx/2.)
            zIdx = int(Nz/2.)
            data = data[:,xIdx,zIdx]
@@ -3181,13 +3184,14 @@ if MakePlot >= 1:
             separator = '_'
             RunName=separator.join(tmp)
 
-        #plt.show()
-        if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.png')
-        if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.png')
-        if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
-        if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
-        if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
-        plt.close(fig)
+        if w2f_analysis == 0: plt.show()
+        if w2f_analysis == 1:
+            if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.png')
+            if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.png')
+            if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
+            if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
+            if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
+            plt.close(fig)
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,
