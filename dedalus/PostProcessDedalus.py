@@ -21,6 +21,9 @@ from dedalus import public as de
 import sys
 from netCDF4 import Dataset
 import netCDF4 as nc4
+from matplotlib.colors import LogNorm
+
+plt.rcParams.update({'font.size': 14})
 
 
 #Passed variables:
@@ -56,15 +59,15 @@ scalePert	= 0
 forced          = 0
 if VaryN == 1:
     #N2		= 0.09
-    N2		= 0.25
-    #N2 	= 1
+    #N2		= 0.25
+    #N2		= 1
     N2		= 2.25		
-    #N2 	= 4
+    #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
-    #N2 	= 9
+    #N2          = 9
     #N2		= 10.5625
-    #N2 	= 12.25
+    #N2         = 12.25
     #N2		= 14.0625
     #N2		= 16
     #N2		= 20.25
@@ -90,14 +93,17 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
-Density			= 0
 StateS_2                = 0
+Buoyancy		= 0
+Density			= 1
+Density_2		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
+dbdz			= 0
 drhodz			= 0
 TrackSteps              = 0
 TrackInterfaces         = 0
@@ -106,6 +112,8 @@ UseProxySz 		= 0
 dUdz                    = 0
 Richardson              = 1
 AnalyseRiFields		= 1
+Froude			= 0
+Reynolds	 	= 0
 Vorticity               = 0
 KineticE                = 0
 PotentialE              = 0
@@ -116,7 +124,9 @@ ForwardTransform     	= 0
 CoefficientSpace	= 0
 
 SpectralAnalysis        = 0
-AnalyseS                = 1
+AnalyseS                = 0
+AnalyseRho              = 1
+AnalysePsi              = 0
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
@@ -148,18 +158,22 @@ tMean_slide = 0
 Nt_mean = 21
 wing = Nt_mean//2
 
+FieldMaxMin = 0
+
+
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 1
-PlotT 		= 0
+PlotTZ 		= 0
+PlotT 		= 1
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
 NoPlotLabels    = 0
+logscale	= 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -169,7 +183,8 @@ if VaryN == 0:
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
-    dir_state = '/home/ubuntu/dedalus/Results/' + 'State' + RunName + '/'
+    #dir_state = '/home/ubuntu/dedalus/Results/' + 'State' + RunName + '/'
+    dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
@@ -206,7 +221,9 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced==1 or SinglePoint==1 or Modulated==1:
         if forced == 1:
-            RunName = RunName + '_k05n028x10'
+            RunName = RunName + '_k04n02'
+            #RunName = RunName + '_k04n18'
+            #RunName = RunName + '_k05n028x10'
             #RunName = RunName + '_k05n028x2'
             #RunName = RunName + '_k05n014x5'
             #RunName = RunName + '_k05n014'
@@ -215,6 +232,7 @@ if VaryN == 1:
             #RunName = RunName + '_dt0.005_sp'
         if Modulated == 1 and forced == 0 and SinglePoint == 0:
             RunName = RunName + '_R'
+        if Linear ==1 : RunName = RunName + '_linear'
     #dir_state = './Results/' + RunName + '/'
     dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
 
@@ -225,22 +243,21 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 10
-        nfiles = 29
+        #nfiles = 10
+        nfiles = 30
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
-        StartMin = 6
-        nfiles = 2
+        StartMin = 1
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
-    if SinglePoint==1 or MultiPoint==1: 
+    if SinglePoint==1: 
         #dt = 1e-2
-        dt = 0.008
-        #dt = 5e-3
-        #dt = 1e-3
+        dt = 8e-3
+    if MultiPoint==1: dt = 8e-3
 
 if Gusto == 1: dt = 0.004
 
@@ -254,12 +271,12 @@ if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0:
     if forced == 0: dt2=0.2
     if forced == 1: 
         dt2=0.2
-        dt2=dt
+        #dt2=dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     dt2 = dt
-    dt2 = 0.1
+    #dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.02
@@ -390,6 +407,24 @@ if FullFields == 1 and Gusto == 0:
     Tbase = np.zeros(Nz) + TTop
     Sbase = -bs*(z-Lz) + STop
 
+    if Buoyancy == 1:
+        b_pert0 = -g*cs*Spert0
+        bTop = b_pert0
+        b_base = N2*(z-Lz) + bTop 
+        #print(b_pert0/(N2*Lz))
+        #pdb.set_trace()
+
+    if Density == 1:
+        b_pert0 = -g*cs*Spert0
+        #print('initial buoyancy perturbation: ', b_pert0 )
+        #print('initial density perturbation: ', (-rho0/g)*b_pert0 )
+        bTop = b_pert0
+        b_base = N2*(z-Lz) + bTop
+        rho_base = (-rho0/g)*b_base
+        #print(rho_base)
+        #fraction = (-rho0/g)*b_pert0/(-N2*(-rho0/g)*Lz)
+        #print(fraction)
+        #pdb.set_trace()
 
 #Set-up wavenumbers for Dedalus grid:
 kk = np.zeros(Nx)
@@ -406,13 +441,12 @@ kk[int(Nx/2.)+1:] = kkx_neg
 #pdb.set_trace()
 kk_cosine = z_basis.wavenumbers
 
-
 #Set general plotting parameters assuming A4 page size:
 A4Width = 8.27
 MarginWidth = 1
-height = 5
+#height = 4.5
 width = A4Width-2*MarginWidth
-#width = height*1.2
+height = width/1.3
 #For scaling the A4 plot dimensions:
 ScaleFactor = 1
 #ScaleFactor = 0.7
@@ -690,7 +724,7 @@ def spectral_analysis(data,dt2,Welch=True):
     return spectralCoef, freqvec, nperseg;
 
 
-if FullFields == 1 and Gusto == 0:
+if FullFields==1 and Gusto==0 and Buoyancy==0 and Density==0:
     #add base state:
     if Modulated == 0: S += Sbase
     else: S_r += Sbase
@@ -699,18 +733,81 @@ if FullFields == 1 and Gusto == 0:
     #pdb.set_trace()
 
 
-if Density == 1:
-    #calculate density using a linear equation of state where rho=rho(S):
-    if Modulated == 0:
-        S0 = np.mean(S)
-        rho = rho0*(1 + cs*(S-S0))
-        #print(np.min(rho),np.max(rho))
-    if Modulated == 1:
-        S0 = np.mean(S_r)
-        rho_r = rho0*(1 + cs*(S_r-S0))
-        #print(np.min(rho_r),np.max(rho_r))
+if Buoyancy == 1:
+    #For buoyancy first transform perturbation salinity into perturbation buoyancy.
+    #Then apply base state after this transformation.  This avoids having to define
+    #an average salinity when you do it the other way around (i.e. first find the full salinity
+    #and then convert to buoyancy).
 
-    #pdb.set_trace()
+    if Modulated == 0:
+        b = -g*cs*S
+        if FullFields==1: b += b_base
+    if Modulated == 1:
+        b_r = -g*cs*S_r
+        if FullFields==1: b_r += b_base
+
+
+if Density == 1:
+    #For density first transform perturbation salinity into perturbation density.
+    #Then apply base state after this transformation.  This avoids having to define
+    #an average salinity when you do it the other way around (i.e. first find the full salinity
+    #and then convert to density).
+
+    if Modulated == 0:
+        #print(rho0)
+        #pdb.set_trace()
+        rho = rho0*cs*S
+        if FullFields==1: rho += rho_base
+        data = rho
+    if Modulated == 1:
+        rho_r = rho0*cs*S_r
+        if FullFields==1: rho_r += rho_base
+        data = rho_r
+
+    if (MakePlot == 1) and (PlotTZ==1 or PlotXZ==1):
+        PlotTitle = ''
+        FigNmBase = 'rho'
+        cmap="bwr"
+
+        nlevs = 41
+        rhoMin = -.02
+        rhoMax = .02
+        drho = (rhoMax-rhoMin)/(nlevs-1)
+        clevels = np.arange(nlevs)*drho + rhoMin
+
+        xlim=(0,60)
+
+        if Modulated == 0: PlotTitle=r'$\rho$ (kg m$^{-3}$)'
+        if Modulated == 1: PlotTitle = r'$\zeta$ (kg m$^{-3}$)'
+
+
+if Density_2 == 1:
+    #For density first transform perturbation salinity into perturbation density.
+    #Then apply base state after this transformation.  This avoids having to define
+    #an average salinity when you do it the other way around (i.e. first find the full salinity
+    #and then convert to density).
+
+    rho = rho0*cs*S
+    if FullFields==1: rho += rho_base
+
+    #Apply Skew-Hermitian operation:
+    rho2 = rho*(g/rho0/np.sqrt(N2))
+    data = rho2
+
+    if (MakePlot == 1) and (PlotTZ==1 or PlotXZ==1):
+        PlotTitle = ''
+        FigNmBase = 'rho2'
+        cmap="bwr"
+
+        nlevs = 41
+        rhoMin = -.02
+        rhoMax = .02
+        drho = (rhoMax-rhoMin)/(nlevs-1)
+        clevels = np.arange(nlevs)*drho + rhoMin
+
+        xlim=(0,60)
+
+        PlotTitle=r'$\rho$ (kg m$^{-3}$)'
 
 
 if Flow == 1:
@@ -1019,6 +1116,48 @@ if dSdz == 1:
         xlim = (0,60)
         xlim = ((StartMin-1)*secPerFile,np.max(t))
 
+if dbdz == 1:
+
+    if Gusto == 0:
+        if Modulated == 0: data = d_dz(b,Nt,Nx,Nz,z)
+        else: data = d_dz(b_r,Nt,Nx,Nz,z)
+
+    if MakePlot == 1:
+        if NoPlotLabels == 0:
+            PlotTitle = r'$\partial b/\partial z$ (s$^{-2}$)'
+        else: PlotTitle = ''
+        FigNmBase = 'dbdz'
+
+        if filledContour == 1:
+            #nlevs = 21
+            nlevs = 41
+            #nlevs = 81
+        else: nlevs = 41
+
+        if ParkRun < 0:
+            if N2==0.1 or N2==0.25 or N2==0.09:
+                bMin = -100
+                bMax = 100
+            if N2==1:
+                bMin = -300
+                bMax = 300
+            if N2==2.25:
+                bMin = -5
+                bMax = 5
+        dbz = (bMax - bMin)/(nlevs-1)
+        clevels = np.arange(nlevs)*dbz + bMin
+        if filledContour == 1:
+            #cmap = 'PRGn'
+            cmap = 'bwr_r'
+            #cmap = 'tab20b'
+        else:
+            col1 = ['k']*(int(nlevs/2.-1))
+            col2 = ['grey']*(int(nlevs/2.))
+            colorvec = col1+col2
+        #xlim = (0,np.max(t))
+        #xlim = ((StartMin-1)*secPerFile,np.max(t))
+        xlim = (0,60)
+
 if drhodz == 1:
 
     if Gusto == 0:
@@ -1027,7 +1166,8 @@ if drhodz == 1:
 
     if MakePlot == 1:
         if NoPlotLabels == 0:
-            PlotTitle = r'$\partial\rho/\partial z$ (kg m$^{-4}$)'
+            if PlotTZ==1: PlotTitle = r'$\partial \rho/\partial z$ (kg m$^{-4}$)'
+            if PlotXZ==1: PlotTitle = str(t[tIdx]) + ' s'
         else: PlotTitle = ''
         FigNmBase = 'drhodz'
 
@@ -1039,11 +1179,11 @@ if drhodz == 1:
 
         if ParkRun < 0:
             if N2==0.1 or N2==0.25 or N2==0.09:
-                rhozMin = -100
-                rhozMax = 100
+                rhoMin = -100
+                rhoMax = 100
             if N2==1:
-                rhozMin = -300
-                rhozMax = 300
+                rhoMin = -300
+                rhoMax = 300
             if N2==2.25:
                 rhozMin = -500
                 rhozMax = 500
@@ -1081,6 +1221,15 @@ if drhodz == 1:
 
         drhoz = (rhozMax - rhozMin)/(nlevs-1)
         clevels = np.arange(nlevs)*drhoz + rhozMin
+        if logscale == 0:
+            drhoz = (rhoMax - rhoMin)/(nlevs-1)
+            clevels = np.arange(nlevs)*drhoz + rhoMin
+        else:
+            tmp = np.logspace(1,4,50)
+            clevels = np.concatenate((-tmp[::-1],tmp))
+            #print(clevels)
+            #pdb.set_trace()
+
         if filledContour == 1:
             #cmap = 'PRGn'
             cmap = 'bwr'
@@ -1127,11 +1276,11 @@ if Richardson == 1:
 
     N2_local = np.zeros((Nt,Nx,Nz)) 
     Ri_local = np.zeros((Nt,Nx,Nz))
-    for jj in range(1,Nz-1):
-        for ii in range(1,Nx-1):
+    for jj in range(0,Nz):
+        for ii in range(0,Nx):
             N2_local[:,ii,jj] = -g*cs*Sz[:,ii,jj] 
             Ri_local[:,ii,jj] = N2_local[:,ii,jj]/uz[:,ii,jj]**2
-            
+
             #Set inf points to arbitrary value for plotting purposes 
             #Python contour routine will not colour inf regions
             #LogicalInf = np.isinf( Ri_local[:,ii,jj] )
@@ -1236,6 +1385,110 @@ if Richardson == 1:
                 plt.show()
 
             pdb.set_trace()
+
+    if MakePlot==1 and FieldMaxMin==1:
+
+        #Exclude boundary layer effects:
+        if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
+        if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
+
+        maxMinRi = np.zeros((Nt,2))
+        meanRi = np.zeros((Nt))
+        for tt in range(0,Nt):
+            maxMinRi[tt,0] = np.min(Ri_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+            maxMinRi[tt,1] = np.max(Ri_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+            meanRi[tt] = np.mean(Ri_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+      
+ 
+        fig=plt.figure(figsize=(width,height))
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+        fig.set_tight_layout(True)
+        ax1 = fig.add_subplot(grid[0,0])
+
+        ax1.plot(t,maxMinRi[:,0], '-k' )
+        ax1.plot(t,maxMinRi[:,1], ':k' )
+        ax1.plot(t,meanRi, '--k' )
+        ax1.plot([0,60],[1./4,1./4], color='gray')
+        ax1.set_xlabel(r'$t$ (s)' )
+        ax1.set_ylabel(r'Ri' )
+        ax1.set_xlim(0,60)
+        ax1.set_ylim(-1000,1000)
+        plt.show()
+
+
+if Froude == 1:
+
+    Lx = 0.2
+    u = d_dz(Psi,Nt,Nx,Nz,z)
+    Fr_local = u**2/(Lx*g)
+
+    if MakePlot==1 and FieldMaxMin==1:
+
+        #Exclude boundary layer effects:
+        if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
+        if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
+
+        maxMinFr = np.zeros((Nt,2))
+        meanFr = np.zeros((Nt))
+        for tt in range(0,Nt):
+            maxMinFr[tt,0] = np.min(Fr_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+            maxMinFr[tt,1] = np.max(Fr_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+            meanFr[tt] = np.mean(Fr_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+
+
+        fig=plt.figure(figsize=(width,height))
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+        fig.set_tight_layout(True)
+        ax1 = fig.add_subplot(grid[0,0])
+
+        ax1.plot(t,maxMinFr[:,0], '-k' )
+        ax1.plot(t,maxMinFr[:,1], ':k' )
+        ax1.plot(t,meanFr, '--k' )
+        ax1.set_xlabel(r'$t$ (s)' )
+        ax1.set_ylabel(r'Fr' )
+        ax1.set_xlim(0,60)
+        ax1.set_ylim(0,0.005)
+        plt.show()
+
+
+if Reynolds == 1:
+
+    Lx = 0.2
+    nu = 1.*10**(-6.)*100
+
+    u = d_dz(Psi,Nt,Nx,Nz,z)
+    Re_local = u*Lx/nu
+
+    if MakePlot==1 and FieldMaxMin==1:
+
+        #Exclude boundary layer effects:
+        if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
+        if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
+
+        maxMinRe = np.zeros((Nt,2))
+        meanRe = np.zeros((Nt))
+        for tt in range(0,Nt):
+            #maxMinRe[tt,0] = np.min(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+            maxMinRe[tt,1] = np.max(np.abs(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset]))
+            meanRe[tt] = np.mean(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+
+
+        fig=plt.figure(figsize=(width,height))
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+        fig.set_tight_layout(True)
+        ax1 = fig.add_subplot(grid[0,0])
+
+        #ax1.plot(t,maxMinRe[:,0], '-k' )
+        ax1.plot(t,maxMinRe[:,1], ':k' )
+        ax1.plot(t,meanRe, '--k' )
+        ax1.plot([0,60],[1,1], color='gray')
+        ax1.set_xlabel(r'$t$ (s)' )
+        ax1.set_ylabel(r'Re' )
+        ax1.set_xlim(0,60)
+        ax1.set_ylim(1e-4,1e2)
+        ax1.set_yscale('log')
+        plt.show()
+
 
 if TrackSteps == 1:
 
@@ -1469,7 +1722,7 @@ if TrackSteps == 1:
 
     if MakePlot == 1:
         fig=plt.figure(figsize=(width,height))
-        grid = plt.GridSpec(1, 1, wspace=0.4, hspace=0.4)
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
         ax1 = fig.add_subplot(grid[0,0])
 
         plot_data = step_mask[:,xIdx,:].transpose().astype(int)
@@ -1480,9 +1733,11 @@ if TrackSteps == 1:
         ax1.set_xlabel(r'$t$ (s)')
         ax1.set_ylabel(r'$z$ (m)')
         ax1.set_ylim(0,Lz)
-        ax1.set_xlim(0,np.max(t))
-        #ax1.set_xlim(0,30)
+        #ax1.set_xlim(0,np.max(t))
+        ax1.set_xlim(0,60)
         cb = plt.colorbar(i1, ticks=[0,1])
+
+        plt.tight_layout()
  
         #ax2 = fig.add_subplot(grid[0,1])
         #ax2.plot(t,step_count)
@@ -1496,7 +1751,7 @@ if TrackSteps == 1:
 
         #plt.show()
         FigNmBase = 'TrackSteps'
-        plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png') 
+        plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.png') 
 
 
 if TrackInterfaces == 1:
@@ -2225,9 +2480,13 @@ if SpectralAnalysis == 1:
     if AnalyseS == 1:
         if Modulated == 0: data = S2
         if Modulated == 1: data = S_r
-    if AnalyseS == 0:
+    if AnalyseRho == 1:
+        if Modulated == 0: data = rho2
+        if Modulated == 1: data = rho_r
+    if AnalysePsi == 1:
         if Modulated == 0: data = Psi
         if Modulated == 1: data = Psi_r
+
 
     #idx0 = int(10./dt2)
     #tmp = data[idx0:,:,:]
@@ -2269,6 +2528,7 @@ if SpectralAnalysis == 1:
         if CheckPSD == 1: fnm = fnm + '_' + str(dt2)
         if Modulated == 1: fnm = fnm + '_R'
         if MeanFlowAnalysis == 1: fnm = fnm + '_mf'
+        if Linear == 1: fnm = fnm + '_linear'
         fnm = fnm + '.txt'
         np.savetxt(fnm, (f,freqvec))
 
@@ -2303,13 +2563,13 @@ if SpectralAnalysis == 1:
             xlim = (0,5)
             ylim = (1e-18,1e+0)
             xlabel = r'$\omega$ (rad/s)'
-            if Modulated == 0: ylabel = r'PSD ([$S$]$^2$/(rad/s))'
+            if Modulated == 0: ylabel = r'PSD ([$\rho$]$^2$/(rad/s))'
             if Modulated == 1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
             PlotTitle = ''
             FigNmBase = 'psd_'
 
         if PSD_mod_unmod_plot == 1:
-            fig1 = plt.figure(figsize=(width,height))
+            fig1 = plt.figure(figsize=(width*1.2,height))
             grid1 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
             ax1 = fig1.add_subplot(grid1[0,0])
             fig1.set_tight_layout(True) 
@@ -2334,7 +2594,7 @@ if SpectralAnalysis == 1:
             print("integral of PSD for modulated system: ", intPSD_mod)
             print("intPSD/intPSD_mod: ", intPSD/intPSD_mod)
 
-            ax1.plot(xgrid,data[0,:],'.k-', linewidth=2, label=r'$S$')
+            ax1.plot(xgrid,data[0,:],'.k-', linewidth=2, label=r'$\rho$')
             ax1.plot(xgrid,data_mod[0,:],'.-', color='lightgrey', linewidth=1, label=r'$\zeta$')
             ax1.set_xlabel(xlabel)
             ax1.set_ylabel(ylabel)
@@ -2344,8 +2604,8 @@ if SpectralAnalysis == 1:
 
             #Load tracked spectrum features files so we can overplot omega_well and 
             #bandwidths of Meanflow and IGW:
-            datMF = np.loadtxt('./meanflowarr.txt')
-            datIGW = np.loadtxt('./psdIGWarr.txt')
+            datMF = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+            datIGW = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
             N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
             Nidx = np.where(N_vec == np.sqrt(N2))
             omega_well = datMF[Nidx,3].flatten()[0]
@@ -2354,19 +2614,20 @@ if SpectralAnalysis == 1:
             PSD_well = datMF[Nidx,2].flatten()[0] 
             ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'k', label=r'$\omega_{well}$')
             ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'--k', label=r'$\omega_{well} + \Delta\omega_{IGW}$')
-            ax1.text(IGW_mid, 1e-16, r'$\Delta\omega_{IGW}$', horizontalalignment='center', verticalalignment='center')
+            ax1.text(IGW_mid, 1e-16, r'$\Delta\omega_{IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=10)
             xoffset = 0.2
             ax1.plot([omega_well,IGW_mid-xoffset], [1e-16,1e-16], 'k')
             ax1.plot([IGW_mid+xoffset,IGW_maxf], [1e-16,1e-16], 'k')
-            ax1.text(omega_well/2, 1e-16, r'$\Delta\omega_{MF}$', horizontalalignment='center', verticalalignment='center')
+            ax1.text(omega_well/2, 1e-16, r'$\Delta\omega_{MF}$', horizontalalignment='center', verticalalignment='center', fontsize=10)
             ax1.scatter(omega_well,PSD_well, s=100, facecolors='none', edgecolors='k')
             ax1.scatter(IGW_maxf,PSD_well, s=100, facecolors='none', edgecolors='k')
             plt.legend(frameon=False)
             plt.show()
 
         if PSD_vs_N_plot == 1 and CheckPSD == 0:
-            fig1 = plt.figure(figsize=(width,height))
-            grid1 = plt.GridSpec(1, 1, wspace=0.5, hspace=0.)
+            fig1 = plt.figure(figsize=(width*1.2,height))
+            fig1.set_tight_layout(True)
+            grid1 = plt.GridSpec(1, 1, wspace=0, hspace=0.)
             ax1 = fig1.add_subplot(grid1[0,0])
 
             #choices for GAFD seminar 2018:
@@ -2416,7 +2677,7 @@ if SpectralAnalysis == 1:
             if Modulated == 0: 
                 #ax1.set_ylim(1e-12,1e+4)
                 ax1.set_ylim(1e-18,1e+0)
-                ax1.set_ylabel(r'PSD ([$S$]$^2$/(rad/s))')
+                ax1.set_ylabel(r'PSD ([$\rho$]$^2$/(rad/s))')
             else: 
                 ax1.set_ylim(1e-18,1e+0)
                 ax1.set_ylabel(r'PSD ($\left[{\zeta}\right]^2$/(rad/s))')
@@ -2432,10 +2693,11 @@ if SpectralAnalysis == 1:
             ax1.legend(frameon=False, title=r'$N$ (rad/s)')
 
             #some plot annotations:
-            ax1.semilogy([0.5,0.5],[1e-18,1e+0], color=colorvec[0], linestyle=lstyle_vec[0], linewidth=lwidth_vec[0])
-            ax1.semilogy([1,1],[1e-18,1e+0], color=colorvec[1], linestyle=lstyle_vec[1], linewidth=lwidth_vec[1])
-            ax1.semilogy([2,2],[1e-18,1e+0], color=colorvec[2], linestyle=lstyle_vec[2], linewidth=lwidth_vec[2])
-            ax1.semilogy([4,4],[1e-18,1e+0], color=colorvec[3], linestyle=lstyle_vec[3], linewidth=lwidth_vec[3])
+            #ax1.semilogy([0.5,0.5],[1e-18,1e+0], color=colorvec[0], linestyle=lstyle_vec[0], linewidth=lwidth_vec[0])
+            #ax1.semilogy([1,1],[1e-18,1e+0], color=colorvec[1], linestyle=lstyle_vec[1], linewidth=lwidth_vec[1])
+            #ax1.semilogy([2,2],[1e-18,1e+0], color=colorvec[2], linestyle=lstyle_vec[2], linewidth=lwidth_vec[2])
+            #ax1.semilogy([4,4],[1e-18,1e+0], color=colorvec[3], linestyle=lstyle_vec[3], linewidth=lwidth_vec[3])
+
 
             plt.show()
 
@@ -2742,7 +3004,8 @@ if TimescaleSeparation == 1:
 
     if MakePlot == 1:
         fig=plt.figure(figsize=(width,height))
-        grid = plt.GridSpec(1, 2, wspace=0.5, hspace=0.0)
+        fig.tight_layout() 
+        grid = plt.GridSpec(1, 2, wspace=0.6, hspace=0.0)
 
         ax1 = fig.add_subplot(grid[0,0])
         if Modulated == 0:
@@ -2766,7 +3029,7 @@ if TimescaleSeparation == 1:
             l1 = '$0.0246+0.982\,N$'
             i5 = ax1.plot(N_vec,m1,'-k',linewidth=1)
 
-        ax1.legend(frameon=False, loc=2, labelspacing=.3)
+        ax1.legend(frameon=False, loc=2, labelspacing=.3, fontsize=10)
 
         #ax2 = ax1.twinx()
         ax2 = fig.add_subplot(grid[0,1])
@@ -2787,13 +3050,13 @@ if TimescaleSeparation == 1:
         #ax2.tick_params(axis='y', colors='grey')
         ax2.set_xlabel(r'$N$ (rad/s)')
         #ax2.set_xlim(0,6)
-        ax2.set_ylabel(r'PSD ([$S$]$^2$/(rad/s))')
+        ax2.set_ylabel(r'PSD ([$\rho$]$^2$/(rad/s))')
         ax2.set_yscale('log')
         #if Modulated == 0: ax2.set_ylim(1e-4,1e+4)
         if Modulated == 0: ax2.set_ylim(1e-10,1e0)
         if Modulated == 1: ax2.set_ylim(1e-10,1e-2)
         #ax2.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
-        ax2.legend(frameon=False)
+        ax2.legend(frameon=False, fontsize=10)
 
         #Make combined legend:
         #lns = i1+i2+i3+i4+i5
@@ -2881,7 +3144,7 @@ if w2f_analysis == 1:
 if MakePlot >= 1:
 
     if PlotStairStartEnd == 1:
-        dat = np.loadtxt('./stairStartEnd.txt')
+        dat = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/stairStartEnd.txt')
         #print(dat[0,:])
         idxN = np.where(dat[0,:]==np.sqrt(N2))
         tau0 = dat[1,int(np.array(idxN))]
@@ -2932,7 +3195,7 @@ if MakePlot >= 1:
         ygrid = z2d_t
 
     if PlotT >= 1:
-       if SpectralAnalysis == 0:
+       if SpectralAnalysis == 0 and SinglePoint==0:
            xIdx = int(Nx/2.)
            zIdx = int(Nz/2.)
            data = data[:,xIdx,zIdx]
@@ -3048,12 +3311,14 @@ if MakePlot >= 1:
             separator = '_'
             RunName=separator.join(tmp)
 
-        #plt.show()
-        if PlotTZ >= 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
-        if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
-        if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
-        if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
-        plt.close(fig)
+        if w2f_analysis == 0: plt.show()
+        if w2f_analysis == 1:
+            if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.png')
+            if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.png')
+            if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
+            if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
+            if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
+            plt.close(fig)
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,

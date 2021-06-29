@@ -299,7 +299,7 @@ for i in range(0,len(N_vec)):
     tIdxs = np.where( steps_arr[t_offset_vec[i]:,i] == 1 )
     stairAge[i] = (np.max(tIdxs) + t_offset_vec[i])*dt2
 
-axs2[1].plot( N_vec, stairAge, 'ok-', linewidth=2, label=r'$\tau_{steps}$ (s)')
+axs2[1].plot( N_vec, stairAge, 'ok-', linewidth=2, label=r'$\tau_{end}$ (s)')
 axs2[1].plot( N_vec, t_offset_vec0, 'o-', linewidth=2, color='gray', label=r'$\tau_0$ (s)')
 axs2[1].set_xlabel(r'$N$ (rad/s)')
 axs2[1].set_ylabel(r'$t$ (s)')
@@ -358,6 +358,8 @@ if PertVsN == 1:
     rhoprimeN = np.abs(drho_dz_vec)*dz_pert
     ForceN = -g/rho0*rhoprimeN
     Ratio = ForcePert/ForceN
+    print(Ratio)
+
 
     dRdN = np.zeros((len(Ratio)))
     for i in range(0,len(Ratio)):
