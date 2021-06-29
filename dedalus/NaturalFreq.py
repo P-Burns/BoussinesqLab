@@ -27,11 +27,11 @@ ProblemType			= 'Layers'
 
 ParkRun 			= -1
 N2				= 1
-#N2				= 2.25
-#N2				= 4
-#N2				= 6.25
-#N2				= 7.5625
-#N2				= 9
+N2				= 2.25
+N2				= 4
+N2				= 6.25
+N2				= 7.5625
+N2				= 9
 #N2				= 10.5625 
 #N2				= 12.25 
 #N2				= 14.0625
@@ -70,12 +70,12 @@ listOmega			= 0
 listOmegaGrad			= 0
 listOmegaPhaseSpace		= 0
 IntegrateCapOmega		= 1
-PlotWeightFnc			= 0
+PlotWeightFnc			= 1
 
 contourOmega			= 0
 PlotMainTriads                  = 0
 FindUniqueSet                   = 0
-FindMaxModes                    = 1
+FindMaxModes                    = 0
 FindOneAlphaSet                 = 1
 keyNonWaveModes                 = 1
 keyWaveModes                    = 0
@@ -95,12 +95,14 @@ PlotHistOmega12			= 0
 ExamineHISTomega12		= 0
 ExamineHISTn12			= 0
 StepStructureSearch		= 0
-ComputeCumulativeDistFnc	= 1
+ComputeCumulativeDistFnc	= 0
 InteractionCoef			= 1
 PlotInteractCoef		= 0
 SigmaSigma			= 0
+PlotSigmaSigma			= 0
 CombineSigmaSigmaWithC 		= 0
 FrequencyAve			= 1
+SubSums				= 1
 
 PlotCDFsVsN			= 0
 
@@ -434,179 +436,442 @@ def smooth(x,window_len=11,window='hanning'):
 
 if PlotCDFsVsN == 1:
     Nvec = np.array([1.,1.5,2,2.5,2.75,3,3.25,3.5,3.75,4,4.5,5])
+    method1 = 0
+    method2 = 1
 
-    #for CapOmega limit 0
-    #k=0 case:
-    N_IGW_k0_0 = np.repeat(0,len(Nvec))
-    N_MF_k0_0 = np.repeat(0,len(Nvec))
-    #-------------------------
-    #k not 0 case:
-    #Error limit 10%:
-    N_IGW_knot0_0 = np.array([144.0,136.0,208.0,264.0,228.0,248.0,184.0,184.0,184.0,160.0,160.0,124.0])
-    N_MF_knot0_0 = np.array([400.0,232.0,240.0,280.0,236.0,280.0,216.0,216.0,232.0,208.0,208.0,148.0])
+    if method1 == 1:
+        #for CapOmega limit 0
+        #k=0 case:
+        N_IGW_k0_0 = np.repeat(0,len(Nvec))
+        N_MF_k0_0 = np.repeat(0,len(Nvec))
+        #-------------------------
+        #k not 0 case:
+        #Error limit 10%:
+        N_IGW_knot0_0 = np.array([144.0,136.0,208.0,264.0,228.0,248.0,184.0,184.0,184.0,160.0,160.0,124.0])
+        N_MF_knot0_0 = np.array([400.0,232.0,240.0,280.0,236.0,280.0,216.0,216.0,232.0,208.0,208.0,148.0])
 
-    #for CapOmega limit 0.001
-    #k=0 case:
-    #Error limit 10%:
-    N_IGW_k0_001 = np.array([6605.8,3993.2,2699.3,1958.2,1674.9,1427.5,1275.5,1154.6,439.8,379.9,753.1,219.1])*2
-    N_MF_k0_001 = np.array([3363.1,1665.0,966.3,607.5,498.0,404.4,325.2,259.1,0,0,145.8,0])*2
-    #-------------------------
-    #k not 0 case:
-    #Error limit 10%:
-    N_IGW_knot0_001 = np.array([646.1,666.2,852.7,976.3,751.8,785.6,581.0,551.4,598.4,539.8,477.5,311.1])
-    N_MF_knot0_001 = np.array([1795.8,585.3,419.5,402.4,309.5,396.4,289.0,303.1,315.0,269.9,261.4,184.6])
+        #for CapOmega limit 0.001
+        #k=0 case:
+        #Error limit 10%:
+        N_IGW_k0_001 = np.array([6605.8,3993.2,2699.3,1958.2,1674.9,1427.5,1275.5,1154.6,439.8,379.9,753.1,219.1])*2
+        N_MF_k0_001 = np.array([3363.1,1665.0,966.3,607.5,498.0,404.4,325.2,259.1,0,0,145.8,0])*2
+        #-------------------------
+        #k not 0 case:
+        #Error limit 10%:
+        N_IGW_knot0_001 = np.array([646.1,666.2,852.7,976.3,751.8,785.6,581.0,551.4,598.4,539.8,477.5,311.1])
+        N_MF_knot0_001 = np.array([1795.8,585.3,419.5,402.4,309.5,396.4,289.0,303.1,315.0,269.9,261.4,184.6])
 
-    #for CapOmega limit 0.01
-    #k=0 case:
-    #Error limit 15% for N2=12.25:
-    #N_IGW_k0_01 = 
-    #N_MF_k0_01 =
-    #Error limit 10%:
-    N_IGW_k0_01 = np.array([17212.2,11344.0,8451.9,6348.5,5345.1,4589.0,4221.1,4043.6,1579.1,1431.6,2656.1,1103.4])*2
-    N_MF_k0_01 = np.array([9312.6,5029.3,3183.5,2243.9,1993.8,1794.8,1630.8,1457.6,544.6,482.4,982.8,346.3])*2
-    #Error limit 5%:
-    #N_IGW_k0_01 = np.array([18356.1,11503.8,8804.0,6348.5,5345.1,4589.0,4221.1,4175.6,3713.0,3306.8,2765.4,2265.2])*2
-    #N_MF_k0_01 = np.array([9527.8,5051.9,3204.1,2243.9,1993.8,1794.8,1630.8,1457.6,1307.1,1177.4,982.9,860.2])*2
-    #-------------------------
-    #k not 0 case:
-    #Error limit 10%:
-    N_IGW_knot0_01 = np.array([1280.6,868.1,2804.2,2165.2,748.5,587.8,499.0,4453.8,515.6,506.8,5789.3,705.8])
-    N_MF_knot0_01 = np.array([3395.4,397.7,1081.3,687.1,208.8,211.1,201.0,1204.0,216.4,209.8,1671.7,278.8])
-    #Error limit 5%:
-    #N_IGW_knot0_01 = np.array([1869.1,1609.5,8971.8,2165.2,748.5,587.8,499.0,15520.4,9966.9,4744.8,14608.1,11531.0])
-    #N_MF_knot0_01 = np.array([4582.8,1262.0,2455.3,687.1,208.8,211.1,201.0,4033.7,2621.6,1340.3,3954.3,3377.1])
+        #for CapOmega limit 0.01
+        #k=0 case:
+        #Error limit 15% for N2=12.25:
+        #N_IGW_k0_01 = 
+        #N_MF_k0_01 =
+        #Error limit 10%:
+        #N_IGW_k0_01 = np.array([17212.2,11344.0,8451.9,6348.5,5345.1,4589.0,4221.1,4043.6,1579.1,1431.6,2656.1,1103.4])*2
+        #N_MF_k0_01 = np.array([9312.6,5029.3,3183.5,2243.9,1993.8,1794.8,1630.8,1457.6,544.6,482.4,982.8,346.3])*2
+        #Error limit 5%:
+        #N_IGW_k0_01 = np.array([18356.1,11503.8,8804.0,6348.5,5345.1,4589.0,4221.1,4175.6,3713.0,3306.8,2765.4,2265.2])*2
+        #N_MF_k0_01 = np.array([9527.8,5051.9,3204.1,2243.9,1993.8,1794.8,1630.8,1457.6,1307.1,1177.4,982.9,860.2])*2
+        #Error limit 10% but also including interaction coefficent:
+        N_IGW_k0_01 = np.array([20316.0,10562.1,6558.9,3730.8,3049.5,2347.5,2100.5,1729.4,111.8,88.8,674.7,46.0])*2
+        N_MF_k0_01 = np.array([23124.5,8988.5,4548.7,2709.8,2278.3,1952.6,1715.1,1467.5,766.2,653.9,846.0,384.8])*2
 
-    #find total counts for each N:
-    #for CapOmega limit 0
-    N_tot_k0_0 = np.add(N_IGW_k0_0,N_MF_k0_0)
-    N_tot_knot0_0 = np.add(N_IGW_knot0_0,N_MF_knot0_0)
-    N_tot_0 = np.add(N_tot_knot0_0,N_tot_k0_0)
-    #for CapOmega limit 0.001
-    N_tot_k0_001 = np.add(N_IGW_k0_001,N_MF_k0_001)
-    N_tot_knot0_001 = np.add(N_IGW_knot0_001,N_MF_knot0_001)
-    N_tot_001 = np.add(N_tot_knot0_001,N_tot_k0_001)
-    #for CapOmega limit 0.01
-    N_tot_k0_01 = np.add(N_IGW_k0_01,N_MF_k0_01)
-    N_tot_knot0_01 = np.add(N_IGW_knot0_01,N_MF_knot0_01)
-    N_tot_01 = np.add(N_tot_knot0_01,N_tot_k0_01)
+        #N2 = 1
+        #k=0: 	30970.509698196453 18120.723026580214 62.03659115091493
+        #k!=0:	709.9763191829293 2398.1056802398507 783.7960880699401
+        #total: 53045
+        #IGW about 61%
 
-    #find contributions from k=0 and k not 0 sets for mean flow and IGW bandwidths:
-    #for CapOmega limit 0
-    F_IGW_k0_0 = np.divide(N_IGW_k0_0,N_tot_0)
-    F_MF_k0_0 = np.divide(N_MF_k0_0,N_tot_0)
-    F_IGW_knot0_0 = np.divide(N_IGW_knot0_0,N_tot_0)
-    F_MF_knot0_0 = np.divide(N_MF_knot0_0,N_tot_0)
-    #for CapOmega limit 0.001
-    F_IGW_k0_001 = np.divide(N_IGW_k0_001,N_tot_001)
-    F_MF_k0_001 = np.divide(N_MF_k0_001,N_tot_001)
-    F_IGW_knot0_001 = np.divide(N_IGW_knot0_001,N_tot_001)
-    F_MF_knot0_001 = np.divide(N_MF_knot0_001,N_tot_001)
-    #for CapOmega limit 0.01
-    F_IGW_k0_01 = np.divide(N_IGW_k0_01,N_tot_01)
-    F_MF_k0_01 = np.divide(N_MF_k0_01,N_tot_01)
-    F_IGW_knot0_01 = np.divide(N_IGW_knot0_01,N_tot_01)
-    F_MF_knot0_01 = np.divide(N_MF_knot0_01,N_tot_01)
+        #N2=9
+        #k=0:   9173.227086631126 3699.821891033058 9.419149882905069
+        #k!=0:  391.0751050769634 46.63377285821253 142.00748749854642 
+        #total: 13462.1
+        #IGW about 70%, MF 30%
 
+        #N2 = 25
+        #k=0:	2320.102581833732 705.6079732080859 0
+        #k!=0:	461.971361423464 65.63305951483322 184.14325216600378
+        #total: 3737.3
+        #IGW about 77%
+
+        #-------------------------
+        #k not 0 case:
+        #Error limit 10%:
+        #N_IGW_knot0_01 = np.array([1280.6,868.1,2804.2,2165.2,748.5,587.8,499.0,4453.8,515.6,506.8,5789.3,705.8])
+        #N_MF_knot0_01 = np.array([3395.4,397.7,1081.3,687.1,208.8,211.1,201.0,1204.0,216.4,209.8,1671.7,278.8])
+        #Error limit 5%:
+        #N_IGW_knot0_01 = np.array([1869.1,1609.5,8971.8,2165.2,748.5,587.8,499.0,15520.4,9966.9,4744.8,14608.1,11531.0])
+        #N_MF_knot0_01 = np.array([4582.8,1262.0,2455.3,687.1,208.8,211.1,201.0,4033.7,2621.6,1340.3,3954.3,3377.1])
+        #Error limit 10% but also including interaction coefficent:
+        N_IGW_knot0_01 = np.array([394505.8,540313.5,1166628.4,891015.5,376209.5,276776.0,220605.3,1789332.1,216434.4,211742.8,2094734.2,276559.3])
+        N_MF_knot0_01 = np.array([1098534.6,80070.7,112091.8,51420.2,14921.0,16351.2,15294.8,104558.7,15526.3,14287.1,142970.7,17485.4])
+
+        #find total counts for each N:
+        #for CapOmega limit 0
+        N_tot_k0_0 = np.add(N_IGW_k0_0,N_MF_k0_0)
+        N_tot_knot0_0 = np.add(N_IGW_knot0_0,N_MF_knot0_0)
+        N_tot_0 = np.add(N_tot_knot0_0,N_tot_k0_0)
+        #for CapOmega limit 0.001
+        N_tot_k0_001 = np.add(N_IGW_k0_001,N_MF_k0_001)
+        N_tot_knot0_001 = np.add(N_IGW_knot0_001,N_MF_knot0_001)
+        N_tot_001 = np.add(N_tot_knot0_001,N_tot_k0_001)
+        #for CapOmega limit 0.01
+        N_tot_k0_01 = np.add(N_IGW_k0_01,N_MF_k0_01)
+        N_tot_knot0_01 = np.add(N_IGW_knot0_01,N_MF_knot0_01)
+        N_tot_01 = np.add(N_tot_knot0_01,N_tot_k0_01)
+
+        #find contributions from k=0 and k not 0 sets for mean flow and IGW bandwidths:
+        #for CapOmega limit 0
+        F_IGW_k0_0 = np.divide(N_IGW_k0_0,N_tot_0)
+        F_MF_k0_0 = np.divide(N_MF_k0_0,N_tot_0)
+        F_IGW_knot0_0 = np.divide(N_IGW_knot0_0,N_tot_0)
+        F_MF_knot0_0 = np.divide(N_MF_knot0_0,N_tot_0)
+        #for CapOmega limit 0.001
+        F_IGW_k0_001 = np.divide(N_IGW_k0_001,N_tot_001)
+        F_MF_k0_001 = np.divide(N_MF_k0_001,N_tot_001)
+        F_IGW_knot0_001 = np.divide(N_IGW_knot0_001,N_tot_001)
+        F_MF_knot0_001 = np.divide(N_MF_knot0_001,N_tot_001)
+        #for CapOmega limit 0.01
+        F_IGW_k0_01 = np.divide(N_IGW_k0_01,N_tot_01)
+        F_MF_k0_01 = np.divide(N_MF_k0_01,N_tot_01)
+        F_IGW_knot0_01 = np.divide(N_IGW_knot0_01,N_tot_01)
+        F_MF_knot0_01 = np.divide(N_MF_knot0_01,N_tot_01)
+
+        #totals contributions from mean flow and IGW bandwidth:
+        #for CapOmega limit 0
+        F_IGW_0 = np.divide(np.add(N_IGW_k0_0,N_IGW_knot0_0),N_tot_0)
+        F_MF_0 = 1 - F_IGW_0
+        #for CapOmega limit 0.001
+        F_IGW_001 = np.divide(np.add(N_IGW_k0_001,N_IGW_knot0_001),N_tot_001)
+        F_MF_001 = 1 - F_IGW_001
+        #for CapOmega limit 0.01
+        F_IGW_01 = np.divide(np.add(N_IGW_k0_01,N_IGW_knot0_01),N_tot_01)
+        F_MF_01 = 1 - F_IGW_01
+
+        print(N_tot_01)
+        print(" ")
+        print(N_IGW_knot0_01)
+        print(" ")
+        print(np.add(N_IGW_k0_01,N_IGW_knot0_01))
+        print(" ")
+        print(F_IGW_01)
+
+        #check effect of varying near-resonance limit for N2=12.25 rad/s case:
+        #limit_vec = [0.0001,0.001,0.01]
+        #Nvec_limits = [3.5,3.5,3.5]
+        #N_IGW_k0_N2_12_25 = np.array([112.0,112.0,423.9])*2
+        #N_MF_k0_N2_12_25 = np.array([8.0,267.1,1464.7])*2
+        #N_IGW_knot0_N2_12_25 = np.array([345.6,1344.2,2263.3])
+        #N_MF_knot0_N2_12_25 = np.array([741.9,976.9,1196.4])
+        #N_tot_k0_N2_12_25 = np.add(N_IGW_k0_N2_12_25, N_MF_k0_N2_12_25)
+        #N_tot_knot0_N2_12_25 = np.add(N_IGW_knot0_N2_12_25, N_MF_knot0_N2_12_25)
+        #N_tot_N2_12_25 = np.add(N_tot_knot0_N2_12_25,N_tot_k0_N2_12_25)
+        #F_IGW_vec_N2_12_25 = np.divide(np.add(N_IGW_k0_N2_12_25,N_IGW_knot0_N2_12_25),N_tot_N2_12_25)
+        #F_MF_vec_N2_12_25 = 1 - F_IGW_vec_N2_12_25
+        #print(F_IGW_vec_N2_12_25)
+        #print(F_MF_vec_N2_12_25)
+        #-Yes the results were not the same so we then re-did all the calculations for different N at a different
+        #resonant limit - thus removing the need for this section.   
+
+    if method2 == 1:
+
+        #for CapOmega limit 0.01 
+        #k=0 case:
+        #Error limit 10%
+        #T=2400
+        #contribution = capOmegaWeights[ii]
+        #IGW_k0_01	= np.array([-541.5j, -492.1j, -226.4j, -232.6j, -184.3j, -123.0j, -97.8j, -101.3j, -34.5j, -28.5j, -55.0j, -13.4j ])
+        #MF_k0_01 	= np.array([-270.6j, -131.5j, -70.8j, -39.8j, -35.6j,-29.6j, -22.7j, -17.2j, 3.1j, 3.2j, -3.7j, 4.4j])
+        #both_k0_01 	= np.array([0.6j, 0.1j, -0.3j, 0.0j, 0.0j,0.2j, 0.0j, 0.0j, -0.0j, 0.1j, -0.0j, 0j])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        #IGW_k0_01 	= np.array([ (-3808.6+0j), (-2338.8+0j), (-1330.9+0j), (-722.9+0j), (-660.6+0j), (-542.0+0j), (-399.0+0j), (-316.1+0j),\
+        #                             (-24.4+0j), (-18.9+0j), (-142.3+0j), (-9.5+0j) ])
+        #MF_k0_01 	= np.array([ (-4698.5+0j), (-1828.1+0j), (-929.2+0j), (-547.3+0j), (-462.5+0j), (-402.0+0j), (-349.6+0j), (-302.0+0j),\
+        #                             (-156.7+0j), (-134.7+0j), (-175.3+0j), (-78.9+0j) ])
+        #both_k0_01 	= np.array([ (-36.5+0j), (-9.2+0j), (-3.1+0j), (-3.4+0j),(-2.6+0j), (-1.8+0j), (-1.1+0j), (-1.1+0j),\
+        #                             (-0.5+0j), (-0.4+0j), (-0.3+0j), 0j ])
+        #T=100
+        #contribution = capOmegaWeights[ii]
+        #IGW_k0_01      = np.array([ -20470.6j, -14971.2j, -12223.8j, -9651.5j, -8206.1j  ])
+        #MF_k0_01       = np.array([ -10830.5j, -6294.0j, -4180.9j, -3051.8j, -2865.6j   ])
+        #both_k0_01     = np.array([ -76.3j, -35.9j, -18.5j, -21.2j, -12.8j ])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        #IGW_k0_01       = np.array([ (-16958.3+0j), (-9277.4+0j), (-6289.5+0j), (-3697.2+0j), (-3189.6+0j) ])
+        #MF_k0_01        = np.array([ (-15580.5+0j), (-6326.9+0j), (-3338.9+0j), (-2000.3+0j), (-1717.6+0j) ])
+        #both_k0_01      = np.array([ (-182.8+0j), (-59.7+0j), (-19.8+0j), (-21.8+0j), (-12.5+0j) ])
+        #T=1000
+        #contribution = capOmegaWeights[ii]
+        #IGW_k0_01      = np.array([-2533.7j, -1217.1j, -712.2j, -690.9j, -685.2j, -689.6j, -671.4j, -644.7j, -235.6j, -212.9j, -363.4j, -155.9j ])
+        #MF_k0_01       = np.array([-1547.1j, -808.2j, -512.3j, -356.8j, -300.2j, -251.6j, -213.8j,  -186.4j, -37.3j, -32.1j, -106.7j, -17.4j ])
+        #both_k0_01     = np.array([-1.6j, -0.6j,-0.3j, -0.4j, 0.1j, 0.1j, 0.1j, 0.1j, -0.2j, 0.0j, 0.0j, 0j  ])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        #IGW_k0_01       = np.array([ (-11288.5+0j),(-5783.3+0j),(-3373.5+0j), (-1379.1+0j), (-1042.6+0j), (-930.9+0j), (-922.3+0j), (-939.0+0j),\
+        #                             (-66.7+0j), (-51.8+0j), (-408.5+0j), (-24.7+0j) ])
+        #MF_k0_01        = np.array([ (-11778.8+0j),(-4633.5+0j),(-2359.5+0j), (-1388.7+0j), (-1193.9+0j), (-1038.2+0j), (-905.7+0j), (-780.8+0j),\
+        #                             (-395.5+0j), (-340.4+0j), (-455.2+0j), (-197.1+0j) ]) 
+        #both_k0_01      = np.array([ (-89.9+0j),(-29.0+0j),(-9.9+0j), (-10.5+0j), (-5.9+0j), (-4.3+0j), (-3.3+0j), (-3.2+0j), (-2.0+0j), (-1.1+0j),\
+        #                             (-0.5+0j), 0j])
+        #T=10000
+        #contribution = capOmegaWeights[ii]
+        #IGW_k0_01      = np.array([-76.9j, -38.0j, -13.9j, -6.6j, -4.8j, -2.0j, -1.9j, -1.1j, 1.5j, 2.5j, 2.1j, -0.0j ])
+        #MF_k0_01       = np.array([ -8.2j, 1.7j, 4.2j, 4.0j, 4.3j, 3.4j, 3.3j, 2.4j, 0.7j, 0.7j, -4.1j, 0.2j   ])
+        #both_k0_01     = np.array([ 0.1j -0.1j, -0.0j, 0.1j, -0.1j, -0.0j, -0.0j, 0.0j, -0.0j, -0.0j, 0.0j, 0j])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        IGW_k0_01       = np.array([ (-968.3+0j), (-486.9+0j), (-290.5+0j), (-177.5+0j), (-141.3+0j), (-115.2+0j), (-95.7+0j), (-81.4+0j),\
+                                     (-5.2+0j), (-4.0+0j), (-31.0+0j), (-2.1+0j) ])
+        MF_k0_01        = np.array([ (-1074.5+0j), (-421.7+0j), (-211.6+0j), (-125.9+0j), (-107.3+0j), (-91.8+0j), (-78.9+0j), (-68.0+0j),\
+                                     (-35.9+0j), (-30.6+0j), (-40.0+0j), (-17.6+0j) ])
+        both_k0_01      = np.array([ (-7.9+0j), (-2.8+0j), (-1.3+0j), (-1.20j), (-0.4+0j), (-0.4+0j), (-0.4+0j), (-0.3+0j), (-0.0+0j),\
+                                     (-0.1+0j), (-0.1+0j), 0j ])
+
+
+        IGW_k0_01	= np.real(IGW_k0_01)
+        MF_k0_01	= np.real(MF_k0_01)
+        both_k0_01	= np.real(both_k0_01)
+        #-------------------------
+
+        #k not 0 case:
+        #Error limit 10%
+        #T = 2400
+        #contribution = capOmegaWeights[ii]
+        #IGW_knot0_01 = np.array([(-4.4e-16-23.2j), (-2.2e-16-18.8j, (-2.2e-14-70.1j), (2.0e-14-57.6j), (2.0e-14-57.6j), (-1.6e-15-18.2j)\
+        #			(10.0e-16-11.4j), (-2.7e-15-111.2j), (1.1e-15-11.9j), (10.0e-16-11.7j), (-1.7e-14-150.4j), (-4.4e-16-15.2j) ])
+        #MF_knot0_01 = np.array([(160.0-82.1j), (-1.9e-16-7.4j), (56.0-14.9j), (16.0-7.4j), (16.0-7.4j), (8.0-2.6j)\
+        #			(8.0-3.0j), (88.0-12.5j), (16.0-2.5j), (16.0-2.2j), (136.0-18.4j), (24.0-2.6j)  ])
+        #both_knot0_01 = np.array([(152.0-22.2j), (128.0-2.6j), (336.0-8.9j), (352.0-5.0j), (352.0-5.0j), (128-1.4j)\
+        #			(104-1.4j), (512-7.5j), (104-2.1j), (104-1.5j), (696-14.4j), (168-1.1j)])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        #IGW_knot0_01 	= np.array([ (-3541.9+1.4e-12j), (3329.4+1.4e-12j), (4560.7-2.0e-11j), (4376.0-7.3e-12j), (-1008.6-5.5e-12j),\
+        #                             (1245.7+9.1e-13j), (3598.0-1.5e-11j), (1746.2-5.5e-12j), (1447.8+2.7e-12j), (6675.0+3.3e-11j), (1384.8+2.0e-12j) ])
+        #MF_knot0_01 	= np.array([ (-353.1+0.1j), (201.9+2.8e-13j), (-367.4+0.0j), (27.5+2.3e-13j), (-99.7+9.9e-14j),\
+        #                             (-18.1+9.9e-14j), (-1144.7+0.0j), (-112.9+0j), (-135.1-4.3e-14j), (-2062.5-0.1j), (-210.5-5.3e-15j) ])
+        #both_knot0_01 	= np.array([ (2548.8-4.5e-12j), (981.3+1.1e-13j), (1722.4+5.7e-13j), (1606.7+1.0e-13j), (1287.0+0j),\
+        #                             (964.5+1.2e-14j), (2210.8-5.7e-13j), (1347.4-4.3e-14j), (1339.0-7.1e-15j), (4680.5+1.4e-12j), (2541.6-4.4e-15j) ])
+
+        #T=100
+        #contribution = capOmegaWeights[ii]
+        #IGW_knot0_01      = np.array([ ])
+        #MF_knot0_01       = np.array([ ])
+        #both_knot0_01     = np.array([ ])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        #IGW_knot0_01       = np.array([  ])
+        #MF_knot0_01        = np.array([  ])
+        #both_knot0_01      = np.array([  ])
+        #T=1000
+        #contribution = capOmegaWeights[ii]
+        #IGW_knot0_01      = np.array([ (-6.7e-15-73.3j), (-1.6e-15-53.5j), (2.3e-14-183.2j), (3.4e-14-137.7j), (-2.9e-15-45.4j), (-7.2e-16-35.0j),\
+                                 #    (-7.5e-16-29.9j), (-1.8e-15-298.9j), (4.2e-15-29.9j), (5.6e-15-28.6j), (4.8e-14-368.8j), (9.3e-15-42.7j) ])
+        #MF_knot0_01       = np.array([ (160.0-208.5j), (5.6e-17-19.0j), (56-42.9j), (16.0-18.6j), (8.0-2.8j), (8.0-2.3j), (8.0-2.6), (88.0-27.0j),\
+                                #     (16.0-2.8j), (16-2.6j), (136.0-37.4j), (24.0-3.9j) ])
+        #both_knot0_01     = np.array([ (152.0-58.0j), (128.0-6.3j), (336-18.2j), (352-9.6j), (128-1.8j), (112-2.7j), (104-2.1j), (512-22.1j),\
+                                #        (104.0-2.7j), (104-2.1j), (696-27.9j), (168-1.6j)])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        #IGW_knot0_01       = np.array([ (-3637.6-7.3e-12j), (-803.2-3.6e-11j), (714.3+1.4e-10j), (1739.9+7.3e-11j), (-1036.7-1.8e-12j), (778.3+3.6e-12j),\
+        #                             (2789.3-1.3e-11j), (5652.8+1.5e-10j), (4282.3-3.6e-12j), (3859.9-2.7e-12j), (14834.5-1.2e-10j), (6304.6+1.4e-11j)])
+        #MF_knot0_01        = np.array([ (-2054.1-0.6j), (151.1+3.0e-12j), (-986.8-0.0j), (-539.0+2.3e-13j), (-282.0-2.8e-14j), (-308.7+0j),\
+        #                              (-262.1+0j), (-1378.1-0.1j), (-389.6+1.3e-13j), (-376.7+0j), (-1784.2-0.1j), (-456.9+3.2e-14j)  ])
+        #both_knot0_01      = np.array([ (478.3+2.2e-11j), (985.9-2.3e-13j), (1862.0+9.1e-13j), (1681.2+2.8e-13j), (1347.4+7.1e-15j), (1212.3+1.8e-14j),\
+        #                             (1086.6+2.3e-14j), (2591.5-9.1e-13j), (1433.5+2.8e-14j), (1403.9-1.8e-14j), (4535.4+6.0e-12j), (2601.4+0j)])
+        #T=10000
+        #contribution = capOmegaWeights[ii]
+        #IGW_knot0_01      = np.array([ (1.8e-15-5.1j),(-3.9e-16-4.5j), (-1.3e-15-16.8j), (-1.4e-15-12.4j),(1.3e-15-4.0j), (-1.9e-15-3.8j),\
+                            #   (4.4e-16-3.3j), (-9.8e-15-26.8j), (-5.6e-17-4.2j), (3.3e-16-4.2j), (-1.1e-15-42.5j), (-1.4e-15-2.8j) ])
+        #MF_knot0_01       = np.array([ (160.0-19.1j), (-1.9e-16-2.1j), (56.0-5.9j), (16.0-1.6j),(8.0-1.2j), (8.0-1.2j), (8.0-1.5j), (88.0-2.6j),\
+                            #        (16-0.8j), (16.0-0.8j), (136.0-4.6j), (24.0-0.7j)])
+        #both_knot0_01     = np.array([ (152.0-7.1j), (128.0-0.6j), (336.0-3.4j), (352-1.8j), (128-0.4j), (112-0.8j), (104-0.3j), (512.0-1.7j),\
+                            #         (104-0.8j), (104-0.3j), (696.0-2.9j), (168-0.5j)])
+        #contribution = capOmegaWeights[ii]*interactCoef[ii]
+        IGW_knot0_01       = np.array([ (-781.3-6.4e-14j),(-969.7-1.1e-12j), (305.7+1.5e-11j),(414.2-3.6e-12j), (-1182.2-2.3e-13j),(-900.1-5.7e-13j),\
+                                        (-673.0-6.3e-13j), (3519.9-6.4e-12j), (143.0-8.4e-13j), (125.5-5.1e-13j), (4004.5-6.4e-12j), (1354.0+1.8e-14j) ])
+        MF_knot0_01        = np.array([ (-2248.6-0.0j), (99.2+4.3e-14j), (-114.9+0.0j),(38.6-2.6e-13j),(98.3-1.4e-14j),(104.7+0j), (88.8+1.4e-14j),\
+                                        (-1046.1-0.0j), (-8.0-2.1e-14j), (-18.6-1.8e-15j), (-1847.2-0.0j), (-172.2+4.2e-15j)    ])
+        both_knot0_01      = np.array([ (2645.3+2.0e-12j), (824.0+0j), (1615.0+5.7e-14j),(1358.4-2.5e-13j),(1317.9+1.8e-15j), (1057.2-4.4e-16j),\
+                                        (948.0+1.2e-14j), (2617.9+1.4e-13j), (1327.2+1.4e-14j), (1367.8-8.9e-16j), (4892.0-7.5e-14j), (2572.7-8.9e-16j) ])
+
+        IGW_knot0_01  	= np.real(IGW_knot0_01)
+        MF_knot0_01    	= np.real(MF_knot0_01)
+        both_knot0_01 	= np.real(both_knot0_01)
+
+        IGW_01		= np.add(IGW_k0_01,IGW_knot0_01)
+        MF_01		= np.add(MF_k0_01,MF_knot0_01)
+        both_01		= np.add(both_k0_01,both_knot0_01)
+        tot_01		= np.add(np.add(IGW_01,MF_01),both_01)
+
+
+        #find totals for each N:
+        #for CapOmega limit 0
+        #tot_k0_0 = np.add(IGW_k0_0,MF_k0_0)
+        #tot_knot0_0 = np.add(IGW_knot0_0,MF_knot0_0)
+        #tot_0 = np.add(tot_knot0_0,tot_k0_0)
+        #for CapOmega limit 0.001
+        #tot_k0_001 = np.add(IGW_k0_001,MF_k0_001)
+        #tot_knot0_001 = np.add(IGW_knot0_001,MF_knot0_001)
+        #tot_001 = np.add(tot_knot0_001,tot_k0_001)
+        #for CapOmega limit 0.01
+        #tot_k0_01 = np.add(np.add(IGW_k0_01,MF_k0_01),both_k0_01)
+        #tot_knot0_01 = np.add(np.add(IGW_knot0_01,MF_knot0_01),both_knot0_01)
+        #tot_01 = np.add(tot_knot0_01,tot_k0_01)
+
+        #find contributions from k=0 and k!=0 sets for mean flow, IGW and coupled bandwidths:
+        #for CapOmega limit 0.01
+        C_IGW_k0_01 = np.divide(IGW_k0_01,tot_01)
+        C_MF_k0_01 = np.divide(MF_k0_01,tot_01)
+        C_both_k0_01 = np.divide(both_k0_01,tot_01)
+        C_IGW_knot0_01 = np.divide(IGW_knot0_01,tot_01)
+        C_MF_knot0_01 = np.divide(MF_knot0_01,tot_01)
+        C_both_knot0_01 = np.divide(both_knot0_01,tot_01)
+
+        #totals contributions from mean flow, IGW and coupled bandwidths:
+        #for CapOmega limit 0.01
+        C_IGW_01 = np.divide(IGW_01,tot_01)
+        C_MF_01 = np.divide(MF_01,tot_01)
+        C_both_01 = np.divide(both_01,tot_01)
+
+
+    #plot results:
     symsize_vec_k0 = (np.array([8,8,8,8,8,8,8,8,8]))**2
     symsize_vec_knot0 = (np.array([8,8,8,8,8,8,8,8,8]))**2
 
-    #totals contributions from mean flow and IGW bandwidth:
-    #for CapOmega limit 0
-    F_IGW_0 = np.divide(np.add(N_IGW_k0_0,N_IGW_knot0_0),N_tot_0)
-    F_MF_0 = 1 - F_IGW_0
-    #for CapOmega limit 0.001
-    F_IGW_001 = np.divide(np.add(N_IGW_k0_001,N_IGW_knot0_001),N_tot_001)
-    F_MF_001 = 1 - F_IGW_001
-    #for CapOmega limit 0.01
-    F_IGW_01 = np.divide(np.add(N_IGW_k0_01,N_IGW_knot0_01),N_tot_01)
-    F_MF_01 = 1 - F_IGW_01
-
-    print(N_tot_01)
-    print(" ")
-    print(N_IGW_knot0_01)
-    print(" ")
-    print(np.add(N_IGW_k0_01,N_IGW_knot0_01)) 
-    print(" ")
-    print(F_IGW_01)
-
-    #check effect of varying near-resonance limit for N2=12.25 rad/s case:
-    #limit_vec = [0.0001,0.001,0.01]
-    #Nvec_limits = [3.5,3.5,3.5]
-    #N_IGW_k0_N2_12_25 = np.array([112.0,112.0,423.9])*2
-    #N_MF_k0_N2_12_25 = np.array([8.0,267.1,1464.7])*2
-    #N_IGW_knot0_N2_12_25 = np.array([345.6,1344.2,2263.3])
-    #N_MF_knot0_N2_12_25 = np.array([741.9,976.9,1196.4])
-    #N_tot_k0_N2_12_25 = np.add(N_IGW_k0_N2_12_25, N_MF_k0_N2_12_25)
-    #N_tot_knot0_N2_12_25 = np.add(N_IGW_knot0_N2_12_25, N_MF_knot0_N2_12_25)
-    #N_tot_N2_12_25 = np.add(N_tot_knot0_N2_12_25,N_tot_k0_N2_12_25)
-    #F_IGW_vec_N2_12_25 = np.divide(np.add(N_IGW_k0_N2_12_25,N_IGW_knot0_N2_12_25),N_tot_N2_12_25)
-    #F_MF_vec_N2_12_25 = 1 - F_IGW_vec_N2_12_25
-    #print(F_IGW_vec_N2_12_25)
-    #print(F_MF_vec_N2_12_25)
-    #-Yes the results were not the same so we then re-did all the calculations for different N at a different
-    #resonant limit - thus removing the need for this section.
-
-    #plot results:
-    fig = plt.figure(1, figsize=(width,height))
-    fig.set_tight_layout(True)
-    grid = plt.GridSpec(1, 2, wspace=0.3, hspace=0.)
-    ax1 = fig.add_subplot(grid[0,0])
+    if method1 == 1:
+        fig = plt.figure(1, figsize=(width,height))
+        fig.set_tight_layout(True)
+        grid = plt.GridSpec(1, 2, wspace=0.3, hspace=0.)
+        ax1 = fig.add_subplot(grid[0,0])
     
-    #plot IGW results:
-    #for CapOmega limit 0
-    ax1.plot(Nvec,F_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
-    #for CapOmega limit 0.001
-    ax1.plot(Nvec,F_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
-    #for CapOmega limit 0.01
-    ax1.plot(Nvec,F_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
-    #k=0 case:
-    ax1.plot(Nvec, F_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
-    #k not 0 case:
-    ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
+        #plot IGW results:
+        #for CapOmega limit 0
+        ax1.plot(Nvec,F_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
+        #for CapOmega limit 0.001
+        ax1.plot(Nvec,F_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
+        #for CapOmega limit 0.01
+        ax1.plot(Nvec,F_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
+        #k=0 case:
+        ax1.plot(Nvec, F_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
+        #k not 0 case:
+        ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
 
-    ax1.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
-    ax1.set_title(r'$F_{IGW}$')
-    ax1.set_xlabel(r'$N$ (rad/s)')
-    ax1.set_ylabel(r'Contribution to solution (%)')
-    ax1.set_xlim(0,6)
-    ax1.set_ylim(0,1)
-    ax1.legend(frameon=False, loc=2, handlelength=3)
+        ax1.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
+        ax1.set_title(r'$F_{IGW}$')
+        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_ylabel(r'Contribution to solution (%)')
+        ax1.set_xlim(0,6)
+        ax1.set_ylim(0,1)
+        ax1.legend(frameon=False, loc=2, handlelength=3)
 
-    #plot mean flow results:
-    ax2 = fig.add_subplot(grid[0,1])
-    #for CapOmega limit 0
-    ax2.plot(Nvec,F_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
-    #for CapOmega limit 0.001
-    ax2.plot(Nvec,F_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
-    #for CapOmega limit 0.01
-    ax2.plot(Nvec,F_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
-    #k=0 case:
-    ax2.plot(Nvec, F_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
-    #k not 0 case:
-    ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+        #plot mean flow results:
+        ax2 = fig.add_subplot(grid[0,1])
+        #for CapOmega limit 0
+        ax2.plot(Nvec,F_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
+        #for CapOmega limit 0.001
+        ax2.plot(Nvec,F_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
+        #for CapOmega limit 0.01
+        ax2.plot(Nvec,F_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
+        #k=0 case:
+        ax2.plot(Nvec, F_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+        #k not 0 case:
+        ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
-    ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
-    ax2.set_title(r'$F_{MF}$')
-    ax2.set_xlabel(r'$N$ (rad/s)')
-    ax2.set_ylabel(r'Contribution to solution (%)')
-    ax2.set_xlim(0,6)
-    ax2.set_ylim(0,1)
-    ax2.legend(frameon=False, loc=1)
+        ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
+        ax2.set_title(r'$F_{MF}$')
+        ax2.set_xlabel(r'$N$ (rad/s)')
+        ax2.set_ylabel(r'Contribution to solution (%)')
+        ax2.set_xlim(0,6)
+        ax2.set_ylim(0,1)
+        ax2.legend(frameon=False, loc=1)
 
-    OverplotPSDresults = 0
-    if OverplotPSDresults == 1:
-        #overplot PSD results
-        meanflowarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
-        psdIGWarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+        OverplotPSDresults = 0
+        if OverplotPSDresults == 1:
+            #overplot PSD results
+            meanflowarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+            psdIGWarr = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
 
-        F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
-        F_IGW_max = np.max(F_IGW)
-        F_IGW = F_IGW/F_IGW_max
-        ax1.plot(N_vec,F_IGW, 'ok', fillstyle='none')
+            F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]
+            F_IGW_max = np.max(F_IGW)
+            F_IGW = F_IGW/F_IGW_max
+            ax1.plot(N_vec,F_IGW, 'ok', fillstyle='none')
 
-    plt.show()
-    pdb.set_trace()
+        plt.show()
+        pdb.set_trace()
 
+    if method2 == 1:
+        fig = plt.figure(1, figsize=(width*1.5,height))
+        fig.set_tight_layout(True)
+        grid = plt.GridSpec(1, 3, wspace=0.3, hspace=0.)
+        ax1 = fig.add_subplot(grid[0,0])
+
+        #plot IGW results:
+        #for CapOmega limit 0
+        #ax1.plot(Nvec, C_IGW_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
+        #for CapOmega limit 0.001
+        #ax1.plot(Nvec, C_IGW_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
+        #for CapOmega limit 0.01
+        ax1.plot(Nvec, C_IGW_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
+        #k=0 case:
+        ax1.plot(Nvec, C_IGW_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
+        #k not 0 case:
+        ax1.plot(Nvec, C_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
+
+        ax1.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
+        ax1.plot([0,6],[-0.5,-0.5], linestyle='--',color='silver', linewidth=1)
+        ax1.plot([0,6],[1,1], linestyle='--',color='silver', linewidth=1)
+        ax1.plot([0,6],[-1,-1], linestyle='--',color='silver', linewidth=1)
+        ax1.set_title(r'$c_{\Delta\omega_{IGW}}$')
+        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_ylabel(r'Contribution to solution (%)')
+        ax1.set_xlim(0,6)
+        ax1.set_ylim(-4,4)
+        ax1.legend(frameon=False, loc=1, handlelength=3)
+
+        #plot mean flow results:
+        ax2 = fig.add_subplot(grid[0,1])
+        #for CapOmega limit 0
+        #ax2.plot(Nvec, C_MF_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5)
+        #for CapOmega limit 0.001
+        #ax2.plot(Nvec, C_MF_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2)
+        #for CapOmega limit 0.01
+        ax2.plot(Nvec, C_MF_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4)
+        #k=0 case:
+        ax2.plot(Nvec, C_MF_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+        #k not 0 case:
+        ax2.plot(Nvec, C_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+
+        ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
+        ax2.plot([0,6],[-0.5,-0.5], linestyle='--',color='silver', linewidth=1)
+        ax2.plot([0,6],[1,1], linestyle='--',color='silver', linewidth=1)
+        ax2.plot([0,6],[-1,-1], linestyle='--',color='silver', linewidth=1)
+        ax2.set_title(r'$c_{\Delta\omega_{MF}}$')
+        ax2.set_xlabel(r'$N$ (rad/s)')
+        #ax2.set_ylabel(r'Contribution to solution (%)')
+        ax2.set_xlim(0,6)
+        ax2.set_ylim(-4,4)
+        ax2.legend(frameon=False, loc=1)
+
+        #plot coupled results:
+        ax3 = fig.add_subplot(grid[0,2])
+        #for CapOmega limit 0
+        #ax3.plot(Nvec, C_both_0, linestyle='-', marker='.', markersize=14, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
+        #for CapOmega limit 0.001
+        #ax3.plot(Nvec, C_both_001, linestyle='-', marker='.', markersize=14, color='k', linewidth=2, label=r'$|\Omega|\leq 10^{-3}$')
+        #for CapOmega limit 0.01
+        ax3.plot(Nvec, C_both_01, linestyle='-', marker='.', markersize=14, color='k', linewidth=4, label=r'$|\Omega|\leq 10^{-2}$')
+        #k=0 case:
+        ax3.plot(Nvec, C_both_k0_01, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+        #k not 0 case:
+        ax3.plot(Nvec, C_both_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+
+        ax3.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
+        ax3.plot([0,6],[-0.5,-0.5], linestyle='--',color='silver', linewidth=1)
+        ax3.plot([0,6],[1,1], linestyle='--',color='silver', linewidth=1)
+        ax3.plot([0,6],[-1,-1], linestyle='--',color='silver', linewidth=1)
+        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}}$')
+        ax3.set_xlabel(r'$N$ (rad/s)')
+        #ax3.set_ylabel(r'Contribution to solution (%)')
+        ax3.set_xlim(0,6)
+        ax3.set_ylim(-4,4)
+        ax3.legend(frameon=False, loc=1)
+
+        plt.show()
+        pdb.set_trace()
 
 
 #Reconstruct State using the Natural Basis:
@@ -1631,7 +1896,7 @@ if Resonances == 1:
         idxs = np.array(idxs).flatten()	#convert to array and flatten
 
         Nk = len(idxs)
-        print("total # of key (wave or/and non-wave) modes: ", Nk)
+        print("total # of wave or/and non-wave modes used to estimate solution: ", Nk)
 
         ks1 = np.array(ks1)
         ks3 = np.array(ks3)
@@ -1909,42 +2174,47 @@ if Resonances == 1:
             if IntegrateCapOmega == 1:
                 
                 if PlotWeightFnc == 1:
-                    fig0, axs0 = plt.subplots(1,1, figsize=(width,height*2/3.))
+                    fig0, axs0 = plt.subplots(1,1, figsize=(width*1.25,height))
                     fig0.subplots_adjust(wspace=0, hspace=0)
                     fig0.set_tight_layout(True)
-                    axs0.set_yscale('log')
+                    #axs0.set_yscale('log')
 
-                NT = 4
-                tfact = 6000
-                T = (np.arange(NT)+1)*(tfact*dt)
-                linewidthvec = np.arange(NT)*0.5+0.5
-                capOmegaIntegral = np.zeros((len(ydata),NT))
-                capOmegaIntWeights = np.zeros((len(np.array(Omega)),NT)) #for weighting PDFs later.
+                #NT = 10
+                #tfact = 48000
+                #T = (np.arange(NT)+1)*(tfact*dt)
+                T = np.array([1,10,100,1000,10000,100000])
+                NT = len(T)
+                linewidthvec = np.arange(NT)*0.2+0.2
+                capOmegaIntegral = np.zeros((len(ydata),NT), dtype=complex)
+                capOmegaIntWeights = np.zeros((len(np.array(Omega)),NT), dtype=complex) #for weighting PDFs later.
                 for i in range(0,NT):
-                    capOmegaIntegral[:,i] = (1./T[i])*(1./(1j*ydata))*(1 - np.exp(-1j*ydata*T[i]))
+                    capOmegaIntegral[:,i] = -1j/8 * 1./T[i] * (1./(1j*ydata)) * (1 - np.exp(-1j*ydata*T[i]))
                     idxsNaN = np.isnan(capOmegaIntegral[:,i])
                     capOmegaIntegral[idxsNaN,i] = 1
-                    capOmegaIntegral[:,i] = np.absolute(capOmegaIntegral[:,i])
+                    #capOmegaIntegral[:,i] = np.absolute(capOmegaIntegral[:,i])
 
-                    capOmegaIntWeights[:,i] = (1./T[i])*(1./(1j*np.array(Omega)))*(1 - np.exp(-1j*np.array(Omega)*T[i]))
+                    #capOmegaIntWeights[:,i] = (1./T[i])*(1./(1j*np.array(Omega)))*(1 - np.exp(-1j*np.array(Omega)*T[i]))
+                    capOmegaIntWeights[:,i] = -1j/8 * 1./T[i] * 1./(1j*np.array(Omega)) * (1 - np.exp(-1j*np.array(Omega)*T[i]))
                     idxsNaN = np.isnan(capOmegaIntWeights[:,i])
                     capOmegaIntWeights[idxsNaN,i] = 1
-                    capOmegaIntWeights[:,i] = np.absolute(capOmegaIntWeights[:,i])
+                    #capOmegaIntWeights[:,i] = np.absolute(capOmegaIntWeights[:,i])
                
                     if PlotWeightFnc == 1:
                         axs0.plot(capOmegaIntegral[:,i], 'k' ,linewidth=linewidthvec[i], label=str(int(T[i])) )
  
                 if PlotWeightFnc == 1:
-                    axs0.set_ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
+                    #axs0.set_ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
+                    axs0.set_ylabel(r'$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ d$s$')
+                    axs0.set_ylim(-.2,.05)
                     axs0.set_xlabel(r'idx')
-                    axs0.legend(title=r'$T$ (s)')
+                    axs0.legend(title=r'$T$ (s)', frameon=False, loc=4)
                     plt.show()
 
                     plt.figure()
                     plt.plot(capOmegaIntWeights[:,NT-1], 'k', label=str(int(T[i])) )
-                    plt.ylabel(r'|$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ ds|')
+                    plt.ylabel(r'$(1/T)\int_0^T\,e^{-i\,\Omega\,s}$ d$s$')
                     plt.xlabel(r'idx')
-                    plt.legend(title=r'$T$ (s)')
+                    plt.legend(title=r'$T$ (s)', frameon=False)
                     plt.show()
                
 
@@ -1980,9 +2250,14 @@ if Resonances == 1:
             #print(idxs)
             #plt.plot(idxs)
             #plt.show()
-            res_sets2 = res_sets[idxs,:]
+            #res_sets2 = res_sets[idxs,:]
             #np.savetxt('./res_sets2.txt',res_sets2)
-            capOmegaWeights = capOmegaIntWeights[idxs,NT-1].flatten()
+            #capOmegaWeights = capOmegaIntWeights[idxs,NT-1].flatten()
+            res_sets2 = res_sets
+            #capOmegaWeights = capOmegaIntWeights[:,NT-1].flatten()
+            capOmegaWeights = capOmegaIntWeights[:,2].flatten()
+            #capOmegaWeights = capOmegaIntWeights[:,3].flatten()
+            #capOmegaWeights = capOmegaIntWeights[:,4].flatten()
 
         if (keyWaveModes == 1 and keyNonWaveModes == 0) or (keyNonWaveModes == 1 and keyWaveModes == 0):
             Nk2 = res_sets2.shape[0]
@@ -2063,6 +2338,36 @@ if Resonances == 1:
                 ax6 = fig.add_subplot(grid[1,2])
                 ax7 = fig.add_subplot(grid[2,0])
                 ax8 = fig.add_subplot(grid[2,1])
+
+            if SubSums == 1:
+                #Initialise sub sums:
+                sumDomegaIGW1 	= 0
+                sumDomegaMF1 	= 0
+                sumDomegaBoth1 	= 0
+                sumDomegaIGW2 	= np.zeros((Nk,2), dtype=complex)
+                sumDomegaMF2 	= np.zeros((Nk,2), dtype=complex)
+                sumDomegaBoth2 	= np.zeros((Nk,2), dtype=complex)
+                sumDomegaIGW3 	= np.zeros((Nk,2), dtype=complex)
+                sumDomegaMF3 	= np.zeros((Nk,2), dtype=complex)
+                sumDomegaBoth3 	= np.zeros((Nk,2), dtype=complex)
+                sumDomegaIGW4 	= 0
+                sumDomegaMF4 	= 0
+                sumDomegaBoth4 	= 0
+
+                #Define bandwidth boundaries required to compute sub sums:
+                tmp1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+                tmp2 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+                N_vec_tmp = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
+                Nidx = np.where(N_vec_tmp == np.sqrt(N2))
+                wellmode = tmp1[int(Nidx[0]),3]
+                maxIGWmode = tmp2[int(Nidx[0]),2] + wellmode
+                print('well mode: ',wellmode)
+
+                #Track main modes:
+                past_key_modes = []
+                countA = 0
+
+
 
             count00 = 0
             count01 = 0
@@ -2207,6 +2512,40 @@ if Resonances == 1:
                     if alpha2 == 1: sig2 = sigma1_3D[i2,j2,:]
                     sigmaSigma[ii,:] = sig1*sig2 
 
+                if SubSums == 1:
+
+                    if ii==0: past_key_modes.append([i,j])
+
+                    #tpnt = 0
+                    #tpnt = int(Nt/2.)
+                    #tpnt = Nt-1
+                    #xpnt = int(Nx/2.)
+                    #zpnt = int(Nz/2.)
+                    #contribution = interactCoef[ii]*sigmaSigma[ii,tpnt]*capOmegaWeights[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
+                    contribution1 = capOmegaWeights[ii]
+                    contribution2 = interactCoef[ii]*capOmegaWeights[ii]
+
+                    if interactCoef[ii] != 0:
+                        if (abs(omega_k1) > wellmode) and (abs(omega_k2) > wellmode): 
+                            #sumDomegaIGW1 = sumDomegaIGW1 + contribution1
+                            sumDomegaIGW2[countA,alpha] = sumDomegaIGW2[countA,alpha] + contribution1
+                            sumDomegaIGW3[countA,alpha] = sumDomegaIGW3[countA,alpha] + contribution2
+                            #sumDomegaIGW4 = sumDomegaIGW4 + np.abs(capOmegaWeights[ii])
+                        if (abs(omega_k1) <= wellmode) and (abs(omega_k2) <= wellmode): 
+                            #sumDomegaMF1 = sumDomegaMF1 + contribution1
+                            sumDomegaMF2[countA,alpha] = sumDomegaMF2[countA,alpha] + contribution1
+                            sumDomegaMF3[countA,alpha] = sumDomegaMF3[countA,alpha] + contribution2
+                            #sumDomegaMF4 = sumDomegaMF4 + np.abs(capOmegaWeights[ii])
+                        if ((abs(omega_k1) <= wellmode) and (abs(omega_k2) > wellmode)) or ((abs(omega_k1) > wellmode) and (abs(omega_k2) <= wellmode)): 
+                            #sumDomegaBoth1 = sumDomegaBoth1 + contribution1
+                            sumDomegaBoth2[countA,alpha] = sumDomegaBoth2[countA,alpha] + contribution1
+                            sumDomegaBoth3[countA,alpha] = sumDomegaBoth3[countA,alpha] + contribution2
+                            #sumDomegaBoth4 = sumDomegaBoth4 + np.abs(capOmegaWeights[ii])
+                    
+                    if ([i,j] not in past_key_modes):
+                        countA += 1
+                        past_key_modes.append([i,j])
+
 
                 if PlotTriads == 1:
                     #Symbol/line colour selections:
@@ -2305,6 +2644,45 @@ if Resonances == 1:
                     #past_modes.append([i1,i2,j1,j2])
 
             #print(count00,count01)
+
+            if SubSums == 1:
+               print(' ')
+               #print('sumDomegaIGW1, sumDomegaMF1, sumDomegaBoth1: ', sumDomegaIGW1,sumDomegaMF1,sumDomegaBoth1)
+               #print('sumDomegaIGW1, sumDomegaMF1, sumDomegaBoth1: ', np.real(sumDomegaIGW1),np.real(sumDomegaMF1),np.real(sumDomegaBoth1))
+               #print(' ')
+
+               sumDomegaIGW2 = np.reshape(sumDomegaIGW2, (Nk*2))
+               print( sumDomegaIGW2.shape )
+               sumDomegaMF2 = np.reshape(sumDomegaMF2, (Nk*2))
+               sumDomegaBoth2 = np.reshape(sumDomegaBoth2, (Nk*2))
+               total1 = np.sum( np.abs( np.add(np.add(sumDomegaIGW2,sumDomegaMF2),sumDomegaBoth2) )**2 )
+               total2 = np.sum( np.add(np.add(np.abs(sumDomegaIGW2)**2,np.abs(sumDomegaMF2)**2),np.abs(sumDomegaBoth2)**2) )
+               print(total1,total2)
+               print( np.sum(np.abs(sumDomegaIGW2)**2), np.sum(np.abs(sumDomegaMF2)**2), np.sum(np.abs(sumDomegaBoth2)**2) )
+               print( np.abs(np.sum(sumDomegaIGW2))**2, np.abs(np.sum(sumDomegaMF2))**2, np.abs(np.sum(sumDomegaBoth2))**2 )
+               print( np.sum(sumDomegaIGW2), np.sum(sumDomegaMF2), np.sum(sumDomegaBoth2) )
+               print(' ')
+
+               sumDomegaIGW3 = np.reshape(sumDomegaIGW3, (Nk*2))
+               sumDomegaMF3 = np.reshape(sumDomegaMF3, (Nk*2))
+               sumDomegaBoth3 = np.reshape(sumDomegaBoth3, (Nk*2))
+               total3 = np.sum( np.abs( np.add(np.add(sumDomegaIGW3,sumDomegaMF3),sumDomegaBoth3) )**2 )
+               total4 = np.sum( np.add(np.add(np.abs(sumDomegaIGW3)**2,np.abs(sumDomegaMF3)**2),np.abs(sumDomegaBoth3)**2) )
+               print(total3,total4)
+               print( np.sum(np.abs(sumDomegaIGW3)**2), np.sum(np.abs(sumDomegaMF3)**2), np.sum(np.abs(sumDomegaBoth3)**2) )
+               print( np.abs(np.sum(sumDomegaIGW3))**2, np.abs(np.sum(sumDomegaMF3))**2, np.abs(np.sum(sumDomegaBoth3))**2 )
+               print( np.sum(sumDomegaIGW3), np.sum(sumDomegaMF3), np.sum(sumDomegaBoth3) )
+               print(' ')
+
+               #print(sumDomegaIGW3)
+               #print(' ')
+               #print(sumDomegaMF3)
+               #print(' ')
+               #print(sumDomegaBoth3)
+
+
+               #print(sumDomegaIGW4,sumDomegaMF4,sumDomegaBoth4)
+
 
             if FindMaxModes == 1:
                 #plt.figure()
@@ -2462,8 +2840,8 @@ if Resonances == 1:
 
                 if FrequencyAve == 1 and OmegaLimit != 0: 
                     #weights = np.repeat(OmegaScaled,2)
-                    #weights = capOmegaWeights*np.abs(interactCoef)
-                    weights = capOmegaWeights
+                    weights = capOmegaWeights*np.abs(interactCoef)
+                    #weights = capOmegaWeights
                     weights = np.repeat(weights,2)
                 else: weights = np.ones((len(n12_vec)))
 
@@ -2910,7 +3288,7 @@ if Resonances == 1:
                 ax00.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
                 plt.show()
 
-            if SigmaSigma == 1:
+            if SigmaSigma == 1 and PlotSigmaSigma==1:
 
                 fig01, ax01 = plt.subplots(1,1, figsize=(width,height))
                 fig01.subplots_adjust(wspace=0.4, hspace=0.)

@@ -46,26 +46,25 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
-SinglePoint	= 1
+FullDomain      = 1
+SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
 forced          = 0
-N2		= 7.5625
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
     #N2		= 1
-    #N2		= 2.25		
+    N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
-    N2		= 7.5625
+    #N2		= 7.5625
     #N2          = 9
     #N2		= 10.5625
     #N2         = 12.25
@@ -96,10 +95,10 @@ Nvars = len(var_nms)
 #minimise repetition.
 FullFields              = 0
 StatePsi                = 0
-StateS                  = 1
+StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 0
+Density			= 1
 Density_2		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
@@ -131,7 +130,7 @@ MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
 CheckPSD2		= 0
-PSD_vs_N_plot		= 1
+PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
 
 TimescaleSeparation	= 0
@@ -173,7 +172,7 @@ NoPlotLabels    = 0
 logscale	= 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis = 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -220,7 +219,9 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced==1 or SinglePoint==1 or Modulated==1:
         if forced == 1:
-            RunName = RunName + '_k05n028x10'
+            RunName = RunName + '_k04n02'
+            #RunName = RunName + '_k04n18'
+            #RunName = RunName + '_k05n028x10'
             #RunName = RunName + '_k05n028x2'
             #RunName = RunName + '_k05n014x5'
             #RunName = RunName + '_k05n014'
@@ -229,6 +230,7 @@ if VaryN == 1:
             #RunName = RunName + '_dt0.005_sp'
         if Modulated == 1 and forced == 0 and SinglePoint == 0:
             RunName = RunName + '_R'
+        if Linear ==1 : RunName = RunName + '_linear'
     #dir_state = './Results/' + RunName + '/'
     dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
 
@@ -239,8 +241,8 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 10
-        #nfiles = 29
+        #nfiles = 10
+        nfiles = 30
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -267,7 +269,7 @@ if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0:
     if forced == 0: dt2=0.2
     if forced == 1: 
         dt2=0.2
-        dt2=dt
+        #dt2=dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -750,6 +752,8 @@ if Density == 1:
     #and then convert to density).
 
     if Modulated == 0:
+        #print(rho0)
+        #pdb.set_trace()
         rho = rho0*cs*S
         if FullFields==1: rho += rho_base
         data = rho
@@ -2404,6 +2408,7 @@ if SpectralAnalysis == 1:
         if CheckPSD == 1: fnm = fnm + '_' + str(dt2)
         if Modulated == 1: fnm = fnm + '_R'
         if MeanFlowAnalysis == 1: fnm = fnm + '_mf'
+        if Linear == 1: fnm = fnm + '_linear'
         fnm = fnm + '.txt'
         np.savetxt(fnm, (f,freqvec))
 
