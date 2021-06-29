@@ -35,7 +35,7 @@ if len(sys.argv) > 2:
     N2_array_MJ = [0.09, 0.25, 1, 2.25, 4, 6.25, 7.5625, 9, 10.5625, 12.25, 14.0625, 16, 20.25, 25]
     tmp = RunName.split('_')
     N2 = N2_array_MJ[int(tmp[1])]
-
+    print(N2)
 
 
 #Program control:
@@ -48,7 +48,7 @@ SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
@@ -73,8 +73,8 @@ if VaryN == 1:
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-var_nms = ['S']
-#var_nms = ['psi','S']
+#var_nms = ['S']
+var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
@@ -93,18 +93,19 @@ Nvars = len(var_nms)
 FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
-Density			= 1
+Density			= 0
 StateS_2                = 0
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
-drhodz			= 1
+drhodz			= 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
 dUdz                    = 0
-Richardson              = 0
+Richardson              = 1
+AnalyseRiFields		= 1
 Vorticity               = 0
 KineticE                = 0
 PotentialE              = 0
@@ -165,10 +166,10 @@ w2f_analysis = 0
 if VaryN == 0:
     #Options when reading data:  
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
-    #dir_state = '/home/ubuntu/dedalus/Results/State/'
+    dir_state = '/home/ubuntu/dedalus/Results/' + 'State' + RunName + '/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
@@ -230,7 +231,7 @@ if Gusto == 0:
         StartMin = 1
         nfiles = 30
     else:
-        StartMin = 1
+        StartMin = 6
         nfiles = 2
 
     #Model output/write timestep:
@@ -1048,6 +1049,36 @@ if drhodz == 1:
                 rhozMax = 500
                 #rhozMin = -300
                 #rhozMax = 300
+            if N2==3.83 or N2==4:
+                if Modulated == 0:
+                    rhozMin = -1000
+                    rhozMax = 1000
+                if Modulated == 1:
+                    rhozMin = np.min(data)
+                    rhozMax = np.max(data)
+            if N2==6.25 or N2==7.5625:
+                rhozMin = -1500
+                rhozMax = 1500
+            if N2==9 or N2==10.5625:
+                if Modulated == 0:
+                    rhozMin = -2000
+                    rhozMax = 2000
+                else:
+                    rhozMin = np.min(data)
+                    rhozMax = np.max(data)
+            if N2==12.25 or N2==14.0625:
+                rhozMin = -2500
+                rhozMax = 2500
+            if N2==16:
+                rhozMin = -3000
+                rhozMax = 3000
+            if N2==20.25:
+                rhozMin = -4000
+                rhozMax = 4000
+            if N2==25:
+                rhozMin = -5000
+                rhozMax = 5000
+
         drhoz = (rhozMax - rhozMin)/(nlevs-1)
         clevels = np.arange(nlevs)*drhoz + rhozMin
         if filledContour == 1:
@@ -1059,34 +1090,35 @@ if drhodz == 1:
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
         #xlim = (0,np.max(t))
-        #xlim = ((StartMin-1)*secPerFile,np.max(t))
-        xlim = (0,60)
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
+        #xlim = (0,60)
 
 
 if dUdz == 1:
     u = d_dz(Psi,Nt,Nx,Nz,z)
     w = -d_dx(Psi,Nt,Nx,Nz,x)
     data = d_dz(u,Nt,Nx,Nz,z)
-    data2 = d_dz(w,Nt,Nx,Nz,z)
+    if MakePlot==2: data2 = d_dz(w,Nt,Nx,Nz,z)
 
-    if MakePlot == 1:
+    if MakePlot >= 1:
         PlotTitle = r'$\partial u/\partial z$'
         PlotTitle2 = r'$\partial w/\partial z$'
         FigNmBase = 'dUdz' 
         cmap = 'bwr'
 
         nlevs = 41
-        uz_max = 20.
-        uz_min = -20.
+        uz_max = 10.
+        uz_min = -10.
         duz = (uz_max-uz_min)/(nlevs-1)
         clevels = np.arange(nlevs)*duz + uz_min
 
         nlevs = 41
-        wz_max = 20.
-        wz_min = -20.
+        wz_max = 10.
+        wz_min = -10.
         dwz = (wz_max-wz_min)/(nlevs-1)
         clevels2 = np.arange(nlevs)*dwz + wz_min
 
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
 
 if Richardson == 1:
     Sz = d_dz(S,Nt,Nx,Nz,z)
@@ -1111,7 +1143,7 @@ if Richardson == 1:
     data = Ri_local
 
     if MakePlot == 1:
-        PlotTitle = r'$Ri$'
+        PlotTitle = r'Ri'
         FigNmBase = 'Ri'
         cmap = 'PRGn'
 
@@ -1121,6 +1153,89 @@ if Richardson == 1:
         dRi = RiRange/(nlevs-1)
         clevels = np.arange(nlevs)*dRi - (RiRange/2.-RiC)
 
+        #xlim = (0,60)
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
+
+        if AnalyseRiFields == 1:
+            fig=plt.figure(figsize=(width,height))
+            grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+            ax1 = fig.add_subplot(grid[0,0])        
+    
+            #Points used for high resolution time series runs:
+            Nx2 = 3
+            Nz2 = 3
+            xIdx = (np.array([1./4,1./2,3./4])*Nx).astype('int')
+            zIdx = (np.array([1./4,1./2,3./4])*Nz).astype('int')
+        
+            xpnt = xIdx[1] 
+            zpnt = zIdx[0]
+
+            ax1.plot(t,data[:,xpnt,zpnt],'-k', linewidth=3, label=r'Ri')
+            #normN2 = np.max(N2_local[:,xpnt,zpnt])
+            normN2 = 1
+            ax1.plot(t,N2_local[:,xpnt,zpnt]/normN2, ':k', label=r'local $N^2$ (s$^{-2}$)')
+            #norm_uz = np.max(uz[:,xpnt,zpnt]**2)
+            norm_uz = 1
+            ax1.plot(t,uz[:,xpnt,zpnt]**2/norm_uz, '--k', label=r'$(\partial u/\partial z)^2$ (s$^{-2}$)')
+            ax1.plot([np.min(t),np.max(t)],[1./4,1./4], color='gray', label=r'Ri$_c$')
+            ax1.legend(frameon=False, loc=3)
+            ax1.set_xlabel(r'$t$ (s)')
+            #ax1.set_ylim(-10,10)
+            ax1.set_ylim(-6,16)
+            ax1.set_xlim((StartMin-1)*secPerFile,380)
+
+            #plt.show()
+            fig.savefig('RiAnalysis' + RunName + '_t_' + str(nfiles) + '_' + str(xpnt) + '_' + str(zpnt) + '.png')
+            plt.close(fig)
+
+            AnalyseFlow = 1
+            if AnalyseFlow == 1:
+                fig=plt.figure(figsize=(width,height))
+                grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                ax1 = fig.add_subplot(grid[0,0])
+
+                w = -d_dx(Psi,Nt,Nx,Nz,x)
+                wx = d_dx(w,Nt,Nx,Nz,x)
+                Lpsi = uz+wx
+                dtLpsi = d_dt(Lpsi,Nt,t)
+
+                #norm_dtLpsi = np.max(dtLpsi[:,xpnt,zpnt])
+                norm_dtLpsi = 1
+                ax1.plot(t,dtLpsi[:,xpnt,zpnt]/norm_dtLpsi, '.', label=r'$\partial_t\nabla^2\psi$ (s$^{-2})$')
+                norm_u = np.max(np.abs(u[:,xpnt,zpnt]))
+                #norm_u = 1
+                ax1.plot(t,u[:,xpnt,zpnt]/norm_u, '-k', label=r'$u$ (m/s)')
+                norm_w = np.max(np.abs(w[:,xpnt,zpnt]))
+                #norm_w = 1
+                ax1.plot(t,w[:,xpnt,zpnt]/norm_w, ':k', label=r'$w$ (m/s)')
+                #norm_uz2 = np.max(uz[:,xpnt,zpnt]**2)
+                norm_uz2 = 1
+                ax1.plot(t,uz[:,xpnt,zpnt]**2/norm_uz2, '--k', label=r'$(\partial u/\partial z)^2$ (s$^{-2}$)')
+                #norm_uz = np.max(uz[:,xpnt,zpnt])
+                norm_uz = 1
+                ax1.plot(t,uz[:,xpnt,zpnt]/norm_uz, color='gray', linewidth=0.5, label=r'$\partial u/\partial z$ (s$^{-1}$)')
+
+                ax1.legend(frameon=False, loc=2) 
+                ax1.set_xlabel(r'$t$ (s)')
+                ax1.set_ylim(-3,10)
+                ax1.set_xlim((StartMin-1)*secPerFile,380)
+
+                #plt.show()
+                fig.savefig('Flow' + RunName + '_t_' + str(nfiles) + '_' + str(xpnt) + '_' + str(zpnt) + '.png')
+                plt.close(fig)
+
+            ScatterShear2vsSolution = 0
+            if ScatterShear2vsSolution == 1:
+                fig=plt.figure(figsize=(width,height))
+                grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                ax1 = fig.add_subplot(grid[0,0])
+                ax1.scatter(uz[:,xpnt,zpnt]**2,dtLpsi[:,xpnt,zpnt], c='k', marker='.')
+                ax1.set_xlabel(r'$(\partial_z u)^2$ (s$^{-2}$)')
+                ax1.set_ylabel(r'$\partial_t\nabla^2\psi$ (s$^{-2}$)')
+
+                plt.show()
+
+            pdb.set_trace()
 
 if TrackSteps == 1:
 
@@ -2845,7 +2960,7 @@ if MakePlot >= 1:
             if filledContour == 1:
                 i1=ax1.contourf(xgrid,ygrid,data,clevels,cmap=cmap,extend="both")
                 if 'clabel' not in locals(): clabel=''
-                if NoPlotLabels == 0: fig.colorbar(i1,label=clabel)
+                if NoPlotLabels == 0: fig.colorbar(i1,label=clabel, ax=ax1)
                 if PlotXZ==2 or PlotTZ==2 or (PlotXZ==1 and PlotTZ==1):
                     i2=ax2.contourf(xgrid,ygrid,data2,clevels2,cmap=cmap,extend="both")
             else:
@@ -2869,8 +2984,8 @@ if MakePlot >= 1:
                 i1=ax1.plot(data.flatten(),zgrid, '-', c='k', linewidth=2)
 
         #Plot labelling section:
-        if MakePlot == 1:
-            if PlotXZ == 1: 
+        if MakePlot >= 1:
+            if PlotXZ >= 1: 
                 ax1.set_xlim(0,Lx)
                 ax1.set_xlabel(r'$x$ (m)')
                 ax1.set_ylim(0,Lz)
@@ -2879,7 +2994,7 @@ if MakePlot >= 1:
                 ax1.set_title(PlotTitle)
                 start, end = ax1.get_xlim()
                 ax1.xaxis.set_ticks((0,0.05,0.1,0.15,0.2))
-            if PlotTZ == 1:
+            if PlotTZ >= 1:
                 if 'xlim' not in locals(): xlim=(0,t[Nt-1])
                 ax1.set_xlim(xlim)
                 ax1.set_xlabel(r'$t$ (s)')
@@ -2889,7 +3004,7 @@ if MakePlot >= 1:
                 if PlotStairStartEnd==1: 
                     ax1.plot([tau0,tau0],[0,Lz], c='silver')
                     ax1.plot([tauE,tauE],[0,Lz], c='silver')
-            if PlotT == 1:
+            if PlotT >= 1:
                 if 'xlim' not in locals(): xlim=(np.min(xgrid),np.max(xgrid))
                 if 'ylim' not in locals(): ylim=(np.min(data),np.max(data))
                 ax1.set_xlim(xlim)
@@ -2899,7 +3014,7 @@ if MakePlot >= 1:
                 ax1.set_xlabel(xlabel)
                 ax1.set_ylabel(ylabel)
                 ax1.set_title(PlotTitle)
-            if PlotZ == 1:
+            if PlotZ >= 1:
                 ax1.set_title( r'$t$ =' + str("%5.1f" % t[tIdx]) + " s" )
                 ax1.set_ylim(0,Lz)
                 ax1.set_xlabel(r'$S$ (g/kg)')
@@ -2907,15 +3022,18 @@ if MakePlot >= 1:
                 #ax1.set_xlim(0,300)
 
         if 'data2' in locals():
-            fig.colorbar(i2)
+            fig.colorbar(i2, ax=ax2)
             ax2.set_ylim(0,Lz)
             if PlotXZ >= 1: 
                 ax2.set_xlim(0,Lx)
                 #ax2.set_title( PlotTitle2 + ", " + str("%5.1f" % t[tIdx]) + " s" )
                 ax2.set_title(PlotTitle2)
+                ax2.set_xlabel(r'$x$ (m)')
+                ax2.set_ylabel(r'$z$ (m)')
             if PlotTZ >= 1:
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
+                ax2.set_ylabel(r'$z$ (m)')
 
         if NoPlotLabels == 1:
             ax1.axis('off')
@@ -2931,7 +3049,7 @@ if MakePlot >= 1:
             RunName=separator.join(tmp)
 
         #plt.show()
-        if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
+        if PlotTZ >= 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(nfiles) + '.png')
         if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
         if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
         if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
