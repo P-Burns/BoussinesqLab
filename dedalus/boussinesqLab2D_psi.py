@@ -75,17 +75,17 @@ ForceDecay		= 0
 PassiveTracer 		= 0
 compute_p		= 0
 
-CoordinateRotation	= 0
+CoordinateRotation	= 1
 nvars			= 2
 
-Linear			= 0
+Linear			= 1
 
 domain3D		= 0
 
 w2f_grid 		= 0
 w2f_state 		= 0
 w2f_SinglePoint 	= 1
-w2f_dt		 	= 0
+w2f_dt		 	= 1
 w2f_energy		= 0
 
 
@@ -320,7 +320,9 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
+            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
@@ -526,7 +528,7 @@ if Inviscid == 0:
 if AddForce == 1 and ImplicitDiffusion == 1: RHS_1 += 'F(x,z,t)'
 if AddForce == 1 and ImplicitDiffusion == 0: RHS_1 += '+' + 'F(x,z,t)'
 if Linear == 0: RHS_1 += "-u*dx(L(psi))-w*dz(L(psi))"
-if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1) and AddForce == 1: RHS_1 = "0"
+if Linear == 1 and (Inviscid == 1 or ImplicitDiffusion == 1) and AddForce == 0: RHS_1 = "0"
 momentum_eq = LHS_1 + " = " + RHS_1
 print(momentum_eq)
 problem.add_equation(momentum_eq, condition = "(nx != 0) or (nz != 0)")
@@ -824,7 +826,7 @@ else:
 
 SimDays = 0.
 SimHrs = 0.
-SimMins = 1.
+SimMins = 30.
 SimSecs = 0.
 te = SimDays*(24*60*60) + SimHrs*(60*60) + SimMins*60 + SimSecs
 solver.stop_sim_time = te
@@ -941,6 +943,7 @@ if w2f_dt == 1:
 
 
 # CFL
+#CFL = flow_tools.CFL(solver, initial_dt=dt, max_dt=write_dt, cadence=1, safety=1., threshold=0.1)
 CFL = flow_tools.CFL(solver, initial_dt=dt, max_dt=write_dt, cadence=1, safety=1., threshold=0.1)
 CFL.add_velocities(('u', 'w'))
 
