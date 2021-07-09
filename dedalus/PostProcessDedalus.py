@@ -13,6 +13,7 @@ from numpy import fft
 from scipy import fftpack
 from scipy.signal import welch
 from scipy.signal.windows import tukey
+from scipy.integrate import simps
 import pdb #to pause execution use pdb.set_trace()
 import os
 import matplotlib.pyplot as plt
@@ -40,10 +41,9 @@ if len(sys.argv) > 2:
     N2 = N2_array_MJ[int(tmp[1])]
 
 
-
 #Program control:
 Gusto		= 0
-Modulated       = 0
+Modulated       = 1
 Linear 		= 0
 Inviscid	= 0
 FullDomain      = 0
@@ -56,29 +56,29 @@ VaryN           = 0
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 0
+forced          = 1
 if VaryN == 1:
     #N2		= 0.09
-    N2		= 0.25
-    N2		= 1
-    N2		= 2.25		
-    N2		= 4
-    N2		= 6.25
+    #N2		= 0.25
+    #N2		= 1
+    #N2		= 2.25		
+    #N2		= 4
+    #N2		= 6.25
     N2		= 7.5625
-    N2          = 9
-    N2		= 10.5625
-    N2 	        = 12.25
-    N2		= 14.0625
-    N2		= 16
-    N2		= 20.25
-    N2		= 25
+    #N2          = 9
+    #N2		= 10.5625
+    #N2         = 12.25
+    #N2		= 14.0625
+    #N2		= 16
+    #N2		= 20.25
+    #N2		= 25
 
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-var_nms = ['psi','S']
-#var_nms = ['psi','S','psi_r','S_r']
+#var_nms = ['psi','S']
+var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
 #var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
@@ -93,12 +93,12 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 0
+Density			= 1
 Density_2		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
@@ -110,7 +110,7 @@ TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
 dUdz                    = 0
-Richardson              = 1
+Richardson              = 0
 Froude			= 0
 Reynolds	 	= 0
 Vorticity               = 0
@@ -122,7 +122,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -130,8 +130,9 @@ MeanFlowAnalysis	= 0
 PlotBigMode		= 0
 CheckPSD		= 0
 CheckPSD2		= 0
-PSD_vs_N_plot		= 1
+PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
+PSD_linear_nonlinear	= 1
 
 TimescaleSeparation	= 0
 OverlayModulated	= 1
@@ -157,7 +158,7 @@ tMean_slide = 0
 Nt_mean = 21
 wing = Nt_mean//2
 
-FieldMaxMin = 1
+FieldMaxMin = 0
 
 
 #Choose type of plot:
@@ -238,19 +239,22 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 10
-        #nfiles = 29
+        #nfiles = 10
+        nfiles = 30
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 1
 
     #Model output/write timestep:
-    if FullDomain == 1: dt = 1e-1
-    if SinglePoint==1: dt = 1e-2
-    if MultiPoint==1: dt = 0.008
+    if FullDomain == 1: 
+        dt = 1e-1
+    if SinglePoint==1: 
+        dt = 1e-2
+    if MultiPoint==1: 
+        dt = 8e-3
 
 if Gusto == 1: dt = 0.004
 
@@ -264,12 +268,12 @@ if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0:
     if forced == 0: dt2=0.2
     if forced == 1: 
         dt2=0.2
-        dt2=dt
+        #dt2=dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     dt2 = dt
-    dt2 = 0.1
+    #dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.02
@@ -2426,9 +2430,10 @@ if SpectralAnalysis == 1:
             if FullDomain == 1:
                 Idx1 = int(Nx/2.)
                 Idx2 = int(Nz/2.)
-            else:
+            if SinglePoint == 1:
                 Idx1 = 0
                 Idx2 = 0
+
             data = spectralCoef[:,Idx1,Idx2]
 
             xgrid = freqvec*(2*np.pi)
@@ -2664,6 +2669,40 @@ if SpectralAnalysis == 1:
                 if AnalyseS==1: np.savetxt('ts_S' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
                 if AnalyseS==0: np.savetxt('ts_psi' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
 
+
+            if PSD_linear_nonlinear == 1:
+                fig0 = plt.figure(figsize=(width,height))
+                fig0.set_tight_layout(True)
+                grid0 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                ax0 = fig0.add_subplot(grid0[0,0])
+
+                #plot PSD for nonlinear run:
+                idx1 = 1
+                idx2 = 1
+                ax0.semilogy(xgrid,spectralCoef[:,idx1,idx2], '-k')
+
+                #plot PSD for linear run:
+                baseDir = '/gpfs/ts0/home/pb412/'
+                psd_linear = np.loadtxt(baseDir + 'psd_N2_07_5625_k04n18_3000_R_linear.txt')
+                #psd_linear = np.loadtxt(baseDir + 'psd_N2_07_5625_k04n02_3000_R_linear.txt')
+                c = 2*np.pi
+                ax0.semilogy(psd_linear[1,:]*c, psd_linear[0,:], ':b')
+
+                ax0.set_xlim(0,5)
+                ax0.set_ylim(1e-15,1e1)
+                plt.savefig('psd_linear_nonlinear' + RunName + '.png')
+                plt.close(fig0)
+
+                #Compute ratio of energy in PSD from linear and nonlinear 
+                idxs = np.where(xgrid<= np.sqrt(N2))
+                int1 = simps(spectralCoef[idxs,idx1,idx2],xgrid[idxs])	#integral for nonlinear system
+                int2 = simps(psd_linear[0,idxs],xgrid[idxs])		#integral for linear system
+                diff = int1-int2
+                ratio = diff/int2 
+                print(idxs)
+                print(xgrid[np.max(idxs)])
+                print(int1,int2)
+                print(ratio)
 
 
 if TimescaleSeparation == 1:
@@ -3067,9 +3106,13 @@ if MakePlot >= 1:
         ygrid = z2d_t
 
     if PlotT >= 1:
-       if SpectralAnalysis == 0:
+       if SpectralAnalysis==0 and SinglePoint==0 and MultiPoint==0:
            xIdx = int(Nx/2.)
            zIdx = int(Nz/2.)
+           data = data[:,xIdx,zIdx]
+       if MultiPoint == 1:
+           xIdx = 1
+           zIdx = 1
            data = data[:,xIdx,zIdx]
        if 'xgrid' not in locals(): xgrid = t
 
@@ -3181,13 +3224,14 @@ if MakePlot >= 1:
             separator = '_'
             RunName=separator.join(tmp)
 
-        #plt.show()
-        if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.png')
-        if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.png')
-        if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
-        if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
-        if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
-        plt.close(fig)
+        if w2f_analysis == 0: plt.show()
+        if w2f_analysis == 1:
+            if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.png')
+            if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.png')
+            if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
+            if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
+            if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
+            plt.close(fig)
 
     if MakeMovie == 1:
         #If you wish to read in all model outputs, make a sliding average on full output,
