@@ -44,7 +44,7 @@ if len(sys.argv) > 2:
 #Program control:
 Gusto		= 0
 Modulated       = 1
-Linear 		= 0
+Linear 		= 1
 Inviscid	= 0
 FullDomain      = 0
 SinglePoint	= 0
@@ -78,9 +78,9 @@ if VaryN == 1:
 #var_nms = ['psi']
 #var_nms = ['S']
 #var_nms = ['psi','S']
-var_nms = ['psi','S','psi_r','S_r']
+#var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-#var_nms = ['S','S_r']
+var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -110,8 +110,8 @@ TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
 dUdz                    = 0
-Richardson              = 1
-AnalyseRiFields		= 1
+Richardson              = 0
+AnalyseRiFields		= 0
 Froude			= 0
 Reynolds	 	= 0
 Vorticity               = 0
@@ -133,7 +133,7 @@ CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
-PSD_linear_nonlinear	= 1
+PSD_linear_nonlinear	= 0
 
 TimescaleSeparation	= 0
 OverlayModulated	= 1
@@ -163,7 +163,7 @@ FieldMaxMin = 0
 
 
 #Choose type of plot:
-MakePlot 	= 1
+MakePlot 	= 0
 PlotXZ 		= 0
 PlotTZ 		= 0
 PlotT 		= 0
@@ -241,9 +241,10 @@ if Gusto == 0:
     secPerFile = 60.
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
+        #StartMin = 3
         StartMin = 1
         #nfiles = 10
-        nfiles = 30
+        nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -270,8 +271,8 @@ if Gusto == 1: dt = 0.004
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
     if forced == 1: 
-        dt2=0.2
-        #dt2=dt
+        dt2 = 0.2
+        #dt2 = dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -512,7 +513,9 @@ if Gusto == 0:
                 if FullDomain==1 or MultiPoint==1: S_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint: S_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
             if var_nms[jj] == 'psi_r':
-                if FullDomain==1 or MultiPoint==1: Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
+                if FullDomain==1 or MultiPoint==1: 
+                    #print(Psi_r.shape, np.array(tmp_).shape)
+                    Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint==1: Psi_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
 
             #Energy variables:
@@ -2478,12 +2481,16 @@ if ForwardTransform == 1:
 
 if SpectralAnalysis == 1:
     if AnalyseS == 1:
+        fnmVar = 'S'
         if Modulated == 0: data = S2
         if Modulated == 1: data = S_r
     if AnalyseRho == 1:
+        fnmVar = 'Rho'
+        #if Modulated == 0: data = rho
         if Modulated == 0: data = rho2
         if Modulated == 1: data = rho_r
     if AnalysePsi == 1:
+        fnmVar = 'Psi'
         if Modulated == 0: data = Psi
         if Modulated == 1: data = Psi_r
 
@@ -2496,8 +2503,8 @@ if SpectralAnalysis == 1:
     spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
     npersegStr = str(nperseg)
 
-    print('analysis timestep: ', dt2)
-    print('frequency resolution: ', np.min(freqvec[1:]))
+    #print('analysis timestep: ', dt2)
+    #print('frequency resolution: ', np.min(freqvec[1:]))
 
     #intPSD = np.trapz(spectralCoef.flatten(),freqvec)
     #print("integral of PSD: ", intPSD)
@@ -2506,31 +2513,35 @@ if SpectralAnalysis == 1:
         if FullDomain == 1:
             Idx1 = int(Nx/2.)
             Idx2 = int(Nz/2.)
-        else:
+        if MultiPoint == 1:
+            Idx1 = 1
+            Idx2 = 1
+        if SinglePoint ==1:
             Idx1 = 0
             Idx2 = 0
         f = spectralCoef[:,Idx1,Idx2]
 
-        if N2 == 25:       fnm = './psd_N2_25' + '_' + npersegStr
-        if N2 == 20.25:    fnm = './psd_N2_20_25' + '_' + npersegStr
-        if N2 == 16:       fnm = './psd_N2_16' + '_' + npersegStr
-        if N2 == 14.0625:  fnm = './psd_N2_14_0625' + '_' + npersegStr
-        if N2 == 12.25:    fnm = './psd_N2_12_25' + '_' + npersegStr
-        if N2 == 10.5625:  fnm = './psd_N2_10_5625' + '_' + npersegStr
-        if N2 == 9:        fnm = './psd_N2_09' + '_' + npersegStr
-        if N2 == 7.5625:   fnm = './psd_N2_07_5625' + '_' + npersegStr
-        if N2 == 6.25:     fnm = './psd_N2_06_25' + '_' + npersegStr
-        if N2 == 4:        fnm = './psd_N2_04' + '_' + npersegStr
-        if N2 == 2.25:     fnm = './psd_N2_02_25' + '_' + npersegStr
-        if N2 == 1:        fnm = './psd_N2_01' + '_' + npersegStr
-        if N2 == 0.25:     fnm = './psd_N2_00_25' + '_' + npersegStr
-        if N2 == 0.09:     fnm = './psd_N2_00_09' + '_' + npersegStr
-        if CheckPSD == 1: fnm = fnm + '_' + str(dt2)
-        if Modulated == 1: fnm = fnm + '_R'
-        if MeanFlowAnalysis == 1: fnm = fnm + '_mf'
-        if Linear == 1: fnm = fnm + '_linear'
-        fnm = fnm + '.txt'
-        np.savetxt(fnm, (f,freqvec))
+        if len(sys.argv) > 2:
+            tmp = RunName.split('_')
+            #Pad with zeros to correctly order results:
+            tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
+            separator = '_'
+            RunName_ = separator.join(tmp)
+
+        file_dir = './Results/' + RunName + '/'
+        fnm_w2f = file_dir + 'psd_' + fnmVar 
+        if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
+        fnm_w2f = fnm_w2f + RunName + '_' + npersegStr
+        if CheckPSD == 1: fnm_w2f = fnm_w2f + '_' + str(dt2)
+        if MeanFlowAnalysis == 1: fnm_w2f = fnm_w2f + '_mf'
+        if Linear == 1: fnm_w2f = fnm_w2f + '_linear'
+        fnm_w2f = fnm_w2f + '.txt'
+        np.savetxt(fnm_w2f, (f,freqvec))
+
+        if AnalyseS==1: np.savetxt('ts_S' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+        if AnalyseRho==1: np.savetxt('ts_Rho' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+        if AnalyseS==0 and AnalyseRho==0: np.savetxt('ts_psi' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+
 
     if MakePlot == 1:
         yscale = 'log'
@@ -2662,8 +2673,6 @@ if SpectralAnalysis == 1:
             data3 = np.loadtxt(fdir + 'psd_N2_04' + '_' + npersegStr + tag_R + '.txt')
             data4 = np.loadtxt(fdir + 'psd_N2_16' + '_' + npersegStr + tag_R + '.txt')
 
-            #labelvec = ('0.5','1','1.5','2','3','5')
-            #colorvec = ('grey','grey','k','k','k','k','k')
             #lstyle_vec = ('-','-','-','-','-',':',':')
             #lwidth_vec = (3,1,3,2,1,2,1)
             #ax1.set_xlim(0,8)
@@ -2743,6 +2752,7 @@ if SpectralAnalysis == 1:
             plt.show()
 
         if MultiPoint == 1:
+
             fig1 = plt.figure(figsize=(width*1.5,height))
             #fig1.set_tight_layout(True)
             grid1 = plt.GridSpec(1, 2, wspace=0.4, hspace=0.)
@@ -2769,32 +2779,35 @@ if SpectralAnalysis == 1:
             ax1.set_xlim(0,4)
             ax1.set_xlabel(r'$\omega$ (rad/s)')
             ax1.set_ylabel(r'PSD')
-            if AnalyseS==0 and Modulated==0: 
+            if AnalyseS==0 and AnalyseRho==0 and Modulated==0: 
                 ax0.set_ylim(-.004,.002)
                 ax0.set_ylabel(r'$\psi$')
-            if AnalyseS==0 and Modulated==1:
+            if AnalyseS==0 and AnalyseRho==0 and Modulated==1:
                 #ax0.set_ylim(-.004,.002)
                 ax0.set_ylabel(r'$\psi_r$')
             if AnalyseS == 1 and Modulated==0:
                 ax1.set_ylim(1e-11,1e2)
-                ax0.set_ylabel(r'$S$')            
-            if AnalyseS == 1 and Modulated==1:
+                ax0.set_ylabel(r'$S$')
+            if AnalyseRho==1 and Modulated==0:
+                ax1.set_ylim(1e-11,1e2)
+                ax0.set_ylabel(r'$\rho$')
+            if (AnalyseS==1 and Modulated==1) or (AnalyseRho==1 and Modulated==1):
                 #ax1.set_ylim(1e-14,1e-2)
-                ax0.set_ylabel(r'$\zeta$')            
+                ax0.set_ylabel(r'$\zeta$')
             if AnalyseS==1:
-                if Modulated==0: fig1.savefig('psd_S' + RunName + '_multip.png')
-                if Modulated==1: fig1.savefig('psd_Sr' + RunName + '_multip.png')
-            if AnalyseS==0:
-                if Modulated==0: fig1.savefig('psd_Psi' + RunName + '_multip.png')
-                if Modulated==1: fig1.savefig('psd_Psi_r' + RunName + '_multip.png')
+                if Modulated==0: fig1.savefig('psd_S' + RunName_ + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Sr' + RunName_ + '_multip.png')
+            if AnalyseRho==1:
+                if Modulated==0: fig1.savefig('psd_Rho' + RunName_ + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Rho_r' + RunName_ + '_multip.png')
+            if AnalyseS==0 and AnalyseRho==0:
+                if Modulated==0: fig1.savefig('psd_Psi' + RunName_ + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Psi_r' + RunName_ + '_multip.png')
             plt.close(fig1)
-
-            if w2f_analysis==1:
-                if AnalyseS==1: np.savetxt('ts_S' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
-                if AnalyseS==0: np.savetxt('ts_psi' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
 
 
             if PSD_linear_nonlinear == 1:
+
                 fig0 = plt.figure(figsize=(width,height))
                 fig0.set_tight_layout(True)
                 grid0 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
@@ -2806,27 +2819,40 @@ if SpectralAnalysis == 1:
                 ax0.semilogy(xgrid,spectralCoef[:,idx1,idx2], '-k')
 
                 #plot PSD for linear run:
-                baseDir = '/gpfs/ts0/home/pb412/'
-                psd_linear = np.loadtxt(baseDir + 'psd_N2_07_5625_k04n18_3000_R_linear.txt')
-                #psd_linear = np.loadtxt(baseDir + 'psd_N2_07_5625_k04n02_3000_R_linear.txt')
+                fnm_linear = 'psd_' + fnmVar
+                fnm_linear = fnm_linear + '_r'
+                fnm_linear = fnm_linear + RunName + '_' + npersegStr
+                fnm_linear = fnm_linear + '_linear'
+                fnm_linear = fnm_linear + '.txt'
+                baseDir = '/gpfs/ts0/home/pb412/dedalus/Results/' + RunName + '/'
+                psd_linear = np.loadtxt(baseDir + fnm_linear)
+               
                 c = 2*np.pi
                 ax0.semilogy(psd_linear[1,:]*c, psd_linear[0,:], ':b')
 
-                ax0.set_xlim(0,5)
+                ax0.set_title(RunName)
+                ax0.set_xlim(0,6)
                 ax0.set_ylim(1e-15,1e1)
-                plt.savefig('psd_linear_nonlinear' + RunName + '.png')
-                plt.close(fig0)
 
                 #Compute ratio of energy in PSD from linear and nonlinear 
-                idxs = np.where(xgrid<= np.sqrt(N2))
+                idxs = np.where(xgrid <= np.sqrt(N2))
                 int1 = simps(spectralCoef[idxs,idx1,idx2],xgrid[idxs])	#integral for nonlinear system
                 int2 = simps(psd_linear[0,idxs],xgrid[idxs])		#integral for linear system
                 diff = int1-int2
-                ratio = diff/int2 
-                print(idxs)
-                print(xgrid[np.max(idxs)])
-                print(int1,int2)
-                print(ratio)
+                #ratio = diff/int2 
+                ratio = int1/int2 
+                #print(idxs)
+                #print(xgrid[np.max(idxs)])
+                #print(int1,int2)
+                #print(ratio)
+
+                #Add ratio to image:
+                ax0.text(0.5, 1e0, 'Ratio:' + str(ratio))
+                ax0.text(0.5, 1e-1, 'Nonlinear:' + str(int1) + ', Linear: ' + str(int2))
+
+                #Save and close image:
+                plt.savefig('psd_linear_nonlinear' + RunName_ + '.png')
+                plt.close(fig0)
 
 
 if TimescaleSeparation == 1:

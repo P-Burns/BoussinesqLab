@@ -21,12 +21,13 @@ module load HDF5/1.8.18-foss-2016b
 #Activate Dedalus virtual environment
 . bin/activate
 
-ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/PostProcessDedalus.py"
+#ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/PostProcessDedalus_Ri.py"
+ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/PostProcessDedalus_FrReRi.py"
 prefix="State";
 #suffix="/";	#when not copying zip files from the archive
 suffix=".zip";	#when copying zip files from the archive
 
-for ((i=0; i<=99; i++))
+for ((i=0; i<99; i++))
 do
 
     if [ ${RunNames[i]} != 'State_4_125_55_31.zip' ] && [ ${RunNames[i]} != 'State_5_125_55_31.zip' ];	#if statement to exclude problem case(s)

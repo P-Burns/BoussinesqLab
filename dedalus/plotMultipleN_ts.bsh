@@ -1,0 +1,82 @@
+#!/bin/bash
+#Script to read and plot data from different model output directories
+#by calling the analysis script PostProcessDedalus.py in a loop and passing
+#into the Python programme the required data directory information etc.
+
+
+#Put list of model output directories into bash array:
+libAddress="/gpfs/ts0/projects/Research_Project-183035"
+dataDir="HighResResults"
+#dataDir="Linear_HighResResults"
+cd $libAddress/$dataDir
+shopt -s dotglob
+shopt -s nullglob
+RunNames=(*/)			#for list of directories
+#RunNames=(*)			#for list of files (zip files)
+modelAddress="/gpfs/ts0/home/pb412/dedalus"
+cd $modelAddress
+
+#First load a module that is required to enable the Python script PostProcessDedalus.py
+#to load in the needed libraries for the analysis/plotting:
+module purge
+module load HDF5/1.8.18-foss-2016b 
+#Activate Dedalus virtual environment
+. bin/activate
+
+ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus"
+prefix="State";
+suffix="/";	#when not copying zip files from the archive
+#suffix=".zip";	#when copying zip files from the archive
+
+#No longer required as problem solved by zipping one directory.
+#Remove element from loop list that does not exist in HighResResults:
+#if [ $dataDir == 'Linear_HighResResults' ];
+#then
+#    del_element=27; RunNames=( "${RunNames[@]:0:$((del_element-1))}" "${RunNames[@]:$del_element}" )
+#fi
+
+
+for ((i=0; i<=99; i++))
+do
+
+    if [ ${RunNames[i]} != '999' ];	#if statement to exclude problem case(s) - not needed for high res runs
+    then
+        #copy file from archive to tmp directory before running analysis code:
+        echo "copy file from archive..."
+        cp -r $libAddress/$dataDir/${RunNames[i]} $libAddress/tmp
+        #cd $libAddress/tmp
+        #echo "unzipping..."
+        #unzip ${RunNames[i]}
+        #cd $modelAddress
+
+        #Run analysis code:
+        var3=${RunNames[i]#$prefix};
+        var3=${var3%$suffix};
+        echo $var3
+        python3 $ExecPath/PostProcessDedalus.py 30 $var3
+
+        # Remove case files and start over:
+        rm -r $libAddress/tmp/State_*
+
+
+        #Simpler code when not copying files from the archive and unzipping etc:
+        #var3=${RunNames[i]#$prefix};
+        #var3=${var3%$suffix};
+        #echo $var3
+        #python3 $ExecPath/PostProcessDedalus.py 30 $var3
+ 
+    fi 
+
+done
+
+
+
+
+
+
+
+
+
+#Combine png files into one pdf:
+#montage *.png -mode concatenate -tile 2x3 assembly.pdf
+

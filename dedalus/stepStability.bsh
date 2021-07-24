@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#Put list of model output directories into bash array:
+libAddress="/gpfs/ts0/home/pb412/dedalus/Results"
+cd $libAddress
+shopt -s dotglob
+shopt -s nullglob
+RunNames=(*/)          #for list of directories
+modelAddress="/gpfs/ts0/home/pb412/dedalus"
+cd $modelAddress
+
+#First load a module that is required to enable the Python script
+#to load in the needed libraries for the analysis/plotting:
+module purge
+module load HDF5/1.8.18-foss-2016b
+#Activate Dedalus virtual environment
+. bin/activate
+
+ExecPath="/gpfs/ts0/home/pb412/BoussinesqLab/dedalus/stepStability.py"
+python3 $ExecPath ${RunNames[@]}

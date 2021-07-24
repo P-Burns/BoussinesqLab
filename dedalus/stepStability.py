@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pdb #to pause execution use pdb.set_trace()
+from scipy.integrate import simps
 
 
 #Control section:
@@ -38,6 +39,8 @@ d1 = np.zeros((Ns,Forces))
 #Look at ratio of external force to background restoring force:
 d2 = np.zeros((Ns,Forces))
 
+#Look at ratio of total energy in linear and nonlinear systems using PSD:
+d3 = np.zeros((Ns,Forces))
 
 #Time parameters:
 dt = 0.1
@@ -72,29 +75,47 @@ for ff in range(0,Nfiles):
 
     #print(ff)
 
-    #Construct data root directory
+    #Construct data root directory for layer tracking results:
     RunName = sys.argv[ff+1]
     dir0 = "Results/" + RunName + "/TrackSteps/"
+    #Construct data root directory for PSD results:
+    dir1 = "Results/" + RunName
 
     #Create filename for saving results which are correctly ordered.
     #This includes removing first/last special characters and padding numbers with zeros.
     RunName = RunName[1:len(RunName)-1] 
     separator = '_'
-    RunName = RunName.split(separator)
-    fnm=[str(item).zfill(3) for item in RunName]
+    RunName_ = RunName.split(separator)
+    fnm=[str(item).zfill(3) for item in RunName_]
     fnm=separator.join(fnm)
 
     #Find N idx and force idx for contouring results:
-    idxN = int(RunName[0])
-    forceID = int(RunName[2])
+    idxN = int(RunName_[0])
+    forceID = int(RunName_[2])
     idxForce = int(np.where(force_vec==forceID)[0])
 
-    #Read in data for some N and force choice:
+    #Read in data for some N and force choice for layer tracking results:
     steps_t = np.loadtxt(dir0 + 'steps_t.txt')
     steps_dz = np.loadtxt(dir0 + 'steps_dz.txt')
     ddt_steps = np.loadtxt(dir0 + 'd_dt_step.txt')
     ddt_stepsDz = np.loadtxt(dir0 + 'd_dt_stepDz.txt')
     ddt_steps_z = np.loadtxt(dir0 + 'd_dt_step_z.txt')
+
+    #Read in data for some N and force choice for PSD results:
+    #print(RunName)
+    if RunName != '13_125_125_31' and RunName != '13_125_286_31':
+        psd_linear = np.loadtxt(dir1 + 'psd_Rho_r_'+ RunName + '_3000_linear.txt')
+        psd_nonlinear = np.loadtxt(dir1 + 'psd_Rho_r_'+ RunName + '_3000.txt')
+
+        #Compute ratio of energy in PSD from linear and nonlinear
+        c = 2*np.pi
+        xgrid = psd_linear[1,:]*c
+        idxs = np.where(xgrid <= N_vec[idxN])
+        int1 = simps(psd_nonlinear[0,idxs],xgrid[idxs])  #integral for nonlinear system
+        int2 = simps(psd_linear[0,idxs],xgrid[idxs])     #integral for linear system
+        ratio = int1/int2
+        d3[idxN,idxForce] = ratio
+
 
     #make a copy before manipulating data:
     steps_t_cp 		= np.copy(steps_t)
@@ -285,6 +306,9 @@ for ff in range(0,Nfiles):
             fig.savefig(fnm + 'panel.png')
             plt.close(fig)
         if saveFig==0: plt.show()
+
+
+
 
 
 
@@ -525,3 +549,46 @@ plt.ylabel(r'$d_2$')
 
 plt.savefig('d2.png')
 plt.close()
+
+
+
+#Look at relationship between layer features and ratio of energy in nonlinear and linear system:
+fig = plt.figure(figsize=(width,height))
+fig.set_tight_layout(True)
+
+interp = 'none'
+rows = 2
+columns = 2
+meshwidth=0.1
+snap=True
+
+fig.add_subplot(rows,columns,1)
+plt.pcolormesh(xvec,yvec,d3, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
+plt.xticks(n_vec[::2])
+plt.xlim(0,400)
+plt.ylim(0,6)
+plt.colorbar()
+plt.scatter(xvec2,yvec2, marker='+', s=10, color='k')
+plt.title(r'$d_3$')
+plt.xlabel(r'$n$ (rad/m)')
+plt.ylabel(r'$N$ (rad/s)')
+
+maskIdxs = np.where(mask==0)
+fig.add_subplot(rows,columns,4)
+plt.scatter(s1[maskIdxs[0],maskIdxs[1]].flatten(),d3[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_1$')
+plt.ylabel(r'$d_3$')
+
+fig.add_subplot(rows,columns,5)
+plt.scatter(s2[maskIdxs[0],maskIdxs[1]].flatten(),d3[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_2$')
+plt.ylabel(r'$d_3$')
+
+fig.add_subplot(rows,columns,6)
+plt.scatter(s3[maskIdxs[0],maskIdxs[1]].flatten(),d3[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
+plt.xlabel(r'$s_3$')
+plt.ylabel(r'$d_3$')
+
+plt.savefig('d3.png')
+plt.close()
+
