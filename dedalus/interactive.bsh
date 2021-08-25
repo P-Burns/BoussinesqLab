@@ -1,3 +1,9 @@
-#srun -p stq -A Research_Project-183035 --time=00:15:00 plotMultipleN.bsh
-srun -p sq --mem=50G -A Research_Project-183035 --time=25:00:00 plotMultipleN.bsh
-#srun -p sq -A Research_Project-183035 --time=00:20:00 plotMultipleN.bsh
+#srun -p stq -A Research_Project-183035 --time=00:20:00 plotMultipleN.bsh
+#srun -p sq -A Research_Project-183035 --time=00:30:00 plotMultipleN.bsh
+
+#High resolution simulations:
+srun -p sq -A Research_Project-183035 --time=01:00:00 plotMultipleN_ts.bsh
+#srun -p stq -A Research_Project-183035 --time=00:10:00 plotMultipleN_ts.bsh
+
+#Step stability analysis:
+#srun -p sq -A Research_Project-183035 --time=01:00:00 stepStability.bsh

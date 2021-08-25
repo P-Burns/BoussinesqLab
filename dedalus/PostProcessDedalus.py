@@ -13,6 +13,7 @@ from numpy import fft
 from scipy import fftpack
 from scipy.signal import welch
 from scipy.signal.windows import tukey
+from scipy.integrate import simps
 import pdb #to pause execution use pdb.set_trace()
 import os
 import matplotlib.pyplot as plt
@@ -38,25 +39,24 @@ if len(sys.argv) > 2:
     N2_array_MJ = [0.09, 0.25, 1, 2.25, 4, 6.25, 7.5625, 9, 10.5625, 12.25, 14.0625, 16, 20.25, 25]
     tmp = RunName.split('_')
     N2 = N2_array_MJ[int(tmp[1])]
-
-
+    print(N2)
 
 #Program control:
 Gusto		= 0
-Modulated       = 0
-Linear 		= 0
+Modulated       = 1
+Linear 		= 1
 Inviscid	= 0
-FullDomain      = 1
+FullDomain      = 0
 SinglePoint	= 0
-MultiPoint	= 0
+MultiPoint	= 1
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 0
+forced          = 1
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
@@ -77,10 +77,10 @@ if VaryN == 1:
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-var_nms = ['psi','S']
+#var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-#var_nms = ['S','S_r']
+var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -111,6 +111,7 @@ Fluxes			= 0
 UseProxySz 		= 0
 dUdz                    = 0
 Richardson              = 0
+AnalyseRiFields		= 0
 Froude			= 0
 Reynolds	 	= 0
 BigT			= 0
@@ -123,7 +124,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 AnalyseS                = 0
 AnalyseRho              = 0
 AnalysePsi              = 0
@@ -133,6 +134,7 @@ CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
+PSD_linear_nonlinear	= 0
 
 TimescaleSeparation	= 0
 OverlayModulated	= 1
@@ -162,7 +164,7 @@ FieldMaxMin 	= 1
 
 
 #Choose type of plot:
-MakePlot 	= 1
+MakePlot 	= 0
 PlotXZ 		= 0
 PlotTZ 		= 1
 PlotT 		= 0
@@ -180,10 +182,9 @@ w2f_analysis = 0
 if VaryN == 0:
     #Options when reading data:  
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
-    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
-    dir_state = '/home/ubuntu/dedalus/Results/State/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced02/'
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced03/'
@@ -241,9 +242,10 @@ if Gusto == 0:
     secPerFile = 60.
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
+        #StartMin = 3
         StartMin = 1
         #nfiles = 10
-        nfiles = 30
+        nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -252,11 +254,12 @@ if Gusto == 0:
         nfiles = 2
 
     #Model output/write timestep:
-    if FullDomain == 1: dt = 1e-1
+    if FullDomain == 1: 
+        dt = 1e-1
     if SinglePoint==1: 
-        #dt = 1e-2
+        dt = 1e-2
+    if MultiPoint==1: 
         dt = 8e-3
-    if MultiPoint==1: dt = 8e-3
 
 if Gusto == 1: dt = 0.004
 
@@ -269,8 +272,8 @@ if Gusto == 1: dt = 0.004
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: dt2=0.2
     if forced == 1: 
-        dt2=0.2
-        #dt2=dt
+        dt2 = 0.2
+        #dt2 = dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
@@ -511,7 +514,9 @@ if Gusto == 0:
                 if FullDomain==1 or MultiPoint==1: S_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint: S_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
             if var_nms[jj] == 'psi_r':
-                if FullDomain==1 or MultiPoint==1: Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
+                if FullDomain==1 or MultiPoint==1: 
+                    #print(Psi_r.shape, np.array(tmp_).shape)
+                    Psi_r[idxS:idxE,:,:] = np.array(tmp_)[::int(tq),:,:]
                 if SinglePoint==1: Psi_r[idxS:idxE] = np.array(tmp_)[::int(tq)]
 
             #Energy variables:
@@ -1184,8 +1189,42 @@ if drhodz == 1:
                 rhoMin = -300
                 rhoMax = 300
             if N2==2.25:
-                rhoMin = -400
-                rhoMax = 400
+                rhozMin = -500
+                rhozMax = 500
+                #rhozMin = -300
+                #rhozMax = 300
+            if N2==3.83 or N2==4:
+                if Modulated == 0:
+                    rhozMin = -1000
+                    rhozMax = 1000
+                if Modulated == 1:
+                    rhozMin = np.min(data)
+                    rhozMax = np.max(data)
+            if N2==6.25 or N2==7.5625:
+                rhozMin = -1500
+                rhozMax = 1500
+            if N2==9 or N2==10.5625:
+                if Modulated == 0:
+                    rhozMin = -2000
+                    rhozMax = 2000
+                else:
+                    rhozMin = np.min(data)
+                    rhozMax = np.max(data)
+            if N2==12.25 or N2==14.0625:
+                rhozMin = -2500
+                rhozMax = 2500
+            if N2==16:
+                rhozMin = -3000
+                rhozMax = 3000
+            if N2==20.25:
+                rhozMin = -4000
+                rhozMax = 4000
+            if N2==25:
+                rhozMin = -5000
+                rhozMax = 5000
+
+        drhoz = (rhozMax - rhozMin)/(nlevs-1)
+        clevels = np.arange(nlevs)*drhoz + rhozMin
         if logscale == 0:
             drhoz = (rhoMax - rhoMin)/(nlevs-1)
             clevels = np.arange(nlevs)*drhoz + rhoMin
@@ -1204,34 +1243,35 @@ if drhodz == 1:
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
         #xlim = (0,np.max(t))
-        #xlim = ((StartMin-1)*secPerFile,np.max(t))
-        xlim = (0,60)
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
+        #xlim = (0,60)
 
 
 if dUdz == 1:
     u = d_dz(Psi,Nt,Nx,Nz,z)
     w = -d_dx(Psi,Nt,Nx,Nz,x)
     data = d_dz(u,Nt,Nx,Nz,z)
-    data2 = d_dz(w,Nt,Nx,Nz,z)
+    if MakePlot==2: data2 = d_dz(w,Nt,Nx,Nz,z)
 
-    if MakePlot == 1:
+    if MakePlot >= 1:
         PlotTitle = r'$\partial u/\partial z$'
         PlotTitle2 = r'$\partial w/\partial z$'
         FigNmBase = 'dUdz' 
         cmap = 'bwr'
 
         nlevs = 41
-        uz_max = 20.
-        uz_min = -20.
+        uz_max = 10.
+        uz_min = -10.
         duz = (uz_max-uz_min)/(nlevs-1)
         clevels = np.arange(nlevs)*duz + uz_min
 
         nlevs = 41
-        wz_max = 20.
-        wz_min = -20.
+        wz_max = 10.
+        wz_min = -10.
         dwz = (wz_max-wz_min)/(nlevs-1)
         clevels2 = np.arange(nlevs)*dwz + wz_min
 
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
 
 if Richardson == 1:
     Sz = d_dz(S,Nt,Nx,Nz,z)
@@ -1256,7 +1296,7 @@ if Richardson == 1:
     data = Ri_local
 
     if MakePlot == 1:
-        PlotTitle = r'$Ri$'
+        PlotTitle = r'Ri'
         FigNmBase = 'Ri'
         cmap = 'PRGn'
 
@@ -1266,6 +1306,89 @@ if Richardson == 1:
         dRi = RiRange/(nlevs-1)
         clevels = np.arange(nlevs)*dRi - (RiRange/2.-RiC)
 
+        #xlim = (0,60)
+        xlim = ((StartMin-1)*secPerFile,np.max(t))
+
+        if AnalyseRiFields == 1:
+            fig=plt.figure(figsize=(width,height))
+            grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+            ax1 = fig.add_subplot(grid[0,0])        
+    
+            #Points used for high resolution time series runs:
+            Nx2 = 3
+            Nz2 = 3
+            xIdx = (np.array([1./4,1./2,3./4])*Nx).astype('int')
+            zIdx = (np.array([1./4,1./2,3./4])*Nz).astype('int')
+        
+            xpnt = xIdx[1] 
+            zpnt = zIdx[0]
+
+            ax1.plot(t,data[:,xpnt,zpnt],'-k', linewidth=3, label=r'Ri')
+            #normN2 = np.max(N2_local[:,xpnt,zpnt])
+            normN2 = 1
+            ax1.plot(t,N2_local[:,xpnt,zpnt]/normN2, ':k', label=r'local $N^2$ (s$^{-2}$)')
+            #norm_uz = np.max(uz[:,xpnt,zpnt]**2)
+            norm_uz = 1
+            ax1.plot(t,uz[:,xpnt,zpnt]**2/norm_uz, '--k', label=r'$(\partial u/\partial z)^2$ (s$^{-2}$)')
+            ax1.plot([np.min(t),np.max(t)],[1./4,1./4], color='gray', label=r'Ri$_c$')
+            ax1.legend(frameon=False, loc=3)
+            ax1.set_xlabel(r'$t$ (s)')
+            #ax1.set_ylim(-10,10)
+            ax1.set_ylim(-6,16)
+            ax1.set_xlim((StartMin-1)*secPerFile,380)
+
+            #plt.show()
+            fig.savefig('RiAnalysis' + RunName + '_t_' + str(nfiles) + '_' + str(xpnt) + '_' + str(zpnt) + '.png')
+            plt.close(fig)
+
+            AnalyseFlow = 1
+            if AnalyseFlow == 1:
+                fig=plt.figure(figsize=(width,height))
+                grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                ax1 = fig.add_subplot(grid[0,0])
+
+                w = -d_dx(Psi,Nt,Nx,Nz,x)
+                wx = d_dx(w,Nt,Nx,Nz,x)
+                Lpsi = uz+wx
+                dtLpsi = d_dt(Lpsi,Nt,t)
+
+                #norm_dtLpsi = np.max(dtLpsi[:,xpnt,zpnt])
+                norm_dtLpsi = 1
+                ax1.plot(t,dtLpsi[:,xpnt,zpnt]/norm_dtLpsi, '.', label=r'$\partial_t\nabla^2\psi$ (s$^{-2})$')
+                norm_u = np.max(np.abs(u[:,xpnt,zpnt]))
+                #norm_u = 1
+                ax1.plot(t,u[:,xpnt,zpnt]/norm_u, '-k', label=r'$u$ (m/s)')
+                norm_w = np.max(np.abs(w[:,xpnt,zpnt]))
+                #norm_w = 1
+                ax1.plot(t,w[:,xpnt,zpnt]/norm_w, ':k', label=r'$w$ (m/s)')
+                #norm_uz2 = np.max(uz[:,xpnt,zpnt]**2)
+                norm_uz2 = 1
+                ax1.plot(t,uz[:,xpnt,zpnt]**2/norm_uz2, '--k', label=r'$(\partial u/\partial z)^2$ (s$^{-2}$)')
+                #norm_uz = np.max(uz[:,xpnt,zpnt])
+                norm_uz = 1
+                ax1.plot(t,uz[:,xpnt,zpnt]/norm_uz, color='gray', linewidth=0.5, label=r'$\partial u/\partial z$ (s$^{-1}$)')
+
+                ax1.legend(frameon=False, loc=2) 
+                ax1.set_xlabel(r'$t$ (s)')
+                ax1.set_ylim(-3,10)
+                ax1.set_xlim((StartMin-1)*secPerFile,380)
+
+                #plt.show()
+                fig.savefig('Flow' + RunName + '_t_' + str(nfiles) + '_' + str(xpnt) + '_' + str(zpnt) + '.png')
+                plt.close(fig)
+
+            ScatterShear2vsSolution = 0
+            if ScatterShear2vsSolution == 1:
+                fig=plt.figure(figsize=(width,height))
+                grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                ax1 = fig.add_subplot(grid[0,0])
+                ax1.scatter(uz[:,xpnt,zpnt]**2,dtLpsi[:,xpnt,zpnt], c='k', marker='.')
+                ax1.set_xlabel(r'$(\partial_z u)^2$ (s$^{-2}$)')
+                ax1.set_ylabel(r'$\partial_t\nabla^2\psi$ (s$^{-2}$)')
+
+                plt.show()
+
+            pdb.set_trace()
 
     if MakePlot==1 and FieldMaxMin==1:
 
@@ -2403,12 +2526,16 @@ if ForwardTransform == 1:
 
 if SpectralAnalysis == 1:
     if AnalyseS == 1:
+        fnmVar = 'S'
         if Modulated == 0: data = S2
         if Modulated == 1: data = S_r
     if AnalyseRho == 1:
+        fnmVar = 'Rho'
+        #if Modulated == 0: data = rho
         if Modulated == 0: data = rho2
         if Modulated == 1: data = rho_r
     if AnalysePsi == 1:
+        fnmVar = 'Psi'
         if Modulated == 0: data = Psi
         if Modulated == 1: data = Psi_r
 
@@ -2421,8 +2548,8 @@ if SpectralAnalysis == 1:
     spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
     npersegStr = str(nperseg)
 
-    print('analysis timestep: ', dt2)
-    print('frequency resolution: ', np.min(freqvec[1:]))
+    #print('analysis timestep: ', dt2)
+    #print('frequency resolution: ', np.min(freqvec[1:]))
 
     #intPSD = np.trapz(spectralCoef.flatten(),freqvec)
     #print("integral of PSD: ", intPSD)
@@ -2431,31 +2558,35 @@ if SpectralAnalysis == 1:
         if FullDomain == 1:
             Idx1 = int(Nx/2.)
             Idx2 = int(Nz/2.)
-        else:
+        if MultiPoint == 1:
+            Idx1 = 1
+            Idx2 = 1
+        if SinglePoint ==1:
             Idx1 = 0
             Idx2 = 0
         f = spectralCoef[:,Idx1,Idx2]
 
-        if N2 == 25:       fnm = './psd_N2_25' + '_' + npersegStr
-        if N2 == 20.25:    fnm = './psd_N2_20_25' + '_' + npersegStr
-        if N2 == 16:       fnm = './psd_N2_16' + '_' + npersegStr
-        if N2 == 14.0625:  fnm = './psd_N2_14_0625' + '_' + npersegStr
-        if N2 == 12.25:    fnm = './psd_N2_12_25' + '_' + npersegStr
-        if N2 == 10.5625:  fnm = './psd_N2_10_5625' + '_' + npersegStr
-        if N2 == 9:        fnm = './psd_N2_09' + '_' + npersegStr
-        if N2 == 7.5625:   fnm = './psd_N2_07_5625' + '_' + npersegStr
-        if N2 == 6.25:     fnm = './psd_N2_06_25' + '_' + npersegStr
-        if N2 == 4:        fnm = './psd_N2_04' + '_' + npersegStr
-        if N2 == 2.25:     fnm = './psd_N2_02_25' + '_' + npersegStr
-        if N2 == 1:        fnm = './psd_N2_01' + '_' + npersegStr
-        if N2 == 0.25:     fnm = './psd_N2_00_25' + '_' + npersegStr
-        if N2 == 0.09:     fnm = './psd_N2_00_09' + '_' + npersegStr
-        if CheckPSD == 1: fnm = fnm + '_' + str(dt2)
-        if Modulated == 1: fnm = fnm + '_R'
-        if MeanFlowAnalysis == 1: fnm = fnm + '_mf'
-        if Linear == 1: fnm = fnm + '_linear'
-        fnm = fnm + '.txt'
-        np.savetxt(fnm, (f,freqvec))
+        if len(sys.argv) > 2:
+            tmp = RunName.split('_')
+            #Pad with zeros to correctly order results:
+            tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
+            separator = '_'
+            RunName_ = separator.join(tmp)
+
+        file_dir = './Results/' + RunName + '/'
+        fnm_w2f = file_dir + 'psd_' + fnmVar 
+        if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
+        fnm_w2f = fnm_w2f + RunName + '_' + npersegStr
+        if CheckPSD == 1: fnm_w2f = fnm_w2f + '_' + str(dt2)
+        if MeanFlowAnalysis == 1: fnm_w2f = fnm_w2f + '_mf'
+        if Linear == 1: fnm_w2f = fnm_w2f + '_linear'
+        fnm_w2f = fnm_w2f + '.txt'
+        np.savetxt(fnm_w2f, (f,freqvec))
+
+        if AnalyseS==1: np.savetxt('ts_S' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+        if AnalyseRho==1: np.savetxt('ts_Rho' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+        if AnalyseS==0 and AnalyseRho==0: np.savetxt('ts_psi' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+
 
     if MakePlot == 1:
         yscale = 'log'
@@ -2479,9 +2610,10 @@ if SpectralAnalysis == 1:
             if FullDomain == 1:
                 Idx1 = int(Nx/2.)
                 Idx2 = int(Nz/2.)
-            else:
+            if SinglePoint == 1:
                 Idx1 = 0
                 Idx2 = 0
+
             data = spectralCoef[:,Idx1,Idx2]
 
             xgrid = freqvec*(2*np.pi)
@@ -2586,8 +2718,6 @@ if SpectralAnalysis == 1:
             data3 = np.loadtxt(fdir + 'psd_N2_04' + '_' + npersegStr + tag_R + '.txt')
             data4 = np.loadtxt(fdir + 'psd_N2_16' + '_' + npersegStr + tag_R + '.txt')
 
-            #labelvec = ('0.5','1','1.5','2','3','5')
-            #colorvec = ('grey','grey','k','k','k','k','k')
             #lstyle_vec = ('-','-','-','-','-',':',':')
             #lwidth_vec = (3,1,3,2,1,2,1)
             #ax1.set_xlim(0,8)
@@ -2667,6 +2797,7 @@ if SpectralAnalysis == 1:
             plt.show()
 
         if MultiPoint == 1:
+
             fig1 = plt.figure(figsize=(width*1.5,height))
             #fig1.set_tight_layout(True)
             grid1 = plt.GridSpec(1, 2, wspace=0.4, hspace=0.)
@@ -2693,30 +2824,80 @@ if SpectralAnalysis == 1:
             ax1.set_xlim(0,4)
             ax1.set_xlabel(r'$\omega$ (rad/s)')
             ax1.set_ylabel(r'PSD')
-            if AnalyseS==0 and Modulated==0: 
+            if AnalyseS==0 and AnalyseRho==0 and Modulated==0: 
                 ax0.set_ylim(-.004,.002)
                 ax0.set_ylabel(r'$\psi$')
-            if AnalyseS==0 and Modulated==1:
+            if AnalyseS==0 and AnalyseRho==0 and Modulated==1:
                 #ax0.set_ylim(-.004,.002)
                 ax0.set_ylabel(r'$\psi_r$')
             if AnalyseS == 1 and Modulated==0:
                 ax1.set_ylim(1e-11,1e2)
-                ax0.set_ylabel(r'$S$')            
-            if AnalyseS == 1 and Modulated==1:
+                ax0.set_ylabel(r'$S$')
+            if AnalyseRho==1 and Modulated==0:
+                ax1.set_ylim(1e-11,1e2)
+                ax0.set_ylabel(r'$\rho$')
+            if (AnalyseS==1 and Modulated==1) or (AnalyseRho==1 and Modulated==1):
                 #ax1.set_ylim(1e-14,1e-2)
-                ax0.set_ylabel(r'$\zeta$')            
+                ax0.set_ylabel(r'$\zeta$')
             if AnalyseS==1:
-                if Modulated==0: fig1.savefig('psd_S' + RunName + '_multip.png')
-                if Modulated==1: fig1.savefig('psd_Sr' + RunName + '_multip.png')
-            if AnalyseS==0:
-                if Modulated==0: fig1.savefig('psd_Psi' + RunName + '_multip.png')
-                if Modulated==1: fig1.savefig('psd_Psi_r' + RunName + '_multip.png')
+                if Modulated==0: fig1.savefig('psd_S' + RunName_ + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Sr' + RunName_ + '_multip.png')
+            if AnalyseRho==1:
+                if Modulated==0: fig1.savefig('psd_Rho' + RunName_ + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Rho_r' + RunName_ + '_multip.png')
+            if AnalyseS==0 and AnalyseRho==0:
+                if Modulated==0: fig1.savefig('psd_Psi' + RunName_ + '_multip.png')
+                if Modulated==1: fig1.savefig('psd_Psi_r' + RunName_ + '_multip.png')
             plt.close(fig1)
 
-            if w2f_analysis==1:
-                if AnalyseS==1: np.savetxt('ts_S' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
-                if AnalyseS==0: np.savetxt('ts_psi' + RunName + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
 
+            if PSD_linear_nonlinear == 1:
+
+                fig0 = plt.figure(figsize=(width,height))
+                fig0.set_tight_layout(True)
+                grid0 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+                ax0 = fig0.add_subplot(grid0[0,0])
+
+                #plot PSD for nonlinear run:
+                idx1 = 1
+                idx2 = 1
+                ax0.semilogy(xgrid,spectralCoef[:,idx1,idx2], '-k')
+
+                #plot PSD for linear run:
+                fnm_linear = 'psd_' + fnmVar
+                fnm_linear = fnm_linear + '_r'
+                fnm_linear = fnm_linear + RunName + '_' + npersegStr
+                fnm_linear = fnm_linear + '_linear'
+                fnm_linear = fnm_linear + '.txt'
+                baseDir = '/gpfs/ts0/home/pb412/dedalus/Results/' + RunName + '/'
+                psd_linear = np.loadtxt(baseDir + fnm_linear)
+               
+                c = 2*np.pi
+                ax0.semilogy(psd_linear[1,:]*c, psd_linear[0,:], ':b')
+
+                ax0.set_title(RunName)
+                ax0.set_xlim(0,6)
+                ax0.set_ylim(1e-15,1e1)
+
+                #Compute ratio of energy in PSD from linear and nonlinear 
+                idxs = np.where(xgrid <= np.sqrt(N2))
+                int1 = simps(spectralCoef[idxs,idx1,idx2],xgrid[idxs])	#integral for nonlinear system
+                int2 = simps(psd_linear[0,idxs],xgrid[idxs])		#integral for linear system
+                diff = int1-int2
+                #ratio = diff/int2 
+                ratio = int1/int2 
+                #print(idxs)
+                #print(xgrid[np.max(idxs)])
+                #print(int1,int2)
+                #print(ratio)
+
+                #Add ratio to image:
+                ax0.text(0.5, 1e0, 'Ratio:' + str(ratio))
+                ax0.text(0.5, 1e-1, 'Nonlinear:' + str(int1) + ', Linear: ' + str(int2))
+
+                #Save and close image:
+                plt.savefig('psd_linear_nonlinear' + RunName_ + '.png')
+                plt.close(fig0)
 
 
 if TimescaleSeparation == 1:
@@ -3121,9 +3302,13 @@ if MakePlot >= 1:
         ygrid = z2d_t
 
     if PlotT >= 1:
-       if SpectralAnalysis == 0 and SinglePoint==0:
+       if SpectralAnalysis==0 and SinglePoint==0 and MultiPoint==0:
            xIdx = int(Nx/2.)
            zIdx = int(Nz/2.)
+           data = data[:,xIdx,zIdx]
+       if MultiPoint == 1:
+           xIdx = 1
+           zIdx = 1
            data = data[:,xIdx,zIdx]
        if 'xgrid' not in locals(): xgrid = t
 
@@ -3149,8 +3334,7 @@ if MakePlot >= 1:
             if filledContour == 1:
                 i1=ax1.contourf(xgrid,ygrid,data,clevels,cmap=cmap,extend="both")
                 if 'clabel' not in locals(): clabel=''
-                if NoPlotLabels == 0: 
-                    cbar = fig.colorbar(i1,label=clabel)
+                if NoPlotLabels == 0: fig.colorbar(i1,label=clabel, ax=ax1)
                 if PlotXZ==2 or PlotTZ==2 or (PlotXZ==1 and PlotTZ==1):
                     i2=ax2.contourf(xgrid,ygrid,data2,clevels2,cmap=cmap,extend="both")
             else:
@@ -3174,8 +3358,8 @@ if MakePlot >= 1:
                 i1=ax1.plot(data.flatten(),zgrid, '-', c='k', linewidth=2)
 
         #Plot labelling section:
-        if MakePlot == 1:
-            if PlotXZ == 1: 
+        if MakePlot >= 1:
+            if PlotXZ >= 1: 
                 ax1.set_xlim(0,Lx)
                 ax1.set_xlabel(r'$x$ (m)')
                 ax1.set_ylim(0,Lz)
@@ -3184,7 +3368,7 @@ if MakePlot >= 1:
                 ax1.set_title(PlotTitle)
                 start, end = ax1.get_xlim()
                 ax1.xaxis.set_ticks((0,0.05,0.1,0.15,0.2))
-            if PlotTZ == 1:
+            if PlotTZ >= 1:
                 if 'xlim' not in locals(): xlim=(0,t[Nt-1])
                 ax1.set_xlim(xlim)
                 ax1.set_xlabel(r'$t$ (s)')
@@ -3194,7 +3378,7 @@ if MakePlot >= 1:
                 if PlotStairStartEnd==1: 
                     ax1.plot([tau0,tau0],[0,Lz], c='silver')
                     ax1.plot([tauE,tauE],[0,Lz], c='silver')
-            if PlotT == 1:
+            if PlotT >= 1:
                 if 'xlim' not in locals(): xlim=(np.min(xgrid),np.max(xgrid))
                 if 'ylim' not in locals(): ylim=(np.min(data),np.max(data))
                 ax1.set_xlim(xlim)
@@ -3204,7 +3388,7 @@ if MakePlot >= 1:
                 ax1.set_xlabel(xlabel)
                 ax1.set_ylabel(ylabel)
                 ax1.set_title(PlotTitle)
-            if PlotZ == 1:
+            if PlotZ >= 1:
                 ax1.set_title( r'$t$ =' + str("%5.1f" % t[tIdx]) + " s" )
                 ax1.set_ylim(0,Lz)
                 ax1.set_xlabel(r'$S$ (g/kg)')
@@ -3212,15 +3396,18 @@ if MakePlot >= 1:
                 #ax1.set_xlim(0,300)
 
         if 'data2' in locals():
-            fig.colorbar(i2)
+            fig.colorbar(i2, ax=ax2)
             ax2.set_ylim(0,Lz)
             if PlotXZ >= 1: 
                 ax2.set_xlim(0,Lx)
                 #ax2.set_title( PlotTitle2 + ", " + str("%5.1f" % t[tIdx]) + " s" )
                 ax2.set_title(PlotTitle2)
+                ax2.set_xlabel(r'$x$ (m)')
+                ax2.set_ylabel(r'$z$ (m)')
             if PlotTZ >= 1:
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
+                ax2.set_ylabel(r'$z$ (m)')
 
         if NoPlotLabels == 1:
             ax1.axis('off')

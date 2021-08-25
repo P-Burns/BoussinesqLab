@@ -3281,7 +3281,7 @@ if Resonances == 1:
                     logVec1 = omega12_vec != 0
                 if keyWaveModes == 1:
                     #For this case of k not 0, k1 and k2 are not both necessarily zero together so we need a
-                    #more careful search. Fine all cases when k1 and k2 are zero together:
+                    #more careful search. Find all cases when k1 and k2 are zero together:
                     logVec1 = np.ones((2*Nk2))
                     for ww in range(0,Nk2):
                         logical = (omega12_vec[2*ww] == 0) and (omega12_vec[2*ww+1] == 0)
