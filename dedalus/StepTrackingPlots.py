@@ -305,6 +305,7 @@ axs2[1].set_xlabel(r'$N$ (rad/s)')
 axs2[1].set_ylabel(r'$t$ (s)')
 #axs2[1].set_yscale('linear')
 axs2[1].set_yscale('log')
+axs2[1].set_ylim(1E-1,1E3)
 axs2[1].legend(frameon=False)
 
 if w2f == 1:

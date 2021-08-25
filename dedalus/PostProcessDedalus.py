@@ -60,8 +60,8 @@ forced          = 0
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
-    #N2		= 1
-    N2		= 2.25		
+    N2		= 1
+    #N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
@@ -98,8 +98,8 @@ StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 1
-Density_2		= 0
+Density			= 0
+Density_2		= 1
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
@@ -113,6 +113,7 @@ dUdz                    = 0
 Richardson              = 0
 Froude			= 0
 Reynolds	 	= 0
+BigT			= 0
 Vorticity               = 0
 KineticE                = 0
 PotentialE              = 0
@@ -124,7 +125,7 @@ CoefficientSpace	= 0
 
 SpectralAnalysis        = 0
 AnalyseS                = 0
-AnalyseRho              = 1
+AnalyseRho              = 0
 AnalysePsi              = 0
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
@@ -157,14 +158,14 @@ tMean_slide = 0
 Nt_mean = 21
 wing = Nt_mean//2
 
-FieldMaxMin = 0
+FieldMaxMin 	= 1
 
 
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 0
-PlotT 		= 1
+PlotTZ 		= 1
+PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
@@ -172,7 +173,7 @@ NoPlotLabels    = 0
 logscale	= 0
 
 #Write analysis to file
-w2f_analysis = 1
+w2f_analysis = 0
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -248,7 +249,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 2
 
     #Model output/write timestep:
     if FullDomain == 1: dt = 1e-1
@@ -803,7 +804,7 @@ if Density_2 == 1:
         drho = (rhoMax-rhoMin)/(nlevs-1)
         clevels = np.arange(nlevs)*drho + rhoMin
 
-        xlim=(0,60)
+        xlim=(0,np.max(t))
 
         PlotTitle=r'$\rho$ (kg m$^{-3}$)'
 
@@ -1300,7 +1301,9 @@ if Froude == 1:
 
     Lx = 0.2
     u = d_dz(Psi,Nt,Nx,Nz,z)
-    Fr_local = u**2/(Lx*g)
+    w = -d_dx(Psi,Nt,Nx,Nz,z)
+    u_mag = np.sqrt(u**2 + w**2)
+    Fr_local = u_mag**2/(Lx*g)
 
     if MakePlot==1 and FieldMaxMin==1:
 
@@ -1321,13 +1324,15 @@ if Froude == 1:
         fig.set_tight_layout(True)
         ax1 = fig.add_subplot(grid[0,0])
 
-        ax1.plot(t,maxMinFr[:,0], '-k' )
-        ax1.plot(t,maxMinFr[:,1], ':k' )
-        ax1.plot(t,meanFr, '--k' )
+        ax1.plot(t,maxMinFr[:,0], '-k', label=r'min($Fr$)' )
+        ax1.plot(t,maxMinFr[:,1], ':k', label=r'max($Fr$)'  )
+        ax1.plot(t,meanFr, '--k', label=r'$\overline{Fr}$'  )
         ax1.set_xlabel(r'$t$ (s)' )
         ax1.set_ylabel(r'Fr' )
         ax1.set_xlim(0,60)
-        ax1.set_ylim(0,0.005)
+        #ax1.set_ylim(0,0.005)
+        ax1.set_yscale('log')
+        plt.legend(frameon=False)
         plt.show()
 
 
@@ -1368,6 +1373,46 @@ if Reynolds == 1:
         ax1.set_ylim(1e-4,1e2)
         ax1.set_yscale('log')
         plt.show()
+
+
+if BigT == 1:
+
+    #Retrieve times of layer start and end:
+    dat = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/stairStartEnd.txt')
+    #print(dat[0,:])
+    idxN = np.where(dat[0,:]==np.sqrt(N2))
+    tau0 = dat[1,int(np.array(idxN))]
+    tauE = dat[2,int(np.array(idxN))] 
+    print(tau0,tauE)
+    #pdb.set_trace()
+
+    Nt_layer = int((tauE-tau0)/dt2)
+    tau0idx = int(tau0/dt2)
+    bigT = np.zeros((Nt_layer,2))
+   
+    for tt in range(0,Nt_layer):
+        bigT[tt,0] = (tauE-tau0)/maxMinFr[tt+tau0idx,0]
+        bigT[tt,1] = (tauE-tau0)/maxMinFr[tt+tau0idx,1]
+
+
+    if MakePlot == 1:
+        fig=plt.figure(figsize=(width,height))
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+        fig.set_tight_layout(True)
+        ax1 = fig.add_subplot(grid[0,0])
+
+        ax1.plot(t[tau0idx:tau0idx+Nt_layer],bigT[:,0], ':k', label=r'max($T$)')
+        ax1.plot(t[tau0idx:tau0idx+Nt_layer],bigT[:,1], '--k', label=r'min($T$)' )
+        #ax1.plot([0,60],[1,1], color='gray')
+        ax1.set_xlabel(r'$t$ (s)' )
+        ax1.set_ylabel(r'$T=t^*/Fr(t)$' )
+        #ax1.set_xlim(0,60)
+        #ax1.set_ylim(1e-4,1e2)
+        ax1.set_yscale('log')
+        plt.legend(frameon=False)
+        plt.show()
+
+
 
 
 if TrackSteps == 1:
@@ -2870,6 +2915,7 @@ if TimescaleSeparation == 1:
                 psd1 = fhat[0,lastPeakIdx-1] 
 
         meanflowarr[nn,0] = np.sum( fhat[0,0:psdMinIdx] )
+        #meanflowarr[nn,0] = np.sum( fhat[0,:] )	#confirm that total energy in modulated system is energy contained in LFMF bandwidth.
         WellMode = fhat[1,psdMinIdx]
         meanflowarr[nn,2] = fhat[0,psdMinIdx]
         meanflowarr[nn,3] = WellMode*c
