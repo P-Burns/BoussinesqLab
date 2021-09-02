@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+ExecPath="/home/ubuntu/BoussinesqLab/dedalus"
+N2_array=(1 2.25 4 6.25 7.5625 9 10.5625 12.25 14.0625 16 20.25 25)
+#N2_array=(1)
+
+
+for i in ${N2_array[@]}; do
+    echo $i
+    python3 $ExecPath/NaturalFreq.py 30 $i
+done
