@@ -59,11 +59,13 @@ BasisCheck2 			= 0
 nvars 				= 2
 sigma3D 			= 1
 windowMethod			= 3
+excludeLFMF			= 0
+inverse				= 1
 
 FindMainBasisParts 		= 1
 PlotMainBasisParts 		= 0
 PlotState_MainBasis		= 1
-Density				= 0
+Density				= 1
 PlotFastMode1			= 0
 PlotFastMode2			= 0
 PlotSpectrum			= 0
@@ -119,7 +121,7 @@ CombineSigmaSigmaWithC 		= 0
 FrequencyAve			= 1
 SubSums				= 1
 
-PlotCDFsVsN			= 1  
+PlotCDFsVsN			= 0 
 
 
 MakePlot			= 1
@@ -908,7 +910,7 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], C_both_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1$')
 
         ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}} / \sum$')
+        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
         ax3.set_xlabel(r'$N$ (rad/s)')
         #ax3.set_ylabel(r'Contribution to solution (%)')
         #ax3.set_xlim(0,6)
@@ -1000,7 +1002,7 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], C_both_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
 
         ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}} / \sum$')
+        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
         ax3.set_xlabel(r'$N$ (rad/s)')
         #ax3.set_xlim(0,6)
         ax3.set_ylim(-.25,1.5)
@@ -1080,7 +1082,7 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], both_10_3, linestyle='--', marker='.', markersize=10, color='k', linewidth=4)
 
         ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}}$')
+        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}}$')
         ax3.set_xlabel(r'$N$ (rad/s)')
         #ax3.set_xlim(0,6)
         #ax3.set_ylim(-.25,1.5)
@@ -1122,7 +1124,7 @@ if PlotCDFsVsN == 1:
         ax3 = fig2.add_subplot(grid2[0,2])
         ax3.set_ylim(-1,1)
         ax3.set_xlabel(r'$N$ (rad/s)')
-        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}} / \sum$')
+        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax3.plot(Nvec[0:idxE], C_both_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
         ax3.plot(Nvec[0:idxE], C_both_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N\,10$')
@@ -1165,7 +1167,7 @@ if PlotCDFsVsN == 1:
         ax3 = fig2.add_subplot(grid2[0,2])
         ax3.set_ylim(-1,1)
         ax3.set_xlabel(r'$N$ (rad/s)')
-        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}} / \sum$')
+        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax3.plot(Nvec[0:idxE], C_both_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
         ax3.plot(Nvec[0:idxE], C_both_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N\,10$')
@@ -1217,7 +1219,7 @@ if PlotCDFsVsN == 1:
         ax3 = fig2.add_subplot(grid2[0,2])
         ax3.set_ylim(-.25,1.25)
         ax3.set_xlabel(r'$N$ (rad/s)')
-        ax3.set_title(r'$c_{\Delta\omega_{IGW},\Delta\omega_{MF}} / \sum$')
+        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_10_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax3.plot(Nvec[0:idxE], C_both_10_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax3.plot(Nvec[0:idxE], C_both_10_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1689,9 +1691,9 @@ if FindMainBasisParts == 1:
         if ConvergePowerLimit == 0: epsilon = ErrorLimit
         count0 += 1
 
-    print(ks1)
-    print(' ')
-    print(ks3)
+    #print(ks1)
+    #print(' ')
+    #print(ks3)
     #pdb.set_trace()
 
     if PlotMainBasisParts==1:    
@@ -2298,7 +2300,6 @@ if Resonances == 1:
 
     if NearResonanceSearch == 1:
         OmegaLimit = 0.
-        #OmegaLimit = 0.0001
         #OmegaLimit = 0.001
         #OmegaLimit = 0.005
         #OmegaLimit = 0.01
@@ -2532,7 +2533,7 @@ if Resonances == 1:
 
                 plt.show()
 
-                print(res_sets_sorted[minOmegaGradIdx,:])
+                #print(res_sets_sorted[minOmegaGradIdx,:])
 
             if listOmega == 1:
                 plt.rcParams.update({'font.size': 18})
@@ -2793,13 +2794,45 @@ if Resonances == 1:
 
                 #Open files for writing out data line by line for each N:
                 #Using integral and interaction coefficient:
-                file1 = open('IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '.txt', "a")
-                file2 = open('MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '.txt', "a")
-                file3 = open('both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '.txt', "a")
+                if excludeLFMF == 0 and inverse == 0:
+                    fname1 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '.txt'
+                    fname2 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '.txt'
+                    fname3 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '.txt'
+                    fname4 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '.txt'
+                    fname5 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '.txt'
+                    fname6 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '.txt'
+
+                if excludeLFMF == 1 and inverse == 0: 
+                    fname1 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'noLFMF' + '.txt'
+                    fname2 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'noLFMF' + '.txt'
+                    fname3 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'noLFMF' + '.txt'
+                    fname4 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'noLFMF' + '.txt'
+                    fname5 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'noLFMF' + '.txt'
+                    fname6 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'noLFMF' + '.txt'
+
+                if excludeLFMF == 0 and inverse == 1:
+                    fname1 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'inv' + '.txt'
+                    fname2 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'inv' + '.txt'
+                    fname3 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'inv' + '.txt'
+                    fname4 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'inv' + '.txt'
+                    fname5 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'inv' + '.txt'
+                    fname6 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'inv' + '.txt'
+
+                if excludeLFMF == 1 and inverse == 1:
+                    fname1 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'noLFMF_inv' + '.txt'
+                    fname2 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'noLFMF_inv' + '.txt'
+                    fname3 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_' + 'noLFMF_inv' + '.txt'
+                    fname4 = 'IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'noLFMF_inv' + '.txt'
+                    fname5 = 'MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'noLFMF_inv' + '.txt'
+                    fname6 = 'both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '_' + 'noLFMF_inv' + '.txt'
+
+                file1 = open(fname1, "a")
+                file2 = open(fname2, "a")
+                file3 = open(fname3, "a")
                 #Using integral only:
-                file4 = open('IGW_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '.txt', "a")
-                file5 = open('MF_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '.txt', "a")
-                file6 = open('both_' + BasisTag + '_' + str(OmegaLimit) + '_' + windowName + '_int' + '.txt', "a")
+                file4 = open(fname4, "a")
+                file5 = open(fname5, "a")
+                file6 = open(fname6, "a")
 
                 #Define bandwidth boundaries required to compute sub sums:
                 tmp1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
@@ -2973,17 +3006,59 @@ if Resonances == 1:
                     contribution2 = interactCoef[ii]*capOmegaWeights[ii]
 
                     if interactCoef[ii] != 0:
-                        if (abs(omega_k1) > wellmode) and (abs(omega_k2) > wellmode): 
+
+                        #contribution from IGW:
+                        
+                        logic1c = (abs(omega_k1) > wellmode) and (abs(omega_k2) > wellmode)
+                        if inverse == 1:
+                            logic2c = abs(omega_k) == 0		#logic2 
+                        else: logic2c = 1			
+                        #logic2c = 1				#logic1
+                        if logic1c and logic2c:
                             #sumDomegaIGW1 = sumDomegaIGW1 + contribution1
+                            #print(wellmode,abs(omega_k1),abs(omega_k2))
                             sumDomegaIGW2[countA,alpha] = sumDomegaIGW2[countA,alpha] + contribution1
                             sumDomegaIGW3[countA,alpha] = sumDomegaIGW3[countA,alpha] + contribution2
                             #sumDomegaIGW4 = sumDomegaIGW4 + np.abs(capOmegaWeights[ii])
-                        if (abs(omega_k1) <= wellmode) and (abs(omega_k2) <= wellmode): 
+
+                        #contribution from MF:
+                        logic1a = (abs(omega_k1) <= wellmode) and (abs(omega_k2) <= wellmode)
+                        #if excludeLFMF == 1: logic2a = (abs(omega_k1) > OmegaLimit) and (abs(omega_k2) > OmegaLimit)	#logic2
+                        if excludeLFMF == 1: logic2a = (abs(omega_k1) > OmegaLimit) or (abs(omega_k2) > OmegaLimit)	#logic1
+                        else: logic2a = True
+                        if inverse == 1:
+                            tmp = (abs(omega_k1) > OmegaLimit) or (abs(omega_k2) > OmegaLimit)
+                            if tmp == 1:
+                                if keyNonWaveModes == 1:
+                                    if abs(omega_k2) > OmegaLimit: logic3a = abs(omega_k1) >= abs(omega_k)
+                                    if abs(omega_k1) > OmegaLimit: logic3a = abs(omega_k2) >= abs(omega_k)	#logic1
+                                if keyWaveModes == 1:
+                                    if abs(omega_k2) > OmegaLimit: logic3a = abs(omega_k1) == 0
+                                    if abs(omega_k1) > OmegaLimit: logic3a = abs(omega_k2) == 0		#logic2
+                            if tmp == 0:
+                                logic3a = (abs(omega_k1) >= abs(omega_k)) and (abs(omega_k2) >= abs(omega_k))
+                            tmp2 = abs(omega_k) <= wellmode
+                            logic3a = logic3a and tmp2		#logic3 
+                        else: logic3a = 1
+                        if (logic1a and logic2a) and logic3a: 
                             #sumDomegaMF1 = sumDomegaMF1 + contribution1
                             sumDomegaMF2[countA,alpha] = sumDomegaMF2[countA,alpha] + contribution1
                             sumDomegaMF3[countA,alpha] = sumDomegaMF3[countA,alpha] + contribution2
                             #sumDomegaMF4 = sumDomegaMF4 + np.abs(capOmegaWeights[ii])
-                        if ((abs(omega_k1) <= wellmode) and (abs(omega_k2) > wellmode)) or ((abs(omega_k1) > wellmode) and (abs(omega_k2) <= wellmode)): 
+
+                        #contribution from waves in IGW interacting with waves in MF:
+                        logic1b = ((abs(omega_k1) <= wellmode) and (abs(omega_k2) > wellmode)) or ((abs(omega_k1) > wellmode) and (abs(omega_k2) <= wellmode))
+                        if excludeLFMF == 1: logic2b = (abs(omega_k1) > OmegaLimit) and (abs(omega_k2) > OmegaLimit)
+                        else: logic2b = True
+                        if inverse == 1:
+                            if keyNonWaveModes == 1:
+                                if abs(omega_k2) > wellmode: logic3b = abs(omega_k1) >= abs(omega_k)
+                                if abs(omega_k1) > wellmode: logic3b = abs(omega_k2) >= abs(omega_k)	#logic1
+                            if keyWaveModes == 1:
+                                if abs(omega_k2) > wellmode: logic3b = abs(omega_k1) == 0
+                                if abs(omega_k1) > wellmode: logic3b = abs(omega_k2) == 0			#logic2
+                        else: logic3b = 1
+                        if (logic1b and logic2b) and logic3b:
                             #sumDomegaBoth1 = sumDomegaBoth1 + contribution1
                             sumDomegaBoth2[countA,alpha] = sumDomegaBoth2[countA,alpha] + contribution1
                             sumDomegaBoth3[countA,alpha] = sumDomegaBoth3[countA,alpha] + contribution2
