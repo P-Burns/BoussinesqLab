@@ -51,12 +51,12 @@ SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 1
+forced          = 0
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
@@ -104,7 +104,7 @@ PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
 dbdz			= 0
-drhodz			= 0
+drhodz			= 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -124,7 +124,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 AnalyseS                = 0
 AnalyseRho              = 0
 AnalysePsi              = 0
@@ -164,18 +164,18 @@ FieldMaxMin 	= 1
 
 
 #Choose type of plot:
-MakePlot 	= 0
-PlotXZ 		= 0
-PlotTZ 		= 1
+MakePlot 	= 1
+PlotXZ 		= 1
+PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
-MakeMovie 	= 0
+MakeMovie 	= 1
 filledContour 	= 1
-NoPlotLabels    = 0
+NoPlotLabels    = 1
 logscale	= 0
 
 #Write analysis to file
-w2f_analysis = 0
+w2f_analysis 	= 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -251,7 +251,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 2
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: 
@@ -270,17 +270,18 @@ if Gusto == 1: dt = 0.004
 #it avoids exceeding system memory limits).
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
-    if forced == 0: dt2=0.2
+    if forced == 0: 
+        dt2 = 0.2
     if forced == 1: 
         dt2 = 0.2
         #dt2 = dt
 elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
-    dt2 = dt
+    #dt2 = dt
     #dt2 = 0.1
     #dt2 = 0.2
-    #dt2 = 0.4
+    dt2 = 0.4
     #dt2 = 0.02
     #dt2 = 0.04
     #dt2 = 0.08
@@ -1183,11 +1184,11 @@ if drhodz == 1:
 
         if ParkRun < 0:
             if N2==0.1 or N2==0.25 or N2==0.09:
-                rhoMin = -100
-                rhoMax = 100
+                rhozMin = -100
+                rhozMax = 100
             if N2==1:
-                rhoMin = -300
-                rhoMax = 300
+                rhozMin = -300
+                rhozMax = 300
             if N2==2.25:
                 rhozMin = -500
                 rhozMax = 500
@@ -1226,8 +1227,8 @@ if drhodz == 1:
         drhoz = (rhozMax - rhozMin)/(nlevs-1)
         clevels = np.arange(nlevs)*drhoz + rhozMin
         if logscale == 0:
-            drhoz = (rhoMax - rhoMin)/(nlevs-1)
-            clevels = np.arange(nlevs)*drhoz + rhoMin
+            drhoz = (rhozMax - rhozMin)/(nlevs-1)
+            clevels = np.arange(nlevs)*drhoz + rhozMin
         else:
             tmp = np.logspace(1,4,50)
             clevels = np.concatenate((-tmp[::-1],tmp))
@@ -3411,9 +3412,10 @@ if MakePlot >= 1:
 
         if NoPlotLabels == 1:
             ax1.axis('off')
-            
-        #Make sure plot axis labels fit within plot window:
-        plt.tight_layout()
+       
+        if NoPlotLabels == 0:     
+            #Make sure plot axis labels fit within plot window:
+            plt.tight_layout()
 
         if len(sys.argv) > 2:
             tmp = RunName.split('_')
@@ -3455,13 +3457,15 @@ if MakePlot >= 1:
                 ax1 = fig.add_subplot(grid[0,0])
 
             i1=ax1.contourf(xgrid,ygrid,data[tt,:,:].transpose(),clevels,cmap=cmap,extend="both")
-            fig.colorbar(i1)
+            if NoPlotLabels == 0: fig.colorbar(i1)
             ax1.set_xlim(0,Lx)
             ax1.set_ylim(0,Lz)
             ax1.set_xlabel(r'$x$ (m)')
             ax1.set_ylabel(r'$z$ (m)')
-            ax1.set_title(PlotTitle + ", " + str("%5.1f" % t[tt]) + " s")
+            if NoPlotLabels == 0: ax1.set_title(PlotTitle + ", " + str("%5.1f" % t[tt]) + " s")
 
+            if NoPlotLabels == 1:
+                ax1.axis('off')
 
             if PlotZ == 1:
                 xIdx1 = int(Nx/2.)
@@ -3503,7 +3507,8 @@ if MakePlot >= 1:
                     ax2.set_title(PlotTitle2)
 
             FigNm = FigNmBase + '_' + str("%04d" % tt) + '.png'
-            fig.savefig(FigPath+FigNm)
+            if NoPlotLabels == 0: fig.savefig(FigPath+FigNm)
+            if NoPlotLabels == 1: fig.savefig(FigPath+FigNm, bbox_inches = 'tight', pad_inches = 0)
             plt.close(fig)
             #plt.show()
 
