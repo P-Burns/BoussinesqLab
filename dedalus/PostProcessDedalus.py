@@ -43,12 +43,12 @@ if len(sys.argv) > 2:
 
 #Program control:
 Gusto		= 0
-Modulated       = 1
-Linear 		= 1
+Modulated       = 0
+Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
+FullDomain      = 1
 SinglePoint	= 0
-MultiPoint	= 1
+MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
 VaryN           = 0
@@ -76,11 +76,11 @@ if VaryN == 1:
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-#var_nms = ['S']
+var_nms = ['S']
 #var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-var_nms = ['S','S_r']
+#var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -93,13 +93,13 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 0
-Density_2		= 1
+Density			= 1
+Density_2		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
