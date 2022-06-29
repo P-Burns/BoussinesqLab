@@ -38,12 +38,12 @@ ProblemType 		= "Layers"
 ParkRun 		= -1
 scalePert		= 0
 #N2			= 0.09
-#N2			= 0.25
+N2			= 0.25
 #N2			= 1
 #N2			= 2.25
 #N2			= 4
 #N2			= 6.25
-N2			= 7.5625
+#N2			= 7.5625
 #N2			= 9
 #N2			= 10.5625
 #N2			= 12.25
@@ -57,14 +57,14 @@ ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
 ScaleDiffusion 		= 1
 
-ICsRandomPert 		= 0
+ICsRandomPert 		= 1
 ReadICs 		= 1
-Interpolate		= 0
+Interpolate		= 0 
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 1
+AddForce 		= 0
 ForceFullDomain 	= 1
 ForceSingleColumn 	= 0
 SimpleWave		= 0
@@ -75,16 +75,16 @@ ForceDecay		= 0
 PassiveTracer 		= 0
 compute_p		= 0
 
-CoordinateRotation	= 1
+CoordinateRotation	= 0
 nvars			= 2
 
-Linear			= 1
+Linear			= 0
 
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 0
-w2f_SinglePoint 	= 1
+w2f_state 		= 1
+w2f_SinglePoint 	= 0
 w2f_dt		 	= 1
 w2f_energy		= 0
 
@@ -767,6 +767,7 @@ if ProblemType == "Layers":
             #check symmetry:
             #print(fDedalus[:,1])
             #print(fDedalus[0,:])
+            #print(fDedalus.shape)
             #pdb.set_trace()
 
             S0 = fDedalus*Spert0*5
@@ -819,7 +820,7 @@ if ProblemType == "Layers":
 dir_state = 'State'
 if Restart == 1:
     # Load restart file
-    write, dt = solver.load_state('Results/' + dir_state + '/State_s10.h5', -1)
+    write, dt = solver.load_state('Results/' + dir_state + '/State_s3.h5', -1)
 else:
     #dt = 1./600.
     dt = 8e-3
@@ -853,6 +854,7 @@ if w2f_SinglePoint == 1 and w2f_state == 0:
 
 # Analysis:
 file_nt = 60./write_dt	#Each file contains 1 min of data
+#file_nt = 1./write_dt	#Each file contains 1 sec of data
 Results = solver.evaluator.add_file_handler('Results/' + dir_state, sim_dt=write_dt, max_writes=file_nt, mode='append')
 
 if w2f_state == 1:

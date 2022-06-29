@@ -59,7 +59,7 @@ scalePert	= 0
 forced          = 0
 if VaryN == 1:
     #N2		= 0.09
-    #N2		= 0.25
+    N2		= 0.25
     N2		= 1
     #N2		= 2.25		
     #N2		= 4
@@ -98,14 +98,14 @@ StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 1
+Density			= 0
 Density_2		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 0
+dSdz                    = 1
 dbdz			= 0
-drhodz			= 1
-TrackSteps              = 0
+drhodz			= 0
+TrackSteps              = 1
 TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
@@ -126,7 +126,7 @@ CoefficientSpace	= 0
 
 SpectralAnalysis        = 0
 AnalyseS                = 0
-AnalyseRho              = 0
+AnalyseRho              = 1
 AnalysePsi              = 0
 MeanFlowAnalysis	= 0
 PlotBigMode		= 0
@@ -135,6 +135,8 @@ CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 0
 PSD_linear_nonlinear	= 0
+AnalyseLayerCreation    = 0
+AnalyseLayerDecay       = 0
 
 TimescaleSeparation	= 0
 OverlayModulated	= 1
@@ -169,9 +171,9 @@ PlotXZ 		= 1
 PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
-MakeMovie 	= 1
+MakeMovie 	= 0
 filledContour 	= 1
-NoPlotLabels    = 1
+NoPlotLabels    = 0
 logscale	= 0
 
 #Write analysis to file
@@ -240,18 +242,19 @@ if VaryN == 1:
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
     secPerFile = 60.
+    #secPerFile = 1.
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         #StartMin = 3
         StartMin = 1
-        #nfiles = 10
-        nfiles = 29
+        nfiles = 10
+        #nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 10
 
     #Model output/write timestep:
     if FullDomain == 1: 
@@ -272,6 +275,7 @@ if Gusto == 1: dt = 0.004
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: 
         dt2 = 0.2
+        #dt2 = dt
     if forced == 1: 
         dt2 = 0.2
         #dt2 = dt
@@ -279,9 +283,9 @@ elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     #dt2 = dt
-    #dt2 = 0.1
+    dt2 = 0.1
     #dt2 = 0.2
-    dt2 = 0.4
+    #dt2 = 0.4
     #dt2 = 0.02
     #dt2 = 0.04
     #dt2 = 0.08
@@ -668,7 +672,7 @@ def spectral_analysis(data,dt2,Welch=True):
         #Vary number of points with timestep to make results more comparable (see above):
         #nperseg = (nfiles/3.*60)/dt2	#(tested for 15 min of data - possibly adjust otherwise).
         #nwindows = Nt/(nperseg*0.5)+1
-        if MeanFlowAnalysis == 1: nwindows = 1
+        if MeanFlowAnalysis == 1 or AnalyseLayerCreation==1: nwindows = 1
         else: nwindows = 7
         if nwindows != 1: nperseg = int(2*Nt/(nwindows-1))
         else: nperseg = Nt
@@ -1190,10 +1194,10 @@ if drhodz == 1:
                 rhozMin = -300
                 rhozMax = 300
             if N2==2.25:
-                rhozMin = -500
-                rhozMax = 500
-                #rhozMin = -300
-                #rhozMax = 300
+                #rhozMin = -500
+                #rhozMax = 500
+                rhozMin = -400
+                rhozMax = 400
             if N2==3.83 or N2==4:
                 if Modulated == 0:
                     rhozMin = -1000
@@ -1206,8 +1210,8 @@ if drhodz == 1:
                 rhozMax = 1500
             if N2==9 or N2==10.5625:
                 if Modulated == 0:
-                    rhozMin = -2000
-                    rhozMax = 2000
+                    rhozMin = -1500
+                    rhozMax = 1500
                 else:
                     rhozMin = np.min(data)
                     rhozMax = np.max(data)
@@ -1215,8 +1219,8 @@ if drhodz == 1:
                 rhozMin = -2500
                 rhozMax = 2500
             if N2==16:
-                rhozMin = -3000
-                rhozMax = 3000
+                rhozMin = -2500
+                rhozMax = 2500
             if N2==20.25:
                 rhozMin = -4000
                 rhozMax = 4000
@@ -1465,7 +1469,7 @@ if Reynolds == 1:
     Lx = 0.2
     nu = 1.*10**(-6.)*100
 
-    u = d_dz(Psi,Nt,Nx,Nz,z)
+    u = np.abs(d_dz(Psi,Nt,Nx,Nz,z))
     Re_local = u*Lx/nu
 
     if MakePlot==1 and FieldMaxMin==1:
@@ -1477,8 +1481,8 @@ if Reynolds == 1:
         maxMinRe = np.zeros((Nt,2))
         meanRe = np.zeros((Nt))
         for tt in range(0,Nt):
-            #maxMinRe[tt,0] = np.min(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset])
-            maxMinRe[tt,1] = np.max(np.abs(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset]))
+            maxMinRe[tt,0] = np.min(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset])
+            maxMinRe[tt,1] = np.max(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset])
             meanRe[tt] = np.mean(Re_local[tt,:,zIdx_offset:Nz-zIdx_offset])
 
 
@@ -1487,14 +1491,14 @@ if Reynolds == 1:
         fig.set_tight_layout(True)
         ax1 = fig.add_subplot(grid[0,0])
 
-        #ax1.plot(t,maxMinRe[:,0], '-k' )
+        ax1.plot(t,maxMinRe[:,0], '-k' )
         ax1.plot(t,maxMinRe[:,1], ':k' )
         ax1.plot(t,meanRe, '--k' )
         ax1.plot([0,60],[1,1], color='gray')
         ax1.set_xlabel(r'$t$ (s)' )
         ax1.set_ylabel(r'Re' )
         ax1.set_xlim(0,60)
-        ax1.set_ylim(1e-4,1e2)
+        #ax1.set_ylim(1e-4,1e2)
         ax1.set_yscale('log')
         plt.show()
 
@@ -1638,7 +1642,9 @@ if TrackSteps == 1:
 
     if UseShear == 0: 
         #epsilon = -np.min(data)
-        if FullFields == 1: epsilon = bs*0.9
+        #if FullFields == 1: epsilon = bs*0.9
+        #if FullFields == 1: epsilon = bs*0.95
+        if FullFields == 1: epsilon = bs*0.98
         if FullFields == 0: epsilon = 0.1
     if UseShear == 1:
         print(np.max(abs(data))) 
@@ -1746,7 +1752,9 @@ if TrackSteps == 1:
 
     if w2f_analysis == 1:
         if Gusto == 0:
-            if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps/'
+            #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.9bs/'
+            #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.95bs/'
+            if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.98bs/'
             if FullFields == 0: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
         if Gusto == 1:
             dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
@@ -1782,8 +1790,8 @@ if TrackSteps == 1:
         ax1.set_xlabel(r'$t$ (s)')
         ax1.set_ylabel(r'$z$ (m)')
         ax1.set_ylim(0,Lz)
-        #ax1.set_xlim(0,np.max(t))
-        ax1.set_xlim(0,60)
+        ax1.set_xlim(0,np.max(t))
+        #ax1.set_xlim(0,60)
         cb = plt.colorbar(i1, ticks=[0,1])
 
         plt.tight_layout()
@@ -2544,6 +2552,18 @@ if SpectralAnalysis == 1:
     #idx0 = int(10./dt2)
     #tmp = data[idx0:,:,:]
     #data = tmp
+
+    if AnalyseLayerDecay == 1 or AnalyseLayerCreation:
+        N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
+        t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
+        t_offset_vec = (t_offset_vec0/dt2).astype(int) 
+        idx = int(np.where(N_vec == np.sqrt(N2))[0])
+        if AnalyseLayerDecay==1:
+            data = data[t_offset_vec[idx]:]
+            data = data[t_offset_vec[idx]:]
+        if AnalyseLayerCreation==1:
+            data = data[0:t_offset_vec[idx]]
+
 
     Welch = 1
     spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)

@@ -25,8 +25,11 @@ AddGusto 	= 1
 #Choose statistical measure:
 Mean 		= 1
 Median 		= 0
-PertVsN		= 1
+
+PertVsN		= 0
 ParkStepSize	= 0
+
+PL83            = 1
 
 #define useful function:
 def round_down(num, divisor):
@@ -42,7 +45,7 @@ dt2 = 0.1
 t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
 t_offset_vec = (t_offset_vec0/dt2).astype(int)
 #t_offset_vec = np.arange(len(N_vec))*0
-Nmins = 8
+Nmins = 9
 Nt = Nmins*60./dt2
 Nt = int(Nt)
 t = np.arange(Nt)*dt2
@@ -52,7 +55,10 @@ steps_dS = np.zeros((Nt,50,len(N_vec)))
 
 #Read in data:
 for i in range(0,len(N_vec)):    
-    dir_state = './Results/' + name_vec[i] + '/TrackSteps/'
+    #dir_state = './Results/' + name_vec[i] + '/TrackSteps/'
+    #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.9bs/'
+    #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.95bs/'
+    dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.98bs/'
     fnm1 = dir_state + 'steps_t.txt'
     fnm2 = dir_state + 'steps_dz.txt'
     fnm3 = dir_state + 'steps_dS.txt'
@@ -292,12 +298,16 @@ axs2[0].legend(ncol=3, frameon=False, title=r'$N$ (rad/s)')
 
 #Persistence plots:
 #Initialise arrays for persistence data:
-stairAge = np.zeros(len(N_vec))
+stairAge = np.zeros((len(N_vec)))
 for i in range(0,len(N_vec)):
 
     #Find age of staircase for each N:
     tIdxs = np.where( steps_arr[t_offset_vec[i]:,i] == 1 )
-    stairAge[i] = (np.max(tIdxs) + t_offset_vec[i])*dt2
+    if len(tIdxs[0]) > 0: 
+        stairAge[i] = (np.max(tIdxs) + t_offset_vec[i])*dt2
+    else:
+        tIdxs = np.where( steps_arr[t_offset_vec[i]:,i] > 0 )
+        stairAge[i] = (np.max(tIdxs) + t_offset_vec[i])*dt2
 
 axs2[1].plot( N_vec, stairAge, 'ok-', linewidth=2, label=r'$\tau_{end}$ (s)')
 axs2[1].plot( N_vec, t_offset_vec0, 'o-', linewidth=2, color='gray', label=r'$\tau_0$ (s)')
@@ -387,5 +397,85 @@ if PertVsN == 1:
     plt.show()
 
 
+if PL83 == 1:
+
+    #compute Pearson and Linden model:
+    D     = np.sqrt(0.2**2 + 0.45**2)
+    nu    = 1e-4 
+    kappa = 1.4e-5
+    Nvec  = np.array(N_vec)
+
+    PL83axis  = nu*kappa/(Nvec**2*D**4)
+    PL83model = (2*np.pi)**(2./3) * (nu*kappa/(2*Nvec**2*D**4))**(1./6)
+
+    #Use mean layer depths averaged across all time:
+    data1 = steps_dz/D
+    data1[data1 == 0] = np.nan
+    if Mean == 1: means1 = np.nanmean(data1.reshape((Nt*50,len(N_vec))), axis=0)
+    if Median == 1: means1 = np.nanmedian(data1.reshape((Nt*50,len(N_vec))), axis=0)
+    std1 = np.nanstd(data1.reshape((Nt*50,len(N_vec))), axis=0)
+
+    #Use mean layer depths at a few specific time points:
+    #n.b. steps_dz = np.zeros((Nt,50,len(N_vec)))
+
+    #Choose time points using above defined start/end time for layers (varys with N):
+    tIdxs1 = t_offset_vec
+    tIdxs2 = (((stairAge-t_offset_vec0)/2 + t_offset_vec0)/dt2).astype(int)
+    tIdxs3 = (stairAge/dt2).astype(int)-1 
+ 
+    means2 = np.zeros((len(N_vec)))
+    std2   = np.zeros((len(N_vec)))
+    means3 = np.zeros((len(N_vec)))
+    std3   = np.zeros((len(N_vec)))
+    means4 = np.zeros((len(N_vec)))
+    std4   = np.zeros((len(N_vec)))
+
+    for i in range(0,len(N_vec)):
+        tmp = np.squeeze(steps_dz[tIdxs1[i],:,i]/D)
+        tmp[tmp == 0] = np.nan
+        if Mean == 1: means2[i] = np.nanmean(tmp)
+        if Median == 1: means2[i] = np.nanmedian(tmp)
+        std2[i] = np.nanstd(tmp)
+
+    for i in range(0,len(N_vec)):
+        tmp = np.squeeze(steps_dz[tIdxs2[i],:,i]/D)
+        tmp[tmp == 0] = np.nan
+        if Mean == 1: means3[i] = np.nanmean(tmp)
+        if Median == 1: means3[i] = np.nanmedian(tmp)
+        std3[i] = np.nanstd(tmp)
+
+    for i in range(0,len(N_vec)):
+        tmp = np.squeeze(steps_dz[tIdxs3[i],:,i]/D)
+        tmp[tmp == 0] = np.nan
+        if Mean == 1: means4[i] = np.nanmean(tmp)
+        if Median == 1: means4[i] = np.nanmedian(tmp)
+        std4[i] = np.nanstd(tmp)
+
+    fig1, axs = plt.subplots(1,1, figsize=(width,height))
+    fig1.subplots_adjust(wspace=0., hspace=0.)
+    fig1.set_tight_layout(True)
+ 
+    axs.loglog(PL83axis, means1, '.k', label=r'$\forall\,t$')
+    axs.loglog(PL83axis, means2, 'ok', label=r'$\tau_0$')
+    axs.loglog(PL83axis, means3, 'sk', label=r'$(\tau_{end}-\tau_0)/2+\tau_0$')
+    axs.loglog(PL83axis, means4, '^k', label=r'$\tau_{end}$')
+    axs.loglog(PL83axis, PL83model, 'k')
+    axs.fill_between(PL83axis, means1-std1, means1 + std1, color='gray', alpha=0.4)
+    plt.legend()
+    axs.set_xlabel(r'$\nu\,\kappa/(N^2\,D^4)$')
+    axs.set_ylabel(r'$\overline{h_s}\,/\,D$')
+    axs.set_ylim(1e-3,1)
+
+    nu_water    = 1.1e-6
+    #kappa_water = 2.3e-9
+    kappa_water = 1.4e-7
+    D_PL83      = 35.9/100
+    Nmax_PL83   = np.sqrt(nu_water*kappa_water/D_PL83**4/1e-15)
+    Nmin_PL83   = np.sqrt(nu_water*kappa_water/D_PL83**4/1e-11)
+    print(Nmin_PL83,Nmax_PL83)
+
+    plt.savefig('PL83plot.png')
+    plt.savefig('PL83plot.eps')
+    plt.savefig('PL83plot.pdf')
 
 plt.show()
