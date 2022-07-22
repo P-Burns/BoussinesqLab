@@ -51,12 +51,12 @@ SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 1
+VaryN           = 0
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 0
+forced          = 1
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
@@ -251,7 +251,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 5
 
     #Model output/write timestep:
     if FullDomain == 1: 
@@ -281,7 +281,7 @@ else:
     #dt2 = dt
     #dt2 = 0.1
     #dt2 = 0.2
-    dt2 = 0.4
+    dt2 = 1.0
     #dt2 = 0.02
     #dt2 = 0.04
     #dt2 = 0.08
@@ -831,7 +831,8 @@ if Flow == 1:
         cmap = 'bwr'
 
         nlevs = 41
-        scaleU = 1./1000
+        #scaleU = 1./1000
+        scaleU = 1./10
         u_max = 1.0*scaleU
         u_min = -1.0*scaleU
         
@@ -839,7 +840,8 @@ if Flow == 1:
         clevels = np.arange(nlevs)*du + u_min        
 
         nlevs = 41
-        scaleW = 1./1000
+        #scaleW = 1./1000
+        scaleW = 1./10
         w_max = 1.*scaleW
         w_min = -1.*scaleW
         dw = (w_max-w_min)/(nlevs-1)
@@ -3397,7 +3399,7 @@ if MakePlot >= 1:
                 #ax1.set_xlim(0,300)
 
         if 'data2' in locals():
-            fig.colorbar(i2, ax=ax2)
+            if NoPlotLabels == 0: fig.colorbar(i2, ax=ax2)
             ax2.set_ylim(0,Lz)
             if PlotXZ >= 1: 
                 ax2.set_xlim(0,Lx)
@@ -3409,6 +3411,7 @@ if MakePlot >= 1:
                 ax2.set_title(PlotTitle2)
                 ax2.set_xlabel(r'$t$ (s)')
                 ax2.set_ylabel(r'$z$ (m)')
+            if NoPlotLabels == 1: ax2.axis('off')
 
         if NoPlotLabels == 1:
             ax1.axis('off')
@@ -3493,20 +3496,27 @@ if MakePlot >= 1:
             if 'data2' in locals():
                 ax2 = fig.add_subplot(grid[0,1])
                 i2=ax2.contourf(xgrid,ygrid,data2[tt,:,:].transpose(),clevels2,cmap=cmap,extend="both")
-                fig.colorbar(i2)
+                if NoPlotLabels == 0: fig.colorbar(i2)
                 ax2.set_ylim(0,Lz)
                 ax2.set_ylabel(r'$z$ (m)')
                 if PlotXZ == 1: 
                     ax2.set_xlim(0,Lx)
                     ax2.set_xlabel(r'$x$ (m)')
-                    ax2.set_title(PlotTitle2 + ", " + str("%5.1f" % t[tt]) + " s")
+                    if NoPlotLabels == 0: ax2.set_title(PlotTitle2 + ", " + str("%5.1f" % t[tt]) + " s")
                 if PlotTZ == 1:
                     if 'xlim' not in locals(): xlim=(0,t[Nt-1])
                     ax2.set_xlim(xlim)
                     ax2.set_xlabel(r'$t$ (s)')
-                    ax2.set_title(PlotTitle2)
+                    if NoPlotLabels == 0: ax2.set_title(PlotTitle2)
+
+                if NoPlotLabels == 1:
+                    ax2.axis('off')
 
             FigNm = FigNmBase + '_' + str("%04d" % tt) + '.png'
+
+            if not os.path.exists(FigPath):
+                os.makedirs(FigPath)
+
             if NoPlotLabels == 0: fig.savefig(FigPath+FigNm)
             if NoPlotLabels == 1: fig.savefig(FigPath+FigNm, bbox_inches = 'tight', pad_inches = 0)
             plt.close(fig)
