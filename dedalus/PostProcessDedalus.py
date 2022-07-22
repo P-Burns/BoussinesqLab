@@ -46,8 +46,8 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 1
-SinglePoint	= 0
+FullDomain      = 0
+SinglePoint	= 1
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
@@ -59,9 +59,9 @@ scalePert	= 0
 forced          = 0
 if VaryN == 1:
     #N2		= 0.09
-    N2		= 0.25
-    N2		= 1
-    #N2		= 2.25		
+    #N2		= 0.25
+    #N2		= 1
+    N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
@@ -93,19 +93,19 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 0
-Density_2		= 0
+Density			= 1
+Density_2		= 1
 PlotStairStartEnd	= 0
 Flow                    = 0
-dSdz                    = 1
+dSdz                    = 0
 dbdz			= 0
 drhodz			= 0
-TrackSteps              = 1
+TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
@@ -124,7 +124,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -133,7 +133,8 @@ PlotBigMode		= 0
 CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
-PSD_mod_unmod_plot	= 0
+PSD_mod_unmod_plot	= 1
+PSD_add_linear          = 1
 PSD_linear_nonlinear	= 0
 AnalyseLayerCreation    = 0
 AnalyseLayerDecay       = 0
@@ -167,7 +168,7 @@ FieldMaxMin 	= 1
 
 #Choose type of plot:
 MakePlot 	= 1
-PlotXZ 		= 1
+PlotXZ 		= 0
 PlotTZ 		= 0
 PlotT 		= 0
 PlotZ 		= 0
@@ -2587,12 +2588,12 @@ if SpectralAnalysis == 1:
             Idx2 = 0
         f = spectralCoef[:,Idx1,Idx2]
 
-        if len(sys.argv) > 2:
-            tmp = RunName.split('_')
-            #Pad with zeros to correctly order results:
-            tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
-            separator = '_'
-            RunName_ = separator.join(tmp)
+        #if len(sys.argv) > 2:
+        tmp = RunName.split('_')
+        #Pad with zeros to correctly order results:
+        tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
+        separator = '_'
+        RunName_ = separator.join(tmp)
 
         file_dir = './Results/' + RunName + '/'
         fnm_w2f = file_dir + 'psd_' + fnmVar 
@@ -2604,9 +2605,10 @@ if SpectralAnalysis == 1:
         fnm_w2f = fnm_w2f + '.txt'
         np.savetxt(fnm_w2f, (f,freqvec))
 
-        if AnalyseS==1: np.savetxt('ts_S' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
-        if AnalyseRho==1: np.savetxt('ts_Rho' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
-        if AnalyseS==0 and AnalyseRho==0: np.savetxt('ts_psi' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+        if MultiPoint == 1:
+            if AnalyseS==1: np.savetxt('ts_S' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+            if AnalyseRho==1: np.savetxt('ts_Rho' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
+            if AnalyseS==0 and AnalyseRho==0: np.savetxt('ts_psi' + RunName_ + '_multip.csv', data.reshape(Nt,-1), delimiter=',')
 
 
     if MakePlot == 1:
@@ -2690,17 +2692,24 @@ if SpectralAnalysis == 1:
             IGW_mid = datIGW[Nidx,4].flatten()[0]
             IGW_maxf = (datIGW[Nidx,4] + datIGW[Nidx,2]/2).flatten()[0]
             PSD_well = datMF[Nidx,2].flatten()[0] 
-            ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'k', label=r'$\omega_{well}$')
-            ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'--k', label=r'$\omega_{well} + \Delta\omega_{IGW}$')
-            ax1.text(IGW_mid, 1e-16, r'$\Delta\omega_{IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=10)
+            ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'k', label=r'$\omega_{\rm well}$')
+            ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'--k', label=r'$\omega_{\rm well} + \Delta\omega_{\rm IGW}$')
+            if N2 != 0.25: ax1.text(IGW_mid, 1e-16, r'$\omega_{\rm IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
             xoffset = 0.2
-            ax1.plot([omega_well,IGW_mid-xoffset], [1e-16,1e-16], 'k')
-            ax1.plot([IGW_mid+xoffset,IGW_maxf], [1e-16,1e-16], 'k')
-            ax1.text(omega_well/2, 1e-16, r'$\Delta\omega_{MF}$', horizontalalignment='center', verticalalignment='center', fontsize=10)
-            ax1.scatter(omega_well,PSD_well, s=100, facecolors='none', edgecolors='k')
-            ax1.scatter(IGW_maxf,PSD_well, s=100, facecolors='none', edgecolors='k')
+            if N2 != 0.25: ax1.plot([omega_well,IGW_mid-xoffset], [1e-16,1e-16], 'k')
+            if N2 != 0.25: ax1.plot([IGW_mid+xoffset,IGW_maxf], [1e-16,1e-16], 'k')
+            if N2 != 0.25: ax1.text(omega_well/2, 1e-16, r'$\omega_{\rm MF}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
+            #ax1.scatter(omega_well,PSD_well, s=100, facecolors='none', edgecolors='k')
+            #ax1.scatter(IGW_maxf,PSD_well, s=100, facecolors='none', edgecolors='k')
+
+            if PSD_add_linear == 1:
+                dat = np.loadtxt('./SpectralAnalysis/unmodulated/psd_RhoStateN2_02_25_dt0.01_sp_linear_1000.txt')            
+                ax1.plot(xgrid,dat[0,:],'k-', linewidth=0.5, label=r'$\rho_{\rm linear}$')
+
+
             plt.legend(frameon=False)
-            plt.show()
+            #plt.show()
+            plt.savefig('psd_N2_' + RunName_ + '_mod_unmod.eps')
 
         if PSD_vs_N_plot == 1 and CheckPSD == 0:
             fig1 = plt.figure(figsize=(width*1.2,height))
@@ -2766,7 +2775,7 @@ if SpectralAnalysis == 1:
             #ax1.semilogy(data6[1,:]*c,data6[0,:], color=colorvec[5], linestyle=lstyle_vec[5], linewidth=lwidth_vec[5], label=labelvec[5])
             #ax1.semilogy(data7[1,:]*c,data7[0,:], color=colorvec[6], linestyle=lstyle_vec[6], linewidth=lwidth_vec[6], label=labelvec[6])
 
-            ax1.legend(frameon=False, title=r'$N$ (rad/s)')
+            ax1.legend(frameon=False, title=r'$N_{\rm bv}$ (rad/s)')
 
             #some plot annotations:
             #ax1.semilogy([0.5,0.5],[1e-18,1e+0], color=colorvec[0], linestyle=lstyle_vec[0], linewidth=lwidth_vec[0])
@@ -2774,8 +2783,8 @@ if SpectralAnalysis == 1:
             #ax1.semilogy([2,2],[1e-18,1e+0], color=colorvec[2], linestyle=lstyle_vec[2], linewidth=lwidth_vec[2])
             #ax1.semilogy([4,4],[1e-18,1e+0], color=colorvec[3], linestyle=lstyle_vec[3], linewidth=lwidth_vec[3])
 
-
-            plt.show()
+            #plt.show()
+            plt.savefig('psd_N_rad.eps')
 
         if CheckPSD == 1:
 
@@ -2984,6 +2993,8 @@ if TimescaleSeparation == 1:
 
     for nn in range(0,Nn):
 
+        N_bv = N_vec[nn]
+
         #get psd data:
         if IGWmethod==0: 
             if nn == 0: fhat = data1
@@ -3064,6 +3075,7 @@ if TimescaleSeparation == 1:
                     psdMaxIGW = np.max(fhat[0,psdMinIdx:])
                     idx = np.where( fhat[0,psdMinIdx:] == psdMaxIGW )
                     psdMaxIGWidx = int(np.asarray(idx) + psdMinIdx)
+                    
  
             #When energy well has been found stop changing the well idx:
             if psd1 > psd0: flag1=1
@@ -3096,6 +3108,12 @@ if TimescaleSeparation == 1:
                     #When upper bound has been found stop changing the upper bound idx:
                     if (ff > psdMaxIGWidx) and logical4 and all(logical3): 
                         flag2=1
+                     
+        #Shortcut above code to simply set upper bound to N_{bv}, which makes more sense for a band named omega_{IGW}:
+        tmp = np.where(fhat[1,:]*c >= N_bv)
+        tmp = np.asarray(tmp).flatten()[0] 
+        upperBoundIdx = np.min(tmp)
+
 
         if IGWmethod == 1:
             #use crossing points of unmodulated and modulated systems to define IGW bandwidth
@@ -3115,6 +3133,10 @@ if TimescaleSeparation == 1:
                 lastPeakIdx = lastPeakIdx-1
                 psd0 = fhat[0,lastPeakIdx] 
                 psd1 = fhat[0,lastPeakIdx-1] 
+
+            #Shortcut to set upperbound to last peak of IGW signal, which makes more sense for a band named omega_{IGW}:
+            lastPeakIdx = upperBoundIdx
+
 
         meanflowarr[nn,0] = np.sum( fhat[0,0:psdMinIdx] )
         #meanflowarr[nn,0] = np.sum( fhat[0,:] )	#confirm that total energy in modulated system is energy contained in LFMF bandwidth.
@@ -3137,13 +3159,13 @@ if TimescaleSeparation == 1:
 
         ax1 = fig.add_subplot(grid[0,0])
         if Modulated == 0:
-            i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{IGW}$')
-            i1b = ax1.plot(N_vec,psdIGWarr[:,5], 'k', marker='s', linestyle = 'None', fillstyle='none', label=r'$\omega_{IGW_E}$')
-            i1c = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{IGW}$')
-            i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{IGW}$')
-        i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{MF}$')
+            i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{\rm IGW}$')
+            i1b = ax1.plot(N_vec,psdIGWarr[:,5], 'k', marker='s', linestyle = 'None', fillstyle='none', label=r'$\omega_{\rm IGW_E}$')
+            i1c = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{\rm IGW}$')
+            i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{\rm IGW}$')
+        i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{\rm MF}$')
         #i4 = ax1.plot(N_vec0meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{well}$')
-        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_ylabel(r'$\omega$ (rad/s)')
         ax1.set_xlim(0,6)
         ax1.set_ylim(0,6)
@@ -3162,21 +3184,21 @@ if TimescaleSeparation == 1:
         #ax2 = ax1.twinx()
         ax2 = fig.add_subplot(grid[0,1])
         if Modulated == 0:
-            i7 = ax2.plot(N_vec,psdIGWarr[:,0], '^', c='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{IGW}$)')
-            i8 = ax2.plot(N_vec,psdIGWarr[:,3], 'o', c='grey', fillstyle='none', label=r'PSD($\Delta \omega_{IGW}$)')
-        i9 = ax2.plot(N_vec,meanflowarr[:,0], 'o', c='grey', label=r'PSD($\Delta \omega_{MF}$)')
+            i7 = ax2.plot(N_vec,psdIGWarr[:,0], '^', c='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{\rm IGW}$)')
+            i8 = ax2.plot(N_vec,psdIGWarr[:,3], 'o', c='grey', fillstyle='none', label=r'PSD($\omega_{\rm IGW}$)')
+        i9 = ax2.plot(N_vec,meanflowarr[:,0], 'o', c='grey', label=r'PSD($\omega_{\rm MF}$)')
         #i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', c='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
 
         if OverlayModulated == 1:
             data = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr_modulated.txt')
             #N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5))
             N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
-            i10 = ax2.plot(N_vec_mod,data[:,0], 'o', c='grey', fillstyle='none', markersize=10, label=r'PSD($\Delta \omega_{MF\zeta}$)')
+            i10 = ax2.plot(N_vec_mod,data[:,0], 'o', c='grey', fillstyle='none', markersize=10, label=r'PSD($\omega_{\rm MF\zeta}$)')
 
         #ax2.yaxis.label.set_color('grey')
         #ax2.spines['right'].set_color('grey')
         #ax2.tick_params(axis='y', colors='grey')
-        ax2.set_xlabel(r'$N$ (rad/s)')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax2.set_xlim(0,6)
         ax2.set_ylabel(r'PSD ([$\rho$]$^2$/(rad/s))')
         ax2.set_yscale('log')
@@ -3191,7 +3213,8 @@ if TimescaleSeparation == 1:
         #labs = [l.get_label() for l in lns]
         #ax1.legend(lns, labs, loc=0, frameon=False, ncol=2)
 
-        plt.show()
+        #plt.show()
+        plt.savefig('psd_trends.eps')
 
         #check contributions of IGW signal to mean flow using PSD data:
         #F_IGW = psdIGWarr[:,3]/meanflowarr[:,0]

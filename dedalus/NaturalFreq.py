@@ -27,8 +27,11 @@ import sys
 if len(sys.argv) > 1:
     tIdx = int(sys.argv[1])
 if len(sys.argv) > 2:
-    N2 = float(sys.argv[2])
-    print(N2)
+    N2           = float(sys.argv[2])
+    OmegaLimit   = float(sys.argv[3])
+    windowMethod = int(sys.argv[4])
+    keyModes     = int(sys.argv[5])
+    print(N2, OmegaLimit, windowMethod)
 
 
 plt.rcParams.update({'font.size': 14})
@@ -38,8 +41,8 @@ plt.rcParams.update({'font.size': 14})
 ProblemType			= 'Layers'
 ParkRun 			= -1
 if len(sys.argv) <= 2:
-    N2				= 1
-    #N2				= 2.25
+    #N2				= 1
+    N2				= 2.25
     #N2				= 4
     #N2				= 6.25
     #N2				= 7.5625
@@ -49,7 +52,7 @@ if len(sys.argv) <= 2:
     #N2				= 14.0625
     #N2				= 16
     #N2				= 20.25
-    N2				= 25
+    #N2				= 25
 
 DiffusionFactor			= 100
 FullFields 			= 0
@@ -58,15 +61,18 @@ BasisCheck1			= 0
 BasisCheck2 			= 0 
 nvars 				= 2
 sigma3D 			= 1
-windowMethod			= 3
+
+if len(sys.argv) <= 2:  
+    windowMethod                = 3
+
 excludeLFMF			= 0
-inverse				= 1
+inverse				= 0
 
 FindMainBasisParts 		= 1
 PlotMainBasisParts 		= 0
-PlotState_MainBasis		= 1
+PlotState_MainBasis		= 0
 Density				= 1
-PlotFastMode1			= 0
+PlotFastMode1			= 1
 PlotFastMode2			= 0
 PlotSpectrum			= 0
 PlotSigmaSums                   = 0
@@ -94,8 +100,18 @@ PlotMainTriads                  = 0
 FindUniqueSet                   = 0
 FindMaxModes                    = 0
 FindOneAlphaSet                 = 1
-keyNonWaveModes                 = 0
-keyWaveModes                    = 1
+
+if len(sys.argv) <= 2:
+    keyNonWaveModes             = 1
+    keyWaveModes                = 0
+else:
+    if keyModes == 0:
+        keyNonWaveModes         = 1
+        keyWaveModes            = 0
+    if keyModes == 1:
+        keyNonWaveModes         = 0
+        keyWaveModes            = 1
+
 PlotTriads			= 0
 xAxis_k                         = 1
 xAxis_n                         = 1
@@ -115,9 +131,9 @@ StepStructureSearch		= 0
 ComputeCumulativeDistFnc	= 0
 InteractionCoef			= 1
 PlotInteractCoef		= 0
-SigmaSigma			= 0
-PlotSigmaSigma			= 0
-CombineSigmaSigmaWithC 		= 0
+SigmaSigma			= 1
+PlotSigmaSigma			= 1
+CombineSigmaSigmaWithC 		= 1
 FrequencyAve			= 1
 SubSums				= 1
 
@@ -126,8 +142,8 @@ PlotCDFsVsN			= 0
 
 MakePlot			= 1
 PlotXZ				= 0
-PlotTZ				= 1
-PlotT				= 0
+PlotTZ				= 0
+PlotT				= 1
 Plot3D 				= 0
 
 if N2 == 0.25: RunName = 'StateN2_00_25'
@@ -184,72 +200,72 @@ if windowMethod == 0:
     #so that the comparison is fair:
     Nwaves = 10 
     T = np.array([2*np.pi/np.sqrt(N2)*Nwaves]) #Nwave wave periods
-    print(T, 1./T)
+    print('T and 1/T: ', T, 1./T)
     #Nt_T = T/dt
     t0 = t0_
     #te = t0 + int(Nt_T)
     te = te_
-    print(t0*dt,te*dt)
+    print('start/end of layers: ', t0*dt,te*dt)
 if windowMethod == 1:
     windowName = 'window1'
     WavePeriod = 2*np.pi/np.sqrt(N2)
     Nwaves  = 10
     T = np.array([WavePeriod*Nwaves])	#Nwave wave periods
-    print(T, 1./T)
+    print('T and 1/T: ', T, 1./T)
     Nt_T = T/dt 
     t0 = t0_
     te2 = t0 + int(Nt_T)
     te = te_
-    print(t0*dt,te*dt)
-    print(te2*dt)
+    print('start/end of layers: ', t0*dt,te*dt)
+    print('time point closest to T: ', te2*dt)
 if windowMethod == 2:
     windowName = 'window2'
     WavePeriod = 2*np.pi/np.sqrt(N2)
     Nwaves = 5
     T = np.array([WavePeriod*Nwaves])
-    print(T, 1./T)
+    print('T and 1/T: ', T, 1./T)
     Nt_T = T/dt 
     t0 = t0_
     te2 = t0 + int(Nt_T)
     te = te_
-    print(t0*dt,te*dt)
-    print(te2*dt)
+    print('start/end of layers: ', t0*dt,te*dt)
+    print('time point closest to T: ', te2*dt)
 if windowMethod == 3:
     windowName = 'window3'
     WavePeriod = 2*np.pi/np.sqrt(N2)
     Nwaves = 1
     T = np.array([WavePeriod*Nwaves])
-    print(T, 1./T)
+    print('T and 1/T: ', T, 1./T)
     Nt_T = T/dt 
     t0 = t0_
     te2 = t0 + int(Nt_T)
     te = te_
-    print(t0*dt,te*dt)
-    print(te2*dt)
+    print('start/end of layers: ', t0*dt,te*dt)
+    print('time point closest to T: ', te2*dt)
 if windowMethod == 4:
     windowName = 'window4'
     WavePeriod = 2*np.pi/np.sqrt(N2)
     Nwaves = 100
     T = np.array([WavePeriod*Nwaves])
-    print(T, 1./T)
+    print('T and 1/T: ', T, 1./T)
     #Nt_T = T/dt 
     t0 = t0_
     #te = t0 + int(Nt_T)
     te = te_
-    print(t0*dt,te*dt)
+    print('start/end of layers: ', t0*dt,te*dt)
 if windowMethod == 5:
     windowName = 'window5'
     WavePeriod = 2*np.pi/np.sqrt(N2)
     LayerPeriod = (te_ - t0_)*dt
     Nwaves = int( LayerPeriod/WavePeriod )
     T = np.array([WavePeriod*Nwaves])
-    print(T, 1./T)
+    print('T and 1/T: ', T, 1./T)
     Nt_T = T/dt 
     t0 = t0_
     te2 = t0 + int(Nt_T)
     te = te_
-    print(t0*dt,te*dt)
-    print(te2*dt)
+    print('start/end of layers: ', t0*dt,te*dt)
+    print('time point closest to T: ', te2*dt)
 
 
 Nt = te-t0+1
@@ -276,9 +292,10 @@ kk[int(Nx/2.)+1:] = kkx_neg
 kk_cosine = z_basis.wavenumbers
 
 #Check wavenumbers:
-#plt.plot(kk)
-#plt.plot([0,Nx],[0,0])
-#plt.show()
+plt.figure()
+plt.plot(kk)
+plt.plot([0,Nx],[0,0])
+plt.savefig('grid_k.eps')
 #print(kk)
 #pdb.set_trace()
 #plt.plot(kk_cosine)
@@ -529,23 +546,26 @@ def smooth(x,window_len=11,window='hanning'):
 if PlotCDFsVsN == 1:
     Nvec = np.array([1.,1.5,2,2.5,2.75,3,3.25,3.5,3.75,4,4.5,5])
 
-    win0 = 1
+    #baseDir = './contributions/'
+    baseDir = './contributions_check/'
+
+    win0 = 0
     win1 = 1
     win2 = 1
     win3 = 1
-    win4 = 1
+    win4 = 0
     win5 = 1
 
     def read_data(windowName,OmegaLimit1):
 
         #Read in data:
         BasisTag1 = 'k0'
-        IGW_k0 = open('IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
-        MF_k0 = open('MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
-        both_k0 = open('both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
-        IGW_k0_int = open('IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
-        MF_k0_int = open('MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
-        both_k0_int = open('both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
+        IGW_k0 = open(baseDir + 'IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
+        MF_k0 = open(baseDir + 'MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
+        both_k0 = open(baseDir + 'both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
+        IGW_k0_int = open(baseDir + 'IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
+        MF_k0_int = open(baseDir + 'MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
+        both_k0_int = open(baseDir + 'both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
 
         IGW_k0 = np.array([complex(item) for item in IGW_k0.split()])
         MF_k0 = np.array([complex(item) for item in MF_k0.split()])
@@ -557,12 +577,12 @@ if PlotCDFsVsN == 1:
         print(IGW_k0, MF_k0, both_k0)
 
         BasisTag1 = 'knot0'
-        IGW_knot0 = open('IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
-        MF_knot0 = open('MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
-        both_knot0 = open('both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
-        IGW_knot0_int = open('IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
-        MF_knot0_int = open('MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
-        both_knot0_int = open('both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
+        IGW_knot0 = open(baseDir + 'IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
+        MF_knot0 = open(baseDir + 'MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
+        both_knot0 = open(baseDir + 'both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
+        IGW_knot0_int = open(baseDir + 'IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
+        MF_knot0_int = open(baseDir + 'MF_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
+        both_knot0_int = open(baseDir + 'both_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '_int' + '.txt', "r").read()
 
         IGW_knot0 = np.array([complex(item) for item in IGW_knot0.split()])
         MF_knot0 = np.array([complex(item) for item in MF_knot0.split()])
@@ -797,8 +817,8 @@ if PlotCDFsVsN == 1:
         ax1.plot(Nvec, F_IGW_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
 
         ax1.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
-        ax1.set_title(r'$F_{IGW}$')
-        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_title(r'$F_{\rm IGW}$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_ylabel(r'Contribution to solution (%)')
         ax1.set_xlim(0,6)
         ax1.set_ylim(0,1)
@@ -818,8 +838,8 @@ if PlotCDFsVsN == 1:
         ax2.plot(Nvec, F_MF_knot0_01, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
         ax2.plot([0,6],[0.5,0.5], linestyle='--',color='silver', linewidth=1)
-        ax2.set_title(r'$F_{MF}$')
-        ax2.set_xlabel(r'$N$ (rad/s)')
+        ax2.set_title(r'$F_{\rm MF}$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax2.set_ylabel(r'Contribution to solution (%)')
         ax2.set_xlim(0,6)
         ax2.set_ylim(0,1)
@@ -841,7 +861,9 @@ if PlotCDFsVsN == 1:
 
     method2 = 1
     if method2 == 1:
-        #Look at absolute magnitudes:
+
+        print('Look at absolute magnitudes:')
+
         fig = plt.figure(1, figsize=(width*1.5,height))
         fig.set_tight_layout(True)
         grid = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
@@ -864,8 +886,8 @@ if PlotCDFsVsN == 1:
         ax1.plot(Nvec[0:idxE], C_IGW_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
 
         ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax1.set_title(r'$c_{\Delta\omega_{IGW}} / \sum$')
-        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_ylabel(r'Relative contribution')
         #ax1.set_xlim(0,6)
         ax1.set_ylim(-1,1)
@@ -887,8 +909,8 @@ if PlotCDFsVsN == 1:
         ax2.plot(Nvec[0:idxE], C_MF_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
 
         ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax2.set_title(r'$c_{\Delta\omega_{MF}} / \sum$')
-        ax2.set_xlabel(r'$N$ (rad/s)')
+        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax2.set_ylabel(r'Contribution to solution (%)')
         #ax2.set_xlim(0,6)
         ax2.set_ylim(-1,1)
@@ -910,8 +932,8 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], C_both_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1$')
 
         ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
-        ax3.set_xlabel(r'$N$ (rad/s)')
+        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax3.set_ylabel(r'Contribution to solution (%)')
         #ax3.set_xlim(0,6)
         ax3.set_ylim(-1,1)
@@ -949,8 +971,8 @@ if PlotCDFsVsN == 1:
         ax1.plot(Nvec[0:idxE], C_IGW_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
         ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax1.set_title(r'$c_{\Delta\omega_{IGW}} / \sum$')
-        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_ylabel(r'Relative contribution')
         #ax1.set_xlim(0,6)
         ax1.set_ylim(-.25,1.5)
@@ -975,8 +997,8 @@ if PlotCDFsVsN == 1:
         ax2.plot(Nvec[0:idxE], C_MF_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
         ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax2.set_title(r'$c_{\Delta\omega_{MF}} / \sum$')
-        ax2.set_xlabel(r'$N$ (rad/s)')
+        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax2.set_ylabel(r'Contribution to solution (%)')
         #ax2.set_xlim(0,6)
         ax2.set_ylim(-.25,1.5)
@@ -1002,8 +1024,8 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], C_both_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
 
         ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
-        ax3.set_xlabel(r'$N$ (rad/s)')
+        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax3.set_xlim(0,6)
         ax3.set_ylim(-.25,1.5)
         ax3.legend(frameon=False)
@@ -1014,7 +1036,7 @@ if PlotCDFsVsN == 1:
 
 
         #Look at Real parts of un-normalised totals:
-        print('Real parts')
+        print('Real parts (un-normalised totals)')
         fig = plt.figure(1, figsize=(width*1.5,height))
         fig.set_tight_layout(True)
         grid = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
@@ -1037,8 +1059,8 @@ if PlotCDFsVsN == 1:
         ax1.plot(Nvec[0:idxE], IGW_10_3, linestyle='--', marker='.', markersize=10, color='k', linewidth=4)
 
         ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax1.set_title(r'$c_{\Delta\omega_{IGW}}$')
-        ax1.set_xlabel(r'$N$ (rad/s)')
+        ax1.set_title(r'$c_{\omega_{\rm IGW}}$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_ylabel(r'Contribution')
         #ax1.set_xlim(0,6)
         #ax1.set_ylim(-.25,1.5)
@@ -1059,8 +1081,8 @@ if PlotCDFsVsN == 1:
         ax2.plot(Nvec[0:idxE], MF_10_3, linestyle='--', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1$')
 
         ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax2.set_title(r'$c_{\Delta\omega_{MF}}$')
-        ax2.set_xlabel(r'$N$ (rad/s)')
+        ax2.set_title(r'$c_{\omega_{\rm MF}}$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax2.set_ylabel(r'Contribution to solution (%)')
         #ax2.set_xlim(0,6)
         #ax2.set_ylim(-.25,1.5)
@@ -1082,8 +1104,8 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], both_10_3, linestyle='--', marker='.', markersize=10, color='k', linewidth=4)
 
         ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}}$')
-        ax3.set_xlabel(r'$N$ (rad/s)')
+        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}}$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax3.set_xlim(0,6)
         #ax3.set_ylim(-.25,1.5)
 
@@ -1093,7 +1115,8 @@ if PlotCDFsVsN == 1:
 
 
 
-        #Look at effect of changing T, for CapOmega=0.01:
+        print('Look at effect of changing T, for CapOmega=0.01:')
+
         fig2 = plt.figure(figsize=(width*1.5,height))
         fig2.set_tight_layout(True)
         grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
@@ -1101,8 +1124,8 @@ if PlotCDFsVsN == 1:
         ax1 = fig2.add_subplot(grid2[0,0])
         ax1.set_ylim(-1,1)
         ax1.set_ylabel(r'Relative contribution')
-        ax1.set_xlabel(r'$N$ (rad/s)')
-        ax1.set_title(r'$c_{\Delta\omega_{IGW}} / \sum$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
         #ax1.plot(Nvec[0:idxE], C_IGW_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax1.plot(Nvec[0:idxE], C_IGW_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax1.plot(Nvec[0:idxE], C_IGW_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1112,8 +1135,8 @@ if PlotCDFsVsN == 1:
 
         ax2 = fig2.add_subplot(grid2[0,1])
         ax2.set_ylim(-1,1)
-        ax2.set_xlabel(r'$N$ (rad/s)')
-        ax2.set_title(r'$c_{\Delta\omega_{MF}} / \sum$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
         #ax2.plot(Nvec[0:idxE], C_MF_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax2.plot(Nvec[0:idxE], C_MF_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax2.plot(Nvec[0:idxE], C_MF_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1123,20 +1146,22 @@ if PlotCDFsVsN == 1:
 
         ax3 = fig2.add_subplot(grid2[0,2])
         ax3.set_ylim(-1,1)
-        ax3.set_xlabel(r'$N$ (rad/s)')
-        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax3.plot(Nvec[0:idxE], C_both_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N\,10$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N\,5$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N$')
+        ax3.plot(Nvec[0:idxE], C_both_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
+        ax3.plot(Nvec[0:idxE], C_both_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
+        ax3.plot(Nvec[0:idxE], C_both_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
         ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
         ax3.legend(frameon=False)
 
         plt.show()
         #pdb.set_trace()
 
-        #Look at effect of changing T, for CapOmega=0.1:
+
+        print('Look at effect of changing T, for CapOmega=0.1:')
+
         fig2 = plt.figure(figsize=(width*1.5,height))
         fig2.set_tight_layout(True)
         grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
@@ -1144,8 +1169,8 @@ if PlotCDFsVsN == 1:
         ax1 = fig2.add_subplot(grid2[0,0])
         ax1.set_ylim(-1,1)
         ax1.set_ylabel(r'Relative contribution')
-        ax1.set_xlabel(r'$N$ (rad/s)')
-        ax1.set_title(r'$c_{\Delta\omega_{IGW}} / \sum$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
         #ax1.plot(Nvec[0:idxE], C_IGW_abs_1_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax1.plot(Nvec[0:idxE], C_IGW_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax1.plot(Nvec[0:idxE], C_IGW_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1155,8 +1180,8 @@ if PlotCDFsVsN == 1:
 
         ax2 = fig2.add_subplot(grid2[0,1])
         ax2.set_ylim(-1,1)
-        ax2.set_xlabel(r'$N$ (rad/s)')
-        ax2.set_title(r'$c_{\Delta\omega_{MF}} / \sum$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
         #ax2.plot(Nvec[0:idxE], C_MF_abs_1_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax2.plot(Nvec[0:idxE], C_MF_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax2.plot(Nvec[0:idxE], C_MF_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1166,20 +1191,22 @@ if PlotCDFsVsN == 1:
 
         ax3 = fig2.add_subplot(grid2[0,2])
         ax3.set_ylim(-1,1)
-        ax3.set_xlabel(r'$N$ (rad/s)')
-        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax3.plot(Nvec[0:idxE], C_both_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N\,10$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N\,5$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N$')
+        ax3.plot(Nvec[0:idxE], C_both_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
+        ax3.plot(Nvec[0:idxE], C_both_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
+        ax3.plot(Nvec[0:idxE], C_both_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
         ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
         ax3.legend(frameon=False)
 
         plt.show()
         #pdb.set_trace()
 
-        #Look at effect of changing T, for CapOmega=1., consider Real parts only:
+
+        print('Look at effect of changing T, for CapOmega=1., consider Real parts only:')
+
         fig2 = plt.figure(figsize=(width*1.5,height))
         fig2.set_tight_layout(True)
         grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
@@ -1187,8 +1214,8 @@ if PlotCDFsVsN == 1:
         ax1 = fig2.add_subplot(grid2[0,0])
         ax1.set_ylim(-.25,1.25)
         ax1.set_ylabel(r'Relative contribution')
-        ax1.set_xlabel(r'$N$ (rad/s)')
-        ax1.set_title(r'$c_{\Delta\omega_{IGW}} / \sum$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
         #ax1.plot(Nvec[0:idxE], C_IGW_abs_10_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax1.plot(Nvec[0:idxE], C_IGW_10_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax1.plot(Nvec[0:idxE], C_IGW_10_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1202,13 +1229,13 @@ if PlotCDFsVsN == 1:
 
         ax2 = fig2.add_subplot(grid2[0,1])
         ax2.set_ylim(-.25,1.25)
-        ax2.set_xlabel(r'$N$ (rad/s)')
-        ax2.set_title(r'$c_{\Delta\omega_{MF}} / \sum$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
         #ax2.plot(Nvec[0:idxE], C_MF_10_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax2.plot(Nvec[0:idxE], C_MF_10_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
-        ax2.plot(Nvec[0:idxE], C_MF_10_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N\,10$')
-        ax2.plot(Nvec[0:idxE], C_MF_10_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N\,5$')
-        ax2.plot(Nvec[0:idxE], C_MF_10_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N$')
+        ax2.plot(Nvec[0:idxE], C_MF_10_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
+        ax2.plot(Nvec[0:idxE], C_MF_10_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
+        ax2.plot(Nvec[0:idxE], C_MF_10_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
         #k=0 case:
         ax2.plot(Nvec[0:idxE], C_MF_k0_10_3, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
         #k not 0 case:
@@ -1218,8 +1245,8 @@ if PlotCDFsVsN == 1:
 
         ax3 = fig2.add_subplot(grid2[0,2])
         ax3.set_ylim(-.25,1.25)
-        ax3.set_xlabel(r'$N$ (rad/s)')
-        ax3.set_title(r'$c_{\Delta\omega_{IGW,MF}} / \sum$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_10_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
         ax3.plot(Nvec[0:idxE], C_both_10_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
         ax3.plot(Nvec[0:idxE], C_both_10_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
@@ -1307,7 +1334,7 @@ for tt in range(0,Nt):
             plt.xticks((0,90,180))
             plt.colorbar()
 
-            plt.show()
+            plt.savefig('eigenvecs.eps')
             pdb.set_trace()
 
         if BasisCheck2 == 1:
@@ -1401,6 +1428,7 @@ if FindMainBasisParts == 1:
         grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
         ax1 = fig.add_subplot(grid[0,0])
         #ax1.set_ylim(-10,10)
+        ax1.set_xlim(0,40)
         #ax1.set_ylim(10**(-10),100)
         ax1.set_ylabel('')
         ax1.set_xlabel(r'$t$ (s)')
@@ -1461,6 +1489,7 @@ if FindMainBasisParts == 1:
         #Load power limit from file to short-circuit the search for the reduced basis:
         PowerLimit 	= np.loadtxt('PowerLimit_' + str(N2) + '.txt')
         #PowerLimit 	= 0.01
+        print('PowerLimit: ',PowerLimit) 
 
         ErrorLimit 	= 10
         epsilon 	= 100
@@ -1760,7 +1789,7 @@ if FindMainBasisParts == 1:
         i1 = ax1.contourf(xgrid,ygrid,data1,clevels,cmap=cmap,extend='both')
         fig1.colorbar(i1)
         #plt.show()
-        fig1.savefig('full_' + str(N2) + '.png')
+        fig1.savefig('full_' + str(N2) + '.eps')
         plt.close(fig1)
 
         fig2 = plt.figure(figsize=(width,height))
@@ -1844,7 +1873,7 @@ if FindMainBasisParts == 1:
             ax2.annotate(labels2[i], xy=(x,y), xytext=(x,y), ha=ha, size=8) 
 
         #plt.show() 
-        fig2.savefig('estimate_' + str(N2) + '.png')
+        fig2.savefig('estimate_' + str(N2) + '.eps')
         plt.close(fig2)
        # pdb.set_trace()
  
@@ -2299,13 +2328,14 @@ if Resonances == 1:
 
 
     if NearResonanceSearch == 1:
-        OmegaLimit = 0.
-        #OmegaLimit = 0.001
-        #OmegaLimit = 0.005
-        #OmegaLimit = 0.01
-        #OmegaLimit = 0.1
-        #OmegaLimit = 1.0
-        #OmegaLimit = 999
+        if len(sys.argv) <= 2:
+            OmegaLimit = 0.
+            #OmegaLimit = 0.001
+            #OmegaLimit = 0.005
+            #OmegaLimit = 0.01
+            #OmegaLimit = 0.1
+            #OmegaLimit = 1.0
+            #OmegaLimit = 999
         Omega = []
         alphavec = [-1,1]
 
@@ -2643,7 +2673,7 @@ if Resonances == 1:
                     axs0.legend(title=r'$T$', frameon=False, loc=1)
 
                     #plt.show()
-                    plt.savefig('weightFnc_N2_' + str(N2) + '_' + BasisTag + '_' + windowName + '.png')
+                    plt.savefig('weightFnc_N2_' + str(N2) + '_' + BasisTag + '_' + windowName + '.eps')
                     plt.close(fig0)
 
                     #plt.figure()
@@ -2996,14 +3026,15 @@ if Resonances == 1:
 
                     if ii==0: past_key_modes.append([i,j])
 
-                    #tpnt = 0
+                    tpnt = 0
                     #tpnt = int(Nt/2.)
                     #tpnt = Nt-1
-                    #xpnt = int(Nx/2.)
-                    #zpnt = int(Nz/2.)
-                    #contribution = interactCoef[ii]*sigmaSigma[ii,tpnt]*capOmegaWeights[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
-                    contribution1 = capOmegaWeights[ii]
-                    contribution2 = interactCoef[ii]*capOmegaWeights[ii]
+                    xpnt = int(Nx/2.)
+                    zpnt = int(Nz/2.)
+                    contribution1 = sigmaSigma[ii,tpnt]*capOmegaWeights[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
+                    contribution2 = sigmaSigma[ii,tpnt]*capOmegaWeights[ii]*interactCoef[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
+                    #contribution1 = capOmegaWeights[ii]
+                    #contribution2 = capOmegaWeights[ii]*interactCoef[ii]
 
                     if interactCoef[ii] != 0:
 
@@ -3198,13 +3229,13 @@ if Resonances == 1:
 
                #Write data to file:             
                #write results using integral and interaction coefficient: 
-               file1.write( str(np.sum(sumDomegaIGW3)) +'\n' )
-               file2.write( str(np.sum(sumDomegaMF3)) +'\n' )
-               file3.write( str(np.sum(sumDomegaBoth3)) +'\n' )
+               file1.write( str(np.sum(sumDomegaIGW3)) + '\n')
+               file2.write( str(np.sum(sumDomegaMF3)) + '\n')
+               file3.write( str(np.sum(sumDomegaBoth3)) + '\n')
                #write results using integral only:
-               file4.write( str(np.sum(sumDomegaIGW2)) +'\n' )
-               file5.write( str(np.sum(sumDomegaMF2)) +'\n' )
-               file6.write( str(np.sum(sumDomegaBoth2)) +'\n' )
+               file4.write( str(np.sum(sumDomegaIGW2)) + '\n')
+               file5.write( str(np.sum(sumDomegaMF2)) + '\n')
+               file6.write( str(np.sum(sumDomegaBoth2)) + '\n')
 
                file1.close()
                file2.close()
@@ -3311,8 +3342,8 @@ if Resonances == 1:
                 ax.set_zlabel(r'$\omega_{\bf k}^{\alpha},\omega_{{\bf k}_1}^{\alpha_1},\omega_{{\bf k}_2}^{\alpha_2}$ (rad/s)')
 
             if PlotTriads==1:
-                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'triads' + '.png')
-                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'triads' + '.png')
+                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'triads' + '.eps')
+                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'triads' + '.eps')
                 plt.close(fig)
                 #plt.show()
 
@@ -3330,8 +3361,8 @@ if Resonances == 1:
                 axs_0.set_xlabel('Mode (frequency) of modulated system (rad/s)')
                 axs_0.set_ylabel('Max frequency of linear waves\n associated with some mode of solution (rad/s)')
             
-                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'MaxModes' + '.png')
-                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'MaxModes' + '.png')
+                if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_' + 'MaxModes' + '.eps')
+                if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_' + 'MaxModes' + '.eps')
                 plt.close() 
                 #plt.show()
 
@@ -3444,8 +3475,8 @@ if Resonances == 1:
                         ax1.fill_between([0,wellmode],0,ymax, facecolor='silver')                
                         ax1.text(0, ypos, 'LFMF', ha='center', va='center', fontsize=12)
              
-                    if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_near_01_HISTomega12_dt01' + '.png')
-                    if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_near_01_HISTomega12_dt01' + '.png')
+                    if keyNonWaveModes==1: plt.savefig('keyNonWaveModes_N2_' + str(N2) + '_near_01_HISTomega12_dt01' + '.eps')
+                    if keyWaveModes==1: plt.savefig('keyWaveModes_N2_' + str(N2) + '_near_01_HISTomega12_dt01' + '.eps')
                     plt.close()
                     #plt.show()
 
@@ -3494,7 +3525,7 @@ if Resonances == 1:
                     plt.plot([bin_edges[minIdx+count00],bin_edges[minIdx+count00]],[np.min(dNdomega),np.max(dNdomega)], '--k')
                     plt.show()
                     pdb.set_trace()
-                    plt.savefig('dNdomega_' + str(N2) + '_01' + '.png')
+                    plt.savefig('dNdomega_' + str(N2) + '_01' + '.eps')
                     plt.close()
                     #plt.show()
 
@@ -3791,7 +3822,7 @@ if Resonances == 1:
                         #print(kk_cosine[minIdx+count00])
                         plt.title(str(kk_cosine[minIdx0]) + ', ' + str(kk_cosine[minIdx+count00]))
                         plt.plot([kk_cosine[minIdx+count00],kk_cosine[minIdx+count00]],[np.min(dNdn),np.max(dNdn)], '--k')
-                        plt.savefig('dNdn_' + str(N2) + '_01' + '.png')
+                        plt.savefig('dNdn_' + str(N2) + '_01' + '.eps')
                         plt.close()
                         #plt.show()
 
@@ -3830,7 +3861,7 @@ if Resonances == 1:
             if SigmaSigma == 1 and PlotSigmaSigma==1:
 
                 fig01, ax01 = plt.subplots(1,1, figsize=(width,height))
-                fig01.subplots_adjust(wspace=0.4, hspace=0.)
+                fig01.subplots_adjust(wspace=0., hspace=0.)
                 fig01.set_tight_layout(True)
                 #ax01.set_yscale('log')
                 ax01.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
@@ -3853,11 +3884,12 @@ if Resonances == 1:
              
                 for i in range(0,idxE):
                     if CombineSigmaSigmaWithC == 0: 
-                        ax01.plot(xdata,ydata[i,:]*weight, '-k', linewidth=3, color=cmap(color_vec[i]) )
+                        #ax01.plot(xdata,ydata[i,:]*weight, '-k', linewidth=3, color=cmap(color_vec[i]) )
+                        ax01.plot(xdata,ydata[i,:]*weight, '-k', linewidth=1 )
                     if CombineSigmaSigmaWithC == 1: 
                         #ax01.scatter(xdata,ydata[:,i]*weight, marker='o', color=cmap(color_vec) )
                         ax01.scatter(t,ydata[i,:]*weight[i], marker='o', color=cmap(color_vec[i]) )
-                plt.show() 
+                fig01.savefig('N2_' + str(N2) + '_' + 'sigmaSigma.eps') 
 
                 ComplexPlane = 0
                 if ComplexPlane == 1:

@@ -38,9 +38,9 @@ ProblemType 		= "Layers"
 ParkRun 		= -1
 scalePert		= 0
 #N2			= 0.09
-N2			= 0.25
+#N2			= 0.25
 #N2			= 1
-#N2			= 2.25
+N2			= 2.25
 #N2			= 4
 #N2			= 6.25
 #N2			= 7.5625
@@ -78,13 +78,13 @@ compute_p		= 0
 CoordinateRotation	= 0
 nvars			= 2
 
-Linear			= 0
+Linear			= 1
 
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 1
-w2f_SinglePoint 	= 0
+w2f_state 		= 0
+w2f_SinglePoint 	= 1
 w2f_dt		 	= 1
 w2f_energy		= 0
 
