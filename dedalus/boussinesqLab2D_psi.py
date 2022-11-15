@@ -55,7 +55,7 @@ N2			= 2.25
 Inviscid          	= 0
 ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
-ScaleDiffusion 		= 1
+ScaleDiffusion 		= 0
 
 ICsRandomPert 		= 1
 ReadICs 		= 1
@@ -78,13 +78,13 @@ compute_p		= 0
 CoordinateRotation	= 0
 nvars			= 2
 
-Linear			= 1
+Linear			= 0
 
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 0
-w2f_SinglePoint 	= 1
+w2f_state 		= 1
+w2f_SinglePoint 	= 0
 w2f_dt		 	= 1
 w2f_energy		= 0
 
@@ -95,9 +95,9 @@ Nx 	= 80
 Nz 	= 180
 #factor	= 1./4
 #factor	= 1./2
-factor	= 1
+#factor	= 1
 #factor	= 2
-#factor	= 4
+factor	= 4
 Nx 	= int(Nx*factor)
 Nz 	= int(Nz*factor)
 if factor == 1./4: Nz += 1
@@ -762,6 +762,7 @@ if ProblemType == "Layers":
             else:
                 if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
                 if factor == 2: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
+                if factor == 4: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_320_720_Dedalus.txt')
             fDedalus = fDedalus/np.max(fDedalus)
         
             #check symmetry:
@@ -841,11 +842,14 @@ solver.stop_wall_time = wall_time
 solver.stop_iteration = np.inf
 
 #Set data write frequency.
-if (w2f_state == 1 and w2f_SinglePoint == 0) or w2f_energy == 1: write_dt = 1e-1
+if (w2f_state == 1 and w2f_SinglePoint == 0) or w2f_energy == 1: 
+    if ScaleDiffusion == 1: write_dt = 1e-1
+    if ScaleDiffusion == 0: write_dt = 5e-1
 
 if w2f_SinglePoint == 1 and w2f_state == 0: 
     if AddForce == 0: 
-        write_dt = 1e-2
+        if ScaleDiffusion==1: write_dt = 1e-2
+        if ScaleDiffusion==0: write_dt = 1e-3
     if AddForce == 1: 
         #write_dt = 5e-3
         #write_dt = 1e-2
