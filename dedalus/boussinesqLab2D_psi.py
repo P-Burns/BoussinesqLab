@@ -55,11 +55,11 @@ N2			= 2.25
 Inviscid          	= 0
 ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
-ScaleDiffusion 		= 1
+ScaleDiffusion 		= 0
 
 ICsRandomPert 		= 1
 ReadICs 		= 1
-Interpolate		= 0 
+Interpolate		= 1 
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
@@ -78,7 +78,7 @@ compute_p		= 0
 CoordinateRotation	= 0
 nvars			= 2
 
-Linear			= 1
+Linear			= 0
 
 domain3D		= 0
 
@@ -232,8 +232,8 @@ if AddForce == 1:
 
     if SimpleWave==1 or WaveSpectrum==1:
         #Read in some key frequencies from decay case:
-        arr1 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
-        arr2 = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+        arr1 = np.loadtxt('/lustre/home/pb412/BoussinesqLab/dedalus/meanflowarr.txt')
+        arr2 = np.loadtxt('/lustre/home/pb412/BoussinesqLab/dedalus/psdIGWarr.txt')
         N_vec           = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
         N               = np.sqrt(N2)
         idxN            = np.where(N_vec==N)
@@ -320,9 +320,9 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
-            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
+            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
+            tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
@@ -708,7 +708,7 @@ if ProblemType == "Layers":
             if Interpolate == 1:
 
                 #Read in Aegir ICs:
-                fAegir = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_1.txt')
+                fAegir = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_1.txt')
 
                 #Add more symmetry to ICs:
                 #fAegir_flipx = np.flipud(fAegir)
@@ -748,8 +748,8 @@ if ProblemType == "Layers":
 
                 fDedalus = InterpolateFromAegir(NxAegir, NzAegir, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
-                if factor == 1: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
-                if factor == 2: fname = '/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt'
+                if factor == 1: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
+                if factor == 2: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_160_360_Dedalus.txt'
                 np.savetxt(fname, fDedalus) 
                 #pdb.set_trace()
 
@@ -760,8 +760,8 @@ if ProblemType == "Layers":
                 if factor == 2: fDedalus = np.loadtxt('./RandomPhase_160_360.txt')
                 if factor == 4: fDedalus = np.loadtxt('./RandomPhase_320_720.txt')
             else:
-                if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
-                if factor == 2: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
+                if factor == 1: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
+                if factor == 2: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
             fDedalus = fDedalus/np.max(fDedalus)
         
             #check symmetry:
