@@ -557,12 +557,12 @@ if PlotCDFsVsN == 1:
     #baseDir = './contributions_v4/'
     #baseDir = './contributions_v5/'
 
-    win0 = 0
-    win1 = 1
-    win2 = 1
-    win3 = 1
+    win0 = 1
+    win1 = 0
+    win2 = 0
+    win3 = 0
     win4 = 0
-    win5 = 1
+    win5 = 0
 
     def read_data(windowName,OmegaLimit1,tot=None,tot_abs=None):
 
@@ -842,6 +842,105 @@ if PlotCDFsVsN == 1:
     symsize_vec_k0 = (np.array([8,8,8,8,8,8,8,8,8]))**2
     symsize_vec_knot0 = (np.array([8,8,8,8,8,8,8,8,8]))**2
 
+    method0 = 1
+    if method0 == 1:
+
+        #Look at Real parts:
+        print('Real parts')
+        fig = plt.figure(2, figsize=(width*1.5,height))
+        fig.set_tight_layout(True)
+        grid = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
+        ax1 = fig.add_subplot(grid[0,0])
+
+        idxE = len(N_vec)
+
+        #plot IGW results:
+        #for CapOmega limit 0
+        #ax1.plot(Nvec, C_IGW_0_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5)
+        #for CapOmega limit 0.001
+        #ax1.plot(Nvec, C_IGW_001_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+        #for CapOmega limit 0.005
+        #ax1.plot(Nvec, C_IGW_005_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+        #for CapOmega limit 0.01
+        ax1.plot(Nvec[0:idxE], C_IGW_01_0, linestyle='-', marker='.', markersize=10, color='k', linewidth=3)
+        #for CapOmega limit 0.1
+        #ax1.plot(Nvec[0:idxE], C_IGW_1_0, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
+        #for CapOmega limit 1.
+        #ax1.plot(Nvec[0:idxE], C_IGW_10_0, linestyle='--', marker='.', markersize=10, color='k', linewidth=4)
+        #k=0 case:
+        ax1.plot(Nvec[0:idxE], C_IGW_k0_01_0, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+        #k not 0 case:
+        ax1.plot(Nvec[0:idxE], C_IGW_knot0_01_0, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+
+        #ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+        #ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax1.set_ylabel(r'Relative contribution')
+        #ax1.set_xlim(0,6)
+        #ax1.set_ylim(-.25,1.5)
+        ax1.set_ylim(-0.5,1.5)
+
+        #plot mean flow results:
+        ax2 = fig.add_subplot(grid[0,1])
+        #for CapOmega limit 0
+        #ax2.plot(Nvec, C_MF_0_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
+        #for CapOmega limit 0.001
+        #ax2.plot(Nvec, C_MF_001_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$|\Omega|\leq 1\mathrm{E}{-3}$')
+        #for CapOmega limit 0.005
+        #ax2.plot(Nvec, C_MF_005_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$|\Omega|\leq 5\mathrm{E}{-3}$')
+        #for CapOmega limit 0.01
+        ax2.plot(Nvec[0:idxE], C_MF_01_0, linestyle='-', marker='.', markersize=10, color='k', linewidth=3, label=r'$|\Omega|\leq 1\mathrm{E}{-2}$')
+        #for CapOmega limit 0.1
+        #ax2.plot(Nvec[0:idxE], C_MF_1_0, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1\mathrm{E}{-1}$')
+        #for CapOmega limit 1.
+        #ax2.plot(Nvec[0:idxE], C_MF_10_0, linestyle='--', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1$')
+        #k=0 case:
+        ax2.plot(Nvec[0:idxE], C_MF_k0_01_0, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
+        #k not 0 case:
+        ax2.plot(Nvec[0:idxE], C_MF_knot0_01_0, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
+
+        #ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+        #ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
+        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        #ax2.set_ylabel(r'Contribution to solution (%)')
+        #ax2.set_xlim(0,6)
+        #ax2.set_ylim(-.25,1.5)
+        ax2.set_ylim(-0.5,1.5)
+        ax2.legend(frameon=False, loc=1, labelspacing=0.05)
+
+        #plot coupled results:
+        ax3 = fig.add_subplot(grid[0,2])
+        #for CapOmega limit 0
+        #ax3.plot(Nvec, C_both_0_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5)
+        #for CapOmega limit 0.001
+        #ax3.plot(Nvec, C_both_001_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+        #for CapOmega limit 0.005
+        #ax3.plot(Nvec, C_both_005_0, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+        #for CapOmega limit 0.01
+        ax3.plot(Nvec[0:idxE], C_both_01_0, linestyle='-', marker='.', markersize=10, color='k', linewidth=3)
+        #for CapOmega limit 0.1
+        #ax3.plot(Nvec[0:idxE], C_both_1_0, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
+        #for CapOmega limit 1.
+        #ax3.plot(Nvec[0:idxE], C_both_10_0, linestyle='--', marker='.', markersize=10, color='k', linewidth=4)
+        #k=0 case:
+        ax3.plot(Nvec[0:idxE], C_both_k0_01_0, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
+        #k not 0 case:
+        ax3.plot(Nvec[0:idxE], C_both_knot0_01_0, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
+
+        #ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+        #ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
+        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        #ax3.set_xlim(0,6)
+        #ax3.set_ylim(-.25,1.5)
+        ax3.set_ylim(-0.5,1.5)
+        ax3.legend(frameon=False)
+
+        plt.savefig('contributions_capOmega.eps')
+        #plt.show()
+        #pdb.set_trace()
+
+
+
     method1 = 0
     if method1 == 1:
         fig = plt.figure(1, figsize=(width,height))
@@ -904,7 +1003,7 @@ if PlotCDFsVsN == 1:
         plt.show()
         pdb.set_trace()
 
-    method2 = 1
+    method2 = 0
     if method2 == 1:
 
         AbsPlots = 0
