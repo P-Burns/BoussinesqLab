@@ -19,7 +19,7 @@ import sys
 
 #Program control:
 #Write data to file for statistical analysis using R:
-w2f 		= 0
+w2f 		= 1
 #Add Gusto data:
 AddGusto 	= 1
 #Choose statistical measure:
@@ -45,7 +45,7 @@ dt2 = 0.1
 t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
 t_offset_vec = (t_offset_vec0/dt2).astype(int)
 #t_offset_vec = np.arange(len(N_vec))*0
-Nmins = 9
+Nmins = 12
 Nt = Nmins*60./dt2
 Nt = int(Nt)
 t = np.arange(Nt)*dt2
@@ -54,11 +54,11 @@ steps_dz = np.zeros((Nt,50,len(N_vec)))
 steps_dS = np.zeros((Nt,50,len(N_vec)))
 
 #Read in data:
-for i in range(0,len(N_vec)):    
+for i in range(0,len(N_vec)): 
     #dir_state = './Results/' + name_vec[i] + '/TrackSteps/'
-    #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.9bs/'
+    dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.9bs/'
     #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.95bs/'
-    dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.98bs/'
+    #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.98bs/'
     fnm1 = dir_state + 'steps_t.txt'
     fnm2 = dir_state + 'steps_dz.txt'
     fnm3 = dir_state + 'steps_dS.txt'
@@ -273,7 +273,7 @@ if ParkStepSize==1:
 
 if w2f == 1:
     fnm = './steptracking_means.txt'
-    np.savetxt(fnm,(N_vec,means0,means1,means2))
+    np.savetxt(fnm,(N_vec,means0))
 
 
 #Plot number of steps over time for each N:

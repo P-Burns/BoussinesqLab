@@ -12,6 +12,7 @@ from scipy import *
 from numpy import fft
 from scipy import fftpack
 from scipy.signal import welch
+from scipy.signal import periodogram
 from scipy.signal.windows import tukey
 from scipy.integrate import simps
 import pdb #to pause execution use pdb.set_trace()
@@ -46,8 +47,9 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
-SinglePoint	= 1
+ScaleDiffusion	= 0
+FullDomain      = 1
+SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
@@ -73,7 +75,6 @@ if VaryN == 1:
     #N2		= 20.25
     #N2		= 25
 
-
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 var_nms = ['S']
@@ -93,18 +94,18 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
 Density			= 1
-Density_2		= 1
-PlotStairStartEnd	= 0
+Density_2		= 0
+PlotStairStartEnd	= 1
 Flow                    = 0
 dSdz                    = 0
 dbdz			= 0
-drhodz			= 0
+drhodz			= 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -124,7 +125,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -133,8 +134,8 @@ PlotBigMode		= 0
 CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
-PSD_mod_unmod_plot	= 1
-PSD_add_linear          = 1
+PSD_mod_unmod_plot	= 0
+PSD_add_linear          = 0
 PSD_linear_nonlinear	= 0
 AnalyseLayerCreation    = 0
 AnalyseLayerDecay       = 0
@@ -169,7 +170,7 @@ FieldMaxMin 	= 1
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 0
+PlotTZ 		= 1
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -178,14 +179,14 @@ NoPlotLabels    = 0
 logscale	= 0
 
 #Write analysis to file
-w2f_analysis 	= 1
+w2f_analysis 	= 0
 
 
 #Setup parameters for reading Dedalus data into this program:
 if VaryN == 0:
     #Options when reading data:  
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/ForcedResults/' + 'State' + RunName + '/'
-    dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
+    #dir_state = '/gpfs/ts0/projects/Research_Project-183035/tmp/' + 'State' + RunName + '/'
     #dir_state = '/gpfs/ts0/home/pb412/dedalus/Results/' + 'State' + RunName + '/'
 
     #dir_state = '/gpfs/ts0/projects/Research_Project-183035/Results/StateN2_03_83_forced01/'
@@ -206,6 +207,8 @@ if VaryN == 0:
     #dir_state = './Results/State_mesh2/'
     #dir_state = './Results/State_mesh3/'
     #dir_state = './Results/State_mesh4/'
+
+    dir_state = '/home/ubuntu/dedalus/Results/State/'
 
 if VaryN == 1:
     if N2 == 0.09: 	RunName = 'StateN2_00_09'
@@ -231,14 +234,15 @@ if VaryN == 1:
             #RunName = RunName + '_k05n014x5'
             #RunName = RunName + '_k05n014'
         if SinglePoint == 1:
-            RunName = RunName + '_dt0.01_sp'
+            #RunName = RunName + '_dt0.01_sp'
             #RunName = RunName + '_dt0.005_sp'
+            RunName = RunName + '_sp'
         if Modulated == 1 and forced == 0 and SinglePoint == 0:
             RunName = RunName + '_R'
         if Linear ==1 : RunName = RunName + '_linear'
     #dir_state = './Results/' + RunName + '/'
-    dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
-
+    if ScaleDiffusion == 1: dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
+    if ScaleDiffusion == 0: dir_state = '/home/ubuntu/dedalus/Results/molecularDiffusion/' + RunName + '/'
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
@@ -255,13 +259,15 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 10
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: 
-        dt = 1e-1
+        if ScaleDiffusion==1: dt = 1e-1
+        if ScaleDiffusion==0: dt = 5e-1
     if SinglePoint==1: 
-        dt = 1e-2
+        if ScaleDiffusion==1: dt = 1e-2
+        if ScaleDiffusion==0: dt = 1e-3
     if MultiPoint==1: 
         dt = 8e-3
 
@@ -275,8 +281,8 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: 
-        dt2 = 0.2
-        #dt2 = dt
+        #dt2 = 0.2
+        dt2 = 1e-3
     if forced == 1: 
         dt2 = 0.2
         #dt2 = dt
@@ -284,14 +290,14 @@ elif SpectralAnalysis==1 and MeanFlowAnalysis==1 and CheckPSD2==0: dt2=1.
 elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     #dt2 = dt
-    dt2 = 0.1
+    #dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.02
     #dt2 = 0.04
     #dt2 = 0.08
     #dt2 = 0.16
-    #dt2 = 1.
+    dt2 = 1.
     #dt2 = 2.
     #dt2 = 5
 
@@ -302,9 +308,9 @@ Lz = 0.45
 
 #factor = 1./4
 #factor = 1./2
-factor = 1
+#factor = 1
 #factor = 2
-#factor = 4
+factor = 4
 Nx = 80
 Nz = 180
 Nx = int(Nx*factor)
@@ -785,7 +791,8 @@ if Density == 1:
         drho = (rhoMax-rhoMin)/(nlevs-1)
         clevels = np.arange(nlevs)*drho + rhoMin
 
-        xlim=(0,60)
+        #xlim=(0,60)
+        xlim=(0,10)
 
         if Modulated == 0: PlotTitle=r'$\rho$ (kg m$^{-3}$)'
         if Modulated == 1: PlotTitle = r'$\zeta$ (kg m$^{-3}$)'
@@ -815,7 +822,8 @@ if Density_2 == 1:
         drho = (rhoMax-rhoMin)/(nlevs-1)
         clevels = np.arange(nlevs)*drho + rhoMin
 
-        xlim=(0,np.max(t))
+        #xlim=(0,np.max(t))
+        xlim=(0,10)
 
         PlotTitle=r'$\rho$ (kg m$^{-3}$)'
 
@@ -1248,9 +1256,9 @@ if drhodz == 1:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
             colorvec = col1+col2
-        #xlim = (0,np.max(t))
+        xlim = (0,np.max(t))
         xlim = ((StartMin-1)*secPerFile,np.max(t))
-        #xlim = (0,60)
+        #xlim = (0,10)
 
 
 if dUdz == 1:
@@ -1580,35 +1588,40 @@ if TrackSteps == 1:
 
     tmp1 = np.zeros((Nt,Nx,Nz),dtype=bool)
     tmp2 = np.zeros((Nt))
-    tmp3 = np.zeros((Nt,50))
-    tmp4 = np.zeros((Nt,50))
-    tmp5 = np.zeros((Nt,50))
+    Nl = 200
+    tmp3 = np.zeros((Nt,Nl))
+    tmp4 = np.zeros((Nt,Nl))
+    tmp5 = np.zeros((Nt,Nl))
     if forced == 1:
         tmp6 = np.zeros((Nt))		#to compute d_dt(number of steps)
-        tmp7 = np.zeros((Nt,50))	#to compute d_dt(step depth)
-        tmp8 = np.zeros((Nt,50))	#to compute d_dt(mid step point)
+        tmp7 = np.zeros((Nt,Nl))	#to compute d_dt(step depth)
+        tmp8 = np.zeros((Nt,Nl))	#to compute d_dt(mid step point)
 
     if forced == 0:
-        #Exclude boundary layer effects:
-        if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
-        if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
-        if UseShear == 1: zIdx_offset = 0
+        if ScaleDiffusion == 1:
+            #Exclude boundary layer effects:
+            if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
+            if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
+            if UseShear == 1: zIdx_offset = 0
+        if ScaleDiffusion == 0:
+            zIdx_offset = int(.025/dz)
     if forced == 1: zIdx_offset = 0
 
-    #Automatically exclude initial chaos (depends on N2):
-    if FullFields == 1 and forced == 0:
-        i = 0
-        flag0=1
-        while flag0 == 1:
-            logical = Sz[i,:,0+zIdx_offset:Nz-zIdx_offset] > 0
-            if np.max(logical)==0:
-                tIdx_offset = i
-                offset_t = t[i]
-                flag0 = 0
-            i += 1
-        print("offset time: ", offset_t)
+    if ScaleDiffusion == 1:
+        #Automatically exclude initial chaos (depends on N2):
+        if FullFields == 1 and forced == 0:
+            i = 0
+            flag0=1
+            while flag0 == 1:
+                logical = Sz[i,:,0+zIdx_offset:Nz-zIdx_offset] > 0
+                if np.max(logical)==0:
+                    tIdx_offset = i
+                    offset_t = t[i]
+                    flag0 = 0
+                i += 1
+            print("offset time: ", offset_t)
 
-    if FullFields == 0 and forced == 0:
+    if FullFields == 0 and forced == 0 and ScaleDiffusion==1:
         if N2 == 0.25:		offset_t = 19.
         if N2 == 1:		offset_t = 8.8
         if N2 == 2.25:		offset_t = 6.7
@@ -1625,27 +1638,28 @@ if TrackSteps == 1:
         tIdx_offset = int(offset_t/dt2)
         print("offset time: ", offset_t)
 
-    #Deprecated code for manually choosing start time for search:
-    #if N2 == 0.09: tIdx_offset = int(30./dt2)
-    #if N2 == 0.25: tIdx_offset = int(20./dt2)
-    #if N2 == 1: tIdx_offset = int(10./dt2)
-    #if N2 == 2.25: tIdx_offset = int(7./dt2)
-    #if N2 == 3.83 or N2 == 4: tIdx_offset = int(6./dt2)
-    #if N2 == 6.25: tIdx_offset = int(6./dt2)
-    #if N2 == 9: tIdx_offset = int(3./dt2)
-    #if N2 == 12.25: tIdx_offset = int(3./dt2)
-    #if N2 == 16: tIdx_offset = int(2./dt2)
-    #if N2 == 20.25: tIdx_offset = int(1.5/dt2)
-    #if N2 == 25: tIdx_offset = int(1./dt2)
-    #tIdx_offset = 0
+    if ScaleDiffusion==0:
+        #if N2 == 0.09: tIdx_offset = int(30./dt2)
+        #if N2 == 0.25: tIdx_offset = int(20./dt2)
+        #if N2 == 1: tIdx_offset = int(10./dt2)
+        if N2 == 2.25: tIdx_offset = int(60./dt2)
+        #if N2 == 3.83 or N2 == 4: tIdx_offset = int(6./dt2)
+        #if N2 == 6.25: tIdx_offset = int(6./dt2)
+        if N2 == 9: tIdx_offset = int(60./dt2)
+        #if N2 == 12.25: tIdx_offset = int(3./dt2)
+        #if N2 == 16: tIdx_offset = int(2./dt2)
+        #if N2 == 20.25: tIdx_offset = int(1.5/dt2)
+        #if N2 == 25: tIdx_offset = int(1./dt2)
+        #tIdx_offset = 0
 
     if forced == 1: tIdx_offset = 0
 
     if UseShear == 0: 
         #epsilon = -np.min(data)
+        if FullFields == 1: epsilon = bs*0.0001
         #if FullFields == 1: epsilon = bs*0.9
         #if FullFields == 1: epsilon = bs*0.95
-        if FullFields == 1: epsilon = bs*0.98
+        #if FullFields == 1: epsilon = bs*0.98
         if FullFields == 0: epsilon = 0.1
     if UseShear == 1:
         print(np.max(abs(data))) 
@@ -1664,13 +1678,13 @@ if TrackSteps == 1:
         for tt in range(0,Nt):        
             for ii in range(0,Nx):
                 for jj in range(0+zIdx_offset,Nz-zIdx_offset):
-                    if forced == 0: logical0 = (data[tt,ii,jj] <= 0) or UseShear==1
-                    if forced == 1: logical0 = True
+                    if forced == 0 and ScaleDiffusion==1: logical0 = (data[tt,ii,jj] <= 0) or UseShear==1
+                    if forced == 1 or ScaleDiffusion==0: logical0 = True
                     if logical0:
-                        if forced == 0: 
+                        if forced == 0 and ScaleDiffusion==1: 
                             if UseShear == 0: logical1 = abs(data[tt,ii,jj]) <= epsilon
                             if UseShear == 1: logical1 = abs(data[tt,ii,jj]) >= epsilon
-                        if forced == 1: logical1 = abs(data[tt,ii,jj]) <= epsilon or data[tt,ii,jj] > 0
+                        if forced == 1 or ScaleDiffusion==0: logical1 = abs(data[tt,ii,jj]) <= epsilon or data[tt,ii,jj] > 0
                         
                         if logical1 == True: 
                             tmp1[tt,ii,jj] = True
@@ -1753,12 +1767,17 @@ if TrackSteps == 1:
 
     if w2f_analysis == 1:
         if Gusto == 0:
-            #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.9bs/'
+            if FullFields == 1: 
+                if ScaleDiffusion == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.9bs/'
+                if ScaleDiffusion == 0: dir_TrackSteps = './Results/' + 'molecularDiffusion/' + RunName + '/TrackSteps_0.9bs/'
             #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.95bs/'
-            if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.98bs/'
-            if FullFields == 0: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
+            #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.98bs/'
+            if FullFields == 0: 
+                if ScaleDiffusion == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
+                if ScaleDiffusion == 0: dir_TrackSteps = './Results/' + 'molecularDiffusion/' + RunName + '/TrackSteps2/'
         if Gusto == 1:
-            dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
+            if ScaleDiffusion == 1: dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
+            if ScaleDiffusion == 0: dir_TrackSteps =  './Results/' + 'molecularDiffusion/' + RunName + '_gusto' + '/TrackSteps/'
         #Create directory if it doesn't exist:
         if not os.path.exists(dir_TrackSteps):
             os.makedirs(dir_TrackSteps)
@@ -1809,7 +1828,8 @@ if TrackSteps == 1:
 
         #plt.show()
         FigNmBase = 'TrackSteps'
-        plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.png') 
+        if ScaleDiffusion == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps') 
+        if ScaleDiffusion == 0: plt.savefig('./molecularDiffusion/' + FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps') 
 
 
 if TrackInterfaces == 1:
@@ -2541,8 +2561,8 @@ if SpectralAnalysis == 1:
         if Modulated == 1: data = S_r
     if AnalyseRho == 1:
         fnmVar = 'Rho'
-        #if Modulated == 0: data = rho
-        if Modulated == 0: data = rho2
+        if Modulated == 0: data = rho
+        #if Modulated == 0: data = rho2
         if Modulated == 1: data = rho_r
     if AnalysePsi == 1:
         fnmVar = 'Psi'
@@ -2565,10 +2585,17 @@ if SpectralAnalysis == 1:
         if AnalyseLayerCreation==1:
             data = data[0:t_offset_vec[idx]]
 
+    
+    Welch = 0
+    if Welch == 1:
+        spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
+        npersegStr = str(nperseg)
+    else:
+        window = tukey(len(data[:,0,0]), alpha=0.05)
+        freqvec, spectralCoef = periodogram(data, fs=1./dt2, axis=0, return_onesided=True, detrend=False, window=window)
 
-    Welch = 1
-    spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
-    npersegStr = str(nperseg)
+    print(freqvec.shape)
+    print(spectralCoef.shape)
 
     #print('analysis timestep: ', dt2)
     #print('frequency resolution: ', np.min(freqvec[1:]))
@@ -2641,7 +2668,8 @@ if SpectralAnalysis == 1:
 
             xgrid = freqvec*(2*np.pi)
             xlim = (0,5)
-            ylim = (1e-18,1e+0)
+            if ScaleDiffusion == 1: ylim = (1e-18,1e+0)
+            if ScaleDiffusion == 0: ylim = (1e-6,1e+5)
             xlabel = r'$\omega$ (rad/s)'
             if Modulated == 0: ylabel = r'PSD ([$\rho$]$^2$/(rad/s))'
             if Modulated == 1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
@@ -3469,11 +3497,12 @@ if MakePlot >= 1:
 
         if w2f_analysis == 0: plt.show()
         if w2f_analysis == 1:
-            if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.png')
-            if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.png')
-            if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.png')
-            if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.png')
-            if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.png')
+            if ScaleDiffusion == 0: FigNmBase = './molecularDiffusion/' + FigNmBase
+            if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.eps')
+            if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.eps')
+            if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.eps')
+            if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.eps')
+            if PlotT==1 and SpectralAnalysis==1: plt.savefig(FigNmBase + RunName + '_f' + '.eps')
             plt.close(fig)
 
     if MakeMovie == 1:
@@ -3549,7 +3578,7 @@ if MakePlot >= 1:
                     ax2.set_xlabel(r'$t$ (s)')
                     ax2.set_title(PlotTitle2)
 
-            FigNm = FigNmBase + '_' + str("%04d" % tt) + '.png'
+            FigNm = FigNmBase + '_' + str("%04d" % tt) + '.eps'
             if NoPlotLabels == 0: fig.savefig(FigPath+FigNm)
             if NoPlotLabels == 1: fig.savefig(FigPath+FigNm, bbox_inches = 'tight', pad_inches = 0)
             plt.close(fig)

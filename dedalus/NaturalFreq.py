@@ -42,7 +42,7 @@ ProblemType			= 'Layers'
 ParkRun 			= -1
 if len(sys.argv) <= 2:
     #N2				= 1
-    N2				= 2.25
+    #N2				= 2.25
     #N2				= 4
     #N2				= 6.25
     #N2				= 7.5625
@@ -50,7 +50,7 @@ if len(sys.argv) <= 2:
     #N2				= 10.5625 
     #N2				= 12.25 
     #N2				= 14.0625
-    #N2				= 16
+    N2				= 16
     #N2				= 20.25
     #N2				= 25
 
@@ -93,7 +93,7 @@ listOmega			= 0
 listOmegaGrad			= 0
 listOmegaPhaseSpace		= 0
 IntegrateCapOmega		= 1
-PlotWeightFnc			= 1
+PlotWeightFnc			= 0
 
 contourOmega			= 0
 PlotMainTriads                  = 0
@@ -132,7 +132,7 @@ ComputeCumulativeDistFnc	= 0
 InteractionCoef			= 1
 PlotInteractCoef		= 0
 SigmaSigma			= 1
-PlotSigmaSigma			= 1
+PlotSigmaSigma			= 0
 CombineSigmaSigmaWithC 		= 1
 FrequencyAve			= 1
 SubSums				= 1
@@ -142,8 +142,8 @@ PlotCDFsVsN			= 0
 
 MakePlot			= 1
 PlotXZ				= 0
-PlotTZ				= 0
-PlotT				= 1
+PlotTZ				= 1
+PlotT				= 0
 Plot3D 				= 0
 
 if N2 == 0.25: RunName = 'StateN2_00_25'
@@ -292,10 +292,10 @@ kk[int(Nx/2.)+1:] = kkx_neg
 kk_cosine = z_basis.wavenumbers
 
 #Check wavenumbers:
-plt.figure()
-plt.plot(kk)
-plt.plot([0,Nx],[0,0])
-plt.savefig('grid_k.eps')
+#plt.figure()
+#plt.plot(kk)
+#plt.plot([0,Nx],[0,0])
+#plt.savefig('grid_k.eps')
 #print(kk)
 #pdb.set_trace()
 #plt.plot(kk_cosine)
@@ -544,10 +544,17 @@ def smooth(x,window_len=11,window='hanning'):
 
 
 if PlotCDFsVsN == 1:
+
+    exploitAlphaSymmetry = 0
+
     Nvec = np.array([1.,1.5,2,2.5,2.75,3,3.25,3.5,3.75,4,4.5,5])
 
     #baseDir = './contributions/'
-    baseDir = './contributions_check/'
+    #baseDir = './contributions_check/'
+    baseDir = './contributions_v2/'
+    #baseDir = './contributions_v3/'
+    #baseDir = './contributions_v4/'
+    #baseDir = './contributions_v5/'
 
     win0 = 0
     win1 = 1
@@ -556,7 +563,7 @@ if PlotCDFsVsN == 1:
     win4 = 0
     win5 = 1
 
-    def read_data(windowName,OmegaLimit1):
+    def read_data(windowName,OmegaLimit1,tot=None,tot_abs=None):
 
         #Read in data:
         BasisTag1 = 'k0'
@@ -574,7 +581,7 @@ if PlotCDFsVsN == 1:
         MF_k0_int = np.array([complex(item) for item in MF_k0_int.split()])
         both_k0_int = np.array([complex(item) for item in both_k0_int.split()])
 
-        print(IGW_k0, MF_k0, both_k0)
+        #print(IGW_k0, MF_k0, both_k0)
 
         BasisTag1 = 'knot0'
         IGW_knot0 = open(baseDir + 'IGW_' + BasisTag1 + '_' + str(OmegaLimit1) + '_' + windowName + '.txt', "r").read()
@@ -591,7 +598,7 @@ if PlotCDFsVsN == 1:
         MF_knot0_int = np.array([complex(item) for item in MF_knot0_int.split()])
         both_knot0_int = np.array([complex(item) for item in both_knot0_int.split()])
 
-        print(IGW_knot0, MF_knot0, both_knot0)
+        #print(IGW_knot0, MF_knot0, both_knot0)
 
         #IGW_k0         = np.real(IGW_k0)
         #MF_k0          = np.real(MF_k0)
@@ -601,13 +608,18 @@ if PlotCDFsVsN == 1:
         #MF_knot0       = np.real(MF_knot0)
         #both_knot0     = np.real(both_knot0)
 
+        if exploitAlphaSymmetry == 1:
+            #Multiply k0 values by 2:
+            IGW_k0         = IGW_k0*2
+            MF_k0          = MF_k0*2
+            both_k0        = both_k0*2
+
         IGW            = np.add(IGW_k0,IGW_knot0)
         MF             = np.add(MF_k0,MF_knot0)
         both           = np.add(both_k0,both_knot0)
-        tot            = np.add(np.add(IGW,MF),both)
+        if tot is None: tot = np.add(np.add(IGW,MF),both)
 
         #find contributions from k=0 and k!=0 sets for mean flow, IGW and coupled bandwidths:
-        #for CapOmega limit 0.01
         C_IGW_k0 = np.divide(IGW_k0,tot)
         C_MF_k0 = np.divide(MF_k0,tot)
         C_both_k0 = np.divide(both_k0,tot)
@@ -616,7 +628,6 @@ if PlotCDFsVsN == 1:
         C_both_knot0 = np.divide(both_knot0,tot)
 
         #totals contributions from mean flow, IGW and coupled bandwidths:
-        #for CapOmega limit 0.01
         C_IGW = np.divide(IGW,tot)
         C_MF = np.divide(MF,tot)
         C_both = np.divide(both,tot)
@@ -625,7 +636,7 @@ if PlotCDFsVsN == 1:
         IGW_abs        		= np.abs(np.add(IGW_k0,IGW_knot0))
         MF_abs         		= np.abs(np.add(MF_k0,MF_knot0))
         both_abs       		= np.abs(np.add(both_k0,both_knot0))
-        tot_abs        		= np.add(np.add(IGW_abs,MF_abs),both_abs)
+        if tot_abs is None: tot_abs = np.add(np.add(IGW_abs,MF_abs),both_abs)
 
         C_IGW_k0_abs 		= np.divide(np.abs(IGW_k0),tot_abs)
         C_MF_k0_abs 		= np.divide(np.abs(MF_k0),tot_abs)
@@ -638,13 +649,35 @@ if PlotCDFsVsN == 1:
         C_MF_abs       		= np.divide(MF_abs,tot_abs)
         C_both_abs     		= np.divide(both_abs,tot_abs)
 
-        print(C_IGW, C_MF, C_both)
-        print(C_IGW_abs, C_MF_abs, C_both_abs)
-        print(' ')
+        #print(C_IGW, C_MF, C_both)
+        #print(C_IGW_abs, C_MF_abs, C_both_abs)
+        #print(' ')
  
         return C_IGW, C_MF, C_both, C_IGW_k0, C_MF_k0, C_both_k0, C_IGW_knot0, C_MF_knot0, C_both_knot0,\
                C_IGW_abs, C_MF_abs, C_both_abs, C_IGW_k0_abs, C_MF_k0_abs, C_both_k0_abs, C_IGW_knot0_abs, C_MF_knot0_abs, C_both_knot0_abs,\
-               IGW, MF, both
+               IGW, MF, both, IGW_k0, IGW_knot0, MF_k0, MF_knot0, both_k0, both_knot0
+
+
+
+
+    #compute total contribution for window 3 and capOmega1 to compare against
+    C_IGW_10_3, C_MF_10_3, C_both_10_3,\
+    C_IGW_k0_10_3, C_MF_k0_10_3, C_both_k0_10_3,\
+    C_IGW_knot0_10_3, C_MF_knot0_10_3, C_both_knot0_10_3,\
+    C_IGW_abs_10_3, C_MF_abs_10_3, C_both_abs_10_3,\
+    C_IGW_k0_abs_10_3, C_MF_k0_abs_10_3, C_both_k0_abs_10_3,\
+    C_IGW_knot0_abs_10_3, C_MF_knot0_abs_10_3, C_both_knot0_abs_10_3, IGW_10_3, MF_10_3, both_10_3,\
+    IGW_k0_10_3, IGW_knot0_10_3, MF_k0_10_3, MF_knot0_10_3, both_k0_10_3, both_knot0_10_3 = read_data('window3', 1.0)
+ 
+    tot 	= np.add(np.add(IGW_10_3,MF_10_3),both_10_3)
+
+    IGW_abs	= np.abs(np.add(IGW_k0_10_3,IGW_knot0_10_3))
+    MF_abs   	= np.abs(np.add(MF_k0_10_3,MF_knot0_10_3))
+    both_abs  	= np.abs(np.add(both_k0_10_3,both_knot0_10_3))
+    tot_abs 	= np.add(np.add(IGW_abs,MF_abs),both_abs)    
+
+    #tot		= None
+    #tot_abs	= None
 
     if win0 == 1:
         C_IGW_01_0, C_MF_01_0, C_both_01_0,\
@@ -652,51 +685,54 @@ if PlotCDFsVsN == 1:
         C_IGW_knot0_01_0, C_MF_knot0_01_0, C_both_knot0_01_0,\
         C_IGW_abs_01_0, C_MF_abs_01_0, C_both_abs_01_0,\
         C_IGW_k0_abs_01_0, C_MF_k0_abs_01_0, C_both_k0_abs_01_0,\
-        C_IGW_knot0_abs_01_0, C_MF_knot0_abs_01_0, C_both_knot0_abs_01_0, IGW_01_0, MF_01_0, both_01_0 = read_data('window0', 0.01)
+        C_IGW_knot0_abs_01_0, C_MF_knot0_abs_01_0, C_both_knot0_abs_01_0, IGW_01_0, MF_01_0, both_01_0,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window0', 0.01, tot, tot_abs)
 
     if win1 == 1:
-        C_IGW_01_1, C_MF_01_1, C_both_01_1,\
-        C_IGW_k0_01_1, C_MF_k0_01_1, C_both_k0_01_1,\
-        C_IGW_knot0_01_1, C_MF_knot0_01_1, C_both_knot0_01_1,\
-        C_IGW_abs_01_1, C_MF_abs_01_1, C_both_abs_01_1,\
-        C_IGW_k0_abs_01_1, C_MF_k0_abs_01_1, C_both_k0_abs_01_1,\
-        C_IGW_knot0_abs_01_1, C_MF_knot0_abs_01_1, C_both_knot0_abs_01_1, IGW_01_1, MF_01_1, both_01_1 = read_data('window1', 0.01)
+        #C_IGW_01_1, C_MF_01_1, C_both_01_1,\
+        #C_IGW_k0_01_1, C_MF_k0_01_1, C_both_k0_01_1,\
+        #C_IGW_knot0_01_1, C_MF_knot0_01_1, C_both_knot0_01_1,\
+        #C_IGW_abs_01_1, C_MF_abs_01_1, C_both_abs_01_1,\
+        #C_IGW_k0_abs_01_1, C_MF_k0_abs_01_1, C_both_k0_abs_01_1,\
+        #C_IGW_knot0_abs_01_1, C_MF_knot0_abs_01_1, C_both_knot0_abs_01_1, IGW_01_1, MF_01_1, both_01_1 = read_data('window1', 0.01, tot, tot_abs)
 
-        C_IGW_1_1, C_MF_1_1, C_both_1_1,\
-        C_IGW_k0_1_1, C_MF_k0_1_1, C_both_k0_1_1,\
-        C_IGW_knot0_1_1, C_MF_knot0_1_1, C_both_knot0_1_1,\
-        C_IGW_abs_1_1, C_MF_abs_1_1, C_both_abs_1_1,\
-        C_IGW_k0_abs_1_1, C_MF_k0_abs_1_1, C_both_k0_abs_1_1,\
-        C_IGW_knot0_abs_1_1, C_MF_knot0_abs_1_1, C_both_knot0_abs_1_1, IGW_1_1, MF_1_1, both_1_1 = read_data('window1', 0.1)
+        #C_IGW_1_1, C_MF_1_1, C_both_1_1,\
+        #C_IGW_k0_1_1, C_MF_k0_1_1, C_both_k0_1_1,\
+        #C_IGW_knot0_1_1, C_MF_knot0_1_1, C_both_knot0_1_1,\
+        #C_IGW_abs_1_1, C_MF_abs_1_1, C_both_abs_1_1,\
+        #C_IGW_k0_abs_1_1, C_MF_k0_abs_1_1, C_both_k0_abs_1_1,\
+        #C_IGW_knot0_abs_1_1, C_MF_knot0_abs_1_1, C_both_knot0_abs_1_1, IGW_1_1, MF_1_1, both_1_1 = read_data('window1', 0.1, tot, tot_abs)
 
         C_IGW_10_1, C_MF_10_1, C_both_10_1,\
         C_IGW_k0_10_1, C_MF_k0_10_1, C_both_k0_10_1,\
         C_IGW_knot0_10_1, C_MF_knot0_10_1, C_both_knot0_10_1,\
         C_IGW_abs_10_1, C_MF_abs_10_1, C_both_abs_10_1,\
         C_IGW_k0_abs_10_1, C_MF_k0_abs_10_1, C_both_k0_abs_10_1,\
-        C_IGW_knot0_abs_10_1, C_MF_knot0_abs_10_1, C_both_knot0_abs_10_1, IGW_10_1, MF_10_1, both_10_1 = read_data('window1', 1.0)
+        C_IGW_knot0_abs_10_1, C_MF_knot0_abs_10_1, C_both_knot0_abs_10_1, IGW_10_1, MF_10_1, both_10_1,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window1', 1.0, tot, tot_abs)
 
     if win2 == 1:
-        C_IGW_01_2, C_MF_01_2, C_both_01_2,\
-        C_IGW_k0_01_2, C_MF_k0_01_2, C_both_k0_01_2,\
-        C_IGW_knot0_01_2, C_MF_knot0_01_2, C_both_knot0_01_2,\
-        C_IGW_abs_01_2, C_MF_abs_01_2, C_both_abs_01_2,\
-        C_IGW_k0_abs_01_2, C_MF_k0_abs_01_2, C_both_k0_abs_01_2,\
-        C_IGW_knot0_abs_01_2, C_MF_knot0_abs_01_2, C_both_knot0_abs_01_2, IGW_01_2, MF_01_2, both_01_2 = read_data('window2', 0.01)
+        #C_IGW_01_2, C_MF_01_2, C_both_01_2,\
+        #C_IGW_k0_01_2, C_MF_k0_01_2, C_both_k0_01_2,\
+        #C_IGW_knot0_01_2, C_MF_knot0_01_2, C_both_knot0_01_2,\
+        #C_IGW_abs_01_2, C_MF_abs_01_2, C_both_abs_01_2,\
+        #C_IGW_k0_abs_01_2, C_MF_k0_abs_01_2, C_both_k0_abs_01_2,\
+        #C_IGW_knot0_abs_01_2, C_MF_knot0_abs_01_2, C_both_knot0_abs_01_2, IGW_01_2, MF_01_2, both_01_2 = read_data('window2', 0.01, tot, tot_abs)
 
-        C_IGW_1_2, C_MF_1_2, C_both_1_2,\
-        C_IGW_k0_1_2, C_MF_k0_1_2, C_both_k0_1_2,\
-        C_IGW_knot0_1_2, C_MF_knot0_1_2, C_both_knot0_1_2,\
-        C_IGW_abs_1_2, C_MF_abs_1_2, C_both_abs_1_2,\
-        C_IGW_k0_abs_1_2, C_MF_k0_abs_1_2, C_both_k0_abs_1_2,\
-        C_IGW_knot0_abs_1_2, C_MF_knot0_abs_1_2, C_both_knot0_abs_1_2, IGW_1_2, MF_1_2, both_1_2 = read_data('window2', 0.1)
+        #C_IGW_1_2, C_MF_1_2, C_both_1_2,\
+        #C_IGW_k0_1_2, C_MF_k0_1_2, C_both_k0_1_2,\
+        #C_IGW_knot0_1_2, C_MF_knot0_1_2, C_both_knot0_1_2,\
+        #C_IGW_abs_1_2, C_MF_abs_1_2, C_both_abs_1_2,\
+        #C_IGW_k0_abs_1_2, C_MF_k0_abs_1_2, C_both_k0_abs_1_2,\
+        #C_IGW_knot0_abs_1_2, C_MF_knot0_abs_1_2, C_both_knot0_abs_1_2, IGW_1_2, MF_1_2, both_1_2 = read_data('window2', 0.1, tot, tot_abs)
 
         C_IGW_10_2, C_MF_10_2, C_both_10_2,\
         C_IGW_k0_10_2, C_MF_k0_10_2, C_both_k0_10_2,\
-        C_IGW_knot0_10_2, C_MF_knot0_1_2, C_both_knot0_10_2,\
+        C_IGW_knot0_10_2, C_MF_knot0_10_2, C_both_knot0_10_2,\
         C_IGW_abs_10_2, C_MF_abs_10_2, C_both_abs_10_2,\
         C_IGW_k0_abs_10_2, C_MF_k0_abs_10_2, C_both_k0_abs_10_2,\
-        C_IGW_knot0_abs_10_2, C_MF_knot0_abs_10_2, C_both_knot0_abs_10_2, IGW_10_2, MF_10_2, both_10_2 = read_data('window2', 1.0)
+        C_IGW_knot0_abs_10_2, C_MF_knot0_abs_10_2, C_both_knot0_abs_10_2, IGW_10_2, MF_10_2, both_10_2,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window2', 1.0, tot, tot_abs)
 
     if win3 == 1:
         C_IGW_0_3, C_MF_0_3, C_both_0_3,\
@@ -704,42 +740,48 @@ if PlotCDFsVsN == 1:
         C_IGW_knot0_0_3, C_MF_knot0_0_3, C_both_knot0_0_3,\
         C_IGW_abs_0_3, C_MF_abs_0_3, C_both_abs_0_3,\
         C_IGW_k0_abs_0_3, C_MF_k0_abs_0_3, C_both_k0_abs_0_3,\
-        C_IGW_knot0_abs_0_3, C_MF_knot0_abs_0_3, C_both_knot0_abs_0_3, IGW_0_3, MF_0_3, both_0_3 = read_data('window3', 0.0)
+        C_IGW_knot0_abs_0_3, C_MF_knot0_abs_0_3, C_both_knot0_abs_0_3, IGW_0_3, MF_0_3, both_0_3,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window3', 0.0, tot, tot_abs)
 
         C_IGW_001_3, C_MF_001_3, C_both_001_3,\
         C_IGW_k0_001_3, C_MF_k0_001_3, C_both_k0_001_3,\
         C_IGW_knot0_001_3, C_MF_knot0_001_3, C_both_knot0_001_3,\
         C_IGW_abs_001_3, C_MF_abs_001_3, C_both_abs_001_3,\
         C_IGW_k0_abs_001_3, C_MF_k0_abs_001_3, C_both_k0_abs_001_3,\
-        C_IGW_knot0_abs_001_3, C_MF_knot0_abs_001_3, C_both_knot0_abs_001_3, IGW_001_3, MF_001_3, both_001_3 = read_data('window3', 0.001)
+        C_IGW_knot0_abs_001_3, C_MF_knot0_abs_001_3, C_both_knot0_abs_001_3, IGW_001_3, MF_001_3, both_001_3,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window3', 0.001, tot, tot_abs)
 
         C_IGW_005_3, C_MF_005_3, C_both_005_3,\
         C_IGW_k0_005_3, C_MF_k0_005_3, C_both_k0_005_3,\
         C_IGW_knot0_005_3, C_MF_knot0_005_3, C_both_knot0_005_3,\
         C_IGW_abs_005_3, C_MF_abs_005_3, C_both_abs_005_3,\
         C_IGW_k0_abs_005_3, C_MF_k0_abs_005_3, C_both_k0_abs_005_3,\
-        C_IGW_knot0_abs_005_3, C_MF_knot0_abs_005_3, C_both_knot0_abs_005_3, IGW_005_3, MF_005_3, both_005_3 = read_data('window3', 0.005)
+        C_IGW_knot0_abs_005_3, C_MF_knot0_abs_005_3, C_both_knot0_abs_005_3, IGW_005_3, MF_005_3, both_005_3,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window3', 0.005, tot, tot_abs)
 
         C_IGW_01_3, C_MF_01_3, C_both_01_3,\
         C_IGW_k0_01_3, C_MF_k0_01_3, C_both_k0_01_3,\
         C_IGW_knot0_01_3, C_MF_knot0_01_3, C_both_knot0_01_3,\
         C_IGW_abs_01_3, C_MF_abs_01_3, C_both_abs_01_3,\
         C_IGW_k0_abs_01_3, C_MF_k0_abs_01_3, C_both_k0_abs_01_3,\
-        C_IGW_knot0_abs_01_3, C_MF_knot0_abs_01_3, C_both_knot0_abs_01_3, IGW_01_3, MF_01_3, both_01_3 = read_data('window3', 0.01)
+        C_IGW_knot0_abs_01_3, C_MF_knot0_abs_01_3, C_both_knot0_abs_01_3, IGW_01_3, MF_01_3, both_01_3,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window3', 0.01, tot, tot_abs)
 
         C_IGW_1_3, C_MF_1_3, C_both_1_3,\
         C_IGW_k0_1_3, C_MF_k0_1_3, C_both_k0_1_3,\
         C_IGW_knot0_1_3, C_MF_knot0_1_3, C_both_knot0_1_3,\
         C_IGW_abs_1_3, C_MF_abs_1_3, C_both_abs_1_3,\
         C_IGW_k0_abs_1_3, C_MF_k0_abs_1_3, C_both_k0_abs_1_3,\
-        C_IGW_knot0_abs_1_3, C_MF_knot0_abs_1_3, C_both_knot0_abs_1_3, IGW_1_3, MF_1_3, both_1_3 = read_data('window3', 0.1)
+        C_IGW_knot0_abs_1_3, C_MF_knot0_abs_1_3, C_both_knot0_abs_1_3, IGW_1_3, MF_1_3, both_1_3,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window3', 0.1, tot, tot_abs)
 
         C_IGW_10_3, C_MF_10_3, C_both_10_3,\
         C_IGW_k0_10_3, C_MF_k0_10_3, C_both_k0_10_3,\
         C_IGW_knot0_10_3, C_MF_knot0_10_3, C_both_knot0_10_3,\
         C_IGW_abs_10_3, C_MF_abs_10_3, C_both_abs_10_3,\
         C_IGW_k0_abs_10_3, C_MF_k0_abs_10_3, C_both_k0_abs_10_3,\
-        C_IGW_knot0_abs_10_3, C_MF_knot0_abs_10_3, C_both_knot0_abs_10_3, IGW_10_3, MF_10_3, both_10_3 = read_data('window3', 1.0)
+        C_IGW_knot0_abs_10_3, C_MF_knot0_abs_10_3, C_both_knot0_abs_10_3, IGW_10_3, MF_10_3, both_10_3,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window3', 1.0, tot, tot_abs)
 
     if win4 == 1:
         C_IGW_01_4, C_MF_01_4, C_both_01_4,\
@@ -747,7 +789,8 @@ if PlotCDFsVsN == 1:
         C_IGW_knot0_01_4, C_MF_knot0_01_4, C_both_knot0_01_4,\
         C_IGW_abs_01_4, C_MF_abs_01_4, C_both_abs_01_4,\
         C_IGW_k0_abs_01_4, C_MF_k0_abs_01_4, C_both_k0_abs_01_4,\
-        C_IGW_knot0_abs_01_4, C_MF_knot0_abs_01_4, C_both_knot0_abs_01_4, IGW_01_4, MF_01_4, both_01_4 = read_data('window4', 0.01)
+        C_IGW_knot0_abs_01_4, C_MF_knot0_abs_01_4, C_both_knot0_abs_01_4, IGW_01_4, MF_01_4, both_01_4,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window4', 0.01, tot, tot_abs)
 
     if win5 == 1:
         C_IGW_10_5, C_MF_10_5, C_both_10_5,\
@@ -755,49 +798,50 @@ if PlotCDFsVsN == 1:
         C_IGW_knot0_10_5, C_MF_knot0_10_5, C_both_knot0_10_5,\
         C_IGW_abs_10_5, C_MF_abs_10_5, C_both_abs_10_5,\
         C_IGW_k0_abs_10_5, C_MF_k0_abs_10_5, C_both_k0_abs_10_5,\
-        C_IGW_knot0_abs_10_5, C_MF_knot0_abs_10_5, C_both_knot0_abs_10_5, IGW_10_5, MF_10_5, both_10_5 = read_data('window5', 1.0)
+        C_IGW_knot0_abs_10_5, C_MF_knot0_abs_10_5, C_both_knot0_abs_10_5, IGW_10_5, MF_10_5, both_10_5,\
+        tmp, tmp, tmp, tmp, tmp, tmp = read_data('window5', 1.0, tot, tot_abs)
 
-        C_IGW_1_5, C_MF_1_5, C_both_1_5,\
-        C_IGW_k0_1_5, C_MF_k0_1_5, C_both_k0_1_5,\
-        C_IGW_knot0_1_5, C_MF_knot0_1_5, C_both_knot0_1_5,\
-        C_IGW_abs_1_5, C_MF_abs_1_5, C_both_abs_1_5,\
-        C_IGW_k0_abs_1_5, C_MF_k0_abs_1_5, C_both_k0_abs_1_5,\
-        C_IGW_knot0_abs_1_5, C_MF_knot0_abs_1_5, C_both_knot0_abs_1_5, IGW_1_5, MF_1_5, both_1_5 = read_data('window5', 0.1)
+        #C_IGW_1_5, C_MF_1_5, C_both_1_5,\
+        #C_IGW_k0_1_5, C_MF_k0_1_5, C_both_k0_1_5,\
+        #C_IGW_knot0_1_5, C_MF_knot0_1_5, C_both_knot0_1_5,\
+        #C_IGW_abs_1_5, C_MF_abs_1_5, C_both_abs_1_5,\
+        #C_IGW_k0_abs_1_5, C_MF_k0_abs_1_5, C_both_k0_abs_1_5,\
+        #C_IGW_knot0_abs_1_5, C_MF_knot0_abs_1_5, C_both_knot0_abs_1_5, IGW_1_5, MF_1_5, both_1_5 = read_data('window5', 0.1, tot, tot_abs)
 
-        C_IGW_01_5, C_MF_01_5, C_both_01_5,\
-        C_IGW_k0_01_5, C_MF_k0_01_5, C_both_k0_01_5,\
-        C_IGW_knot0_01_5, C_MF_knot0_01_5, C_both_knot0_01_5,\
-        C_IGW_abs_01_5, C_MF_abs_01_5, C_both_abs_01_5,\
-        C_IGW_k0_abs_01_5, C_MF_k0_abs_01_5, C_both_k0_abs_01_5,\
-        C_IGW_knot0_abs_01_5, C_MF_knot0_abs_01_5, C_both_knot0_abs_01_5, IGW_01_5, MF_01_5, both_01_5 = read_data('window5', 0.01)
+        #C_IGW_01_5, C_MF_01_5, C_both_01_5,\
+        #C_IGW_k0_01_5, C_MF_k0_01_5, C_both_k0_01_5,\
+        #C_IGW_knot0_01_5, C_MF_knot0_01_5, C_both_knot0_01_5,\
+        #C_IGW_abs_01_5, C_MF_abs_01_5, C_both_abs_01_5,\
+        #C_IGW_k0_abs_01_5, C_MF_k0_abs_01_5, C_both_k0_abs_01_5,\
+        #C_IGW_knot0_abs_01_5, C_MF_knot0_abs_01_5, C_both_knot0_abs_01_5, IGW_01_5, MF_01_5, both_01_5 = read_data('window5', 0.01, tot, tot_abs)
 
-        C_IGW_005_5, C_MF_005_5, C_both_005_5,\
-        C_IGW_k0_005_5, C_MF_k0_005_5, C_both_k0_005_5,\
-        C_IGW_knot0_005_5, C_MF_knot0_005_5, C_both_knot0_005_5,\
-        C_IGW_abs_005_5, C_MF_abs_005_5, C_both_abs_005_5,\
-        C_IGW_k0_abs_005_5, C_MF_k0_abs_005_5, C_both_k0_abs_005_5,\
-        C_IGW_knot0_abs_005_5, C_MF_knot0_abs_005_5, C_both_knot0_abs_005_5, IGW_005_5, MF_005_5, both_005_5 = read_data('window5', 0.005)
+        #C_IGW_005_5, C_MF_005_5, C_both_005_5,\
+        #C_IGW_k0_005_5, C_MF_k0_005_5, C_both_k0_005_5,\
+        #C_IGW_knot0_005_5, C_MF_knot0_005_5, C_both_knot0_005_5,\
+        #C_IGW_abs_005_5, C_MF_abs_005_5, C_both_abs_005_5,\
+        #C_IGW_k0_abs_005_5, C_MF_k0_abs_005_5, C_both_k0_abs_005_5,\
+        #C_IGW_knot0_abs_005_5, C_MF_knot0_abs_005_5, C_both_knot0_abs_005_5, IGW_005_5, MF_005_5, both_005_5 = read_data('window5', 0.005, tot, tot_abs)
 
-        C_IGW_001_5, C_MF_001_5, C_both_001_5,\
-        C_IGW_k0_001_5, C_MF_k0_001_5, C_both_k0_001_5,\
-        C_IGW_knot0_001_5, C_MF_knot0_001_5, C_both_knot0_001_5,\
-        C_IGW_abs_001_5, C_MF_abs_001_5, C_both_abs_001_5,\
-        C_IGW_k0_abs_001_5, C_MF_k0_abs_001_5, C_both_k0_abs_001_5,\
-        C_IGW_knot0_abs_001_5, C_MF_knot0_abs_001_5, C_both_knot0_abs_001_5, IGW_001_5, MF_001_5, both_001_5 = read_data('window5', 0.001)
+        #C_IGW_001_5, C_MF_001_5, C_both_001_5,\
+        #C_IGW_k0_001_5, C_MF_k0_001_5, C_both_k0_001_5,\
+        #C_IGW_knot0_001_5, C_MF_knot0_001_5, C_both_knot0_001_5,\
+        #C_IGW_abs_001_5, C_MF_abs_001_5, C_both_abs_001_5,\
+        #C_IGW_k0_abs_001_5, C_MF_k0_abs_001_5, C_both_k0_abs_001_5,\
+        #C_IGW_knot0_abs_001_5, C_MF_knot0_abs_001_5, C_both_knot0_abs_001_5, IGW_001_5, MF_001_5, both_001_5 = read_data('window5', 0.001, tot, tot_abs)
 
-        C_IGW_0_5, C_MF_0_5, C_both_0_5,\
-        C_IGW_k0_0_5, C_MF_k0_0_5, C_both_k0_0_5,\
-        C_IGW_knot0_0_5, C_MF_knot0_0_5, C_both_knot0_0_5,\
-        C_IGW_abs_0_5, C_MF_abs_0_5, C_both_abs_0_5,\
-        C_IGW_k0_abs_0_5, C_MF_k0_abs_0_5, C_both_k0_abs_0_5,\
-        C_IGW_knot0_abs_0_5, C_MF_knot0_abs_0_5, C_both_knot0_abs_0_5, IGW_0_5, MF_0_5, both_0_5 = read_data('window5', 0.0)
+        #C_IGW_0_5, C_MF_0_5, C_both_0_5,\
+        #C_IGW_k0_0_5, C_MF_k0_0_5, C_both_k0_0_5,\
+        #C_IGW_knot0_0_5, C_MF_knot0_0_5, C_both_knot0_0_5,\
+        #C_IGW_abs_0_5, C_MF_abs_0_5, C_both_abs_0_5,\
+        #C_IGW_k0_abs_0_5, C_MF_k0_abs_0_5, C_both_k0_abs_0_5,\
+        #C_IGW_knot0_abs_0_5, C_MF_knot0_abs_0_5, C_both_knot0_abs_0_5, IGW_0_5, MF_0_5, both_0_5 = read_data('window5', 0.0, tot, tot_abs)
 
 
     #plot results:
     symsize_vec_k0 = (np.array([8,8,8,8,8,8,8,8,8]))**2
     symsize_vec_knot0 = (np.array([8,8,8,8,8,8,8,8,8]))**2
 
-    method1=0
+    method1 = 0
     if method1 == 1:
         fig = plt.figure(1, figsize=(width,height))
         fig.set_tight_layout(True)
@@ -862,90 +906,92 @@ if PlotCDFsVsN == 1:
     method2 = 1
     if method2 == 1:
 
-        print('Look at absolute magnitudes:')
+        AbsPlots = 0
+        if AbsPlots == 1:
+            print('Look at absolute magnitudes:')
 
-        fig = plt.figure(1, figsize=(width*1.5,height))
-        fig.set_tight_layout(True)
-        grid = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
-        ax1 = fig.add_subplot(grid[0,0])
+            fig = plt.figure(1, figsize=(width*1.5,height))
+            fig.set_tight_layout(True)
+            grid = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
+            ax1 = fig.add_subplot(grid[0,0])
 
-        idxE = len(N_vec)
+            idxE = len(N_vec)
 
-        #plot IGW results:
-        #for CapOmega limit 0
-        ax1.plot(Nvec, C_IGW_abs_0_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5)
-        #for CapOmega limit 0.001
-        ax1.plot(Nvec, C_IGW_abs_001_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
-        #for CapOmega limit 0.005
-        ax1.plot(Nvec, C_IGW_abs_005_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
-        #for CapOmega limit 0.01
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_01_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=3)
-        #for CapOmega limit 0.1
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_1_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
-        #for CapOmega limit 1.
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
+            #plot IGW results:
+            #for CapOmega limit 0
+            ax1.plot(Nvec, C_IGW_abs_0_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5)
+            #for CapOmega limit 0.001
+            ax1.plot(Nvec, C_IGW_abs_001_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+            #for CapOmega limit 0.005
+            ax1.plot(Nvec, C_IGW_abs_005_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+            #for CapOmega limit 0.01
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_01_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=3)
+            #for CapOmega limit 0.1
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_1_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
+            #for CapOmega limit 1.
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_10_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
 
-        ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
-        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax1.set_ylabel(r'Relative contribution')
-        #ax1.set_xlim(0,6)
-        ax1.set_ylim(-1,1)
-        ax1.legend(frameon=False, loc=1, handlelength=3)
+            #ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+            ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
+            ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax1.set_ylabel(r'Relative contribution')
+            #ax1.set_xlim(0,6)
+            ax1.set_ylim(-1,1)
+            ax1.legend(frameon=False, loc=1, handlelength=3)
 
-        #plot mean flow results:
-        ax2 = fig.add_subplot(grid[0,1])
-        #for CapOmega limit 0
-        ax2.plot(Nvec, C_MF_abs_0_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5)
-        #for CapOmega limit 0.001
-        ax2.plot(Nvec, C_MF_abs_001_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
-        #for CapOmega limit 0.005
-        ax2.plot(Nvec, C_MF_abs_005_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
-        #for CapOmega limit 0.01
-        ax2.plot(Nvec[0:idxE], C_MF_abs_01_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=3)
-        #for CapOmega limit 0.1
-        ax2.plot(Nvec[0:idxE], C_MF_abs_1_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
-        #for CapOmega limit 1.
-        ax2.plot(Nvec[0:idxE], C_MF_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
+            #plot mean flow results:
+            ax2 = fig.add_subplot(grid[0,1])
+            #for CapOmega limit 0
+            ax2.plot(Nvec, C_MF_abs_0_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5)
+            #for CapOmega limit 0.001
+            ax2.plot(Nvec, C_MF_abs_001_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+            #for CapOmega limit 0.005
+            ax2.plot(Nvec, C_MF_abs_005_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+            #for CapOmega limit 0.01
+            ax2.plot(Nvec[0:idxE], C_MF_abs_01_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=3)
+            #for CapOmega limit 0.1
+            ax2.plot(Nvec[0:idxE], C_MF_abs_1_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
+            #for CapOmega limit 1.
+            ax2.plot(Nvec[0:idxE], C_MF_abs_10_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=4)
 
-        ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
-        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        #ax2.set_ylabel(r'Contribution to solution (%)')
-        #ax2.set_xlim(0,6)
-        ax2.set_ylim(-1,1)
-        ax2.legend(frameon=False, loc=1)
+            #ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+            ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
+            ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            #ax2.set_ylabel(r'Contribution to solution (%)')
+            #ax2.set_xlim(0,6)
+            ax2.set_ylim(-1,1)
+            ax2.legend(frameon=False, loc=1)
 
-        #plot coupled results:
-        ax3 = fig.add_subplot(grid[0,2])
-        #for CapOmega limit 0
-        ax3.plot(Nvec, C_both_abs_0_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
-        #for CapOmega limit 0.001
-        ax3.plot(Nvec, C_both_abs_001_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$|\Omega|\leq 1\mathrm{E}{-3}$')
-        #for CapOmega limit 0.005
-        ax3.plot(Nvec, C_both_abs_005_5, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$|\Omega|\leq 5\mathrm{E}{-3}$')
-        #for CapOmega limit 0.01
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=3, label=r'$|\Omega|\leq 1\mathrm{E}{-2}$')
-        #for CapOmega limit 0.1
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1\mathrm{E}{-1}$')
-        #for CapOmega limit 1.
-        ax3.plot(Nvec[0:idxE], C_both_abs_10_5, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1$')
+            #plot coupled results:
+            ax3 = fig.add_subplot(grid[0,2])
+            #for CapOmega limit 0
+            ax3.plot(Nvec, C_both_abs_0_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=0.5, label=r'$|\Omega|=0$')
+            #for CapOmega limit 0.001
+            ax3.plot(Nvec, C_both_abs_001_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$|\Omega|\leq 1\mathrm{E}{-3}$')
+            #for CapOmega limit 0.005
+            ax3.plot(Nvec, C_both_abs_005_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$|\Omega|\leq 5\mathrm{E}{-3}$')
+            #for CapOmega limit 0.01
+            ax3.plot(Nvec[0:idxE], C_both_abs_01_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=3, label=r'$|\Omega|\leq 1\mathrm{E}{-2}$')
+            #for CapOmega limit 0.1
+            ax3.plot(Nvec[0:idxE], C_both_abs_1_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1\mathrm{E}{-1}$')
+            #for CapOmega limit 1.
+            ax3.plot(Nvec[0:idxE], C_both_abs_10_3, linestyle='-', marker='.', markersize=10, color='k', linewidth=4, label=r'$|\Omega|\leq 1$')
 
-        ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
-        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
-        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        #ax3.set_ylabel(r'Contribution to solution (%)')
-        #ax3.set_xlim(0,6)
-        ax3.set_ylim(-1,1)
-        ax3.legend(frameon=False, loc=4)
+            #ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+            ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
+            ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            #ax3.set_ylabel(r'Contribution to solution (%)')
+            #ax3.set_xlim(0,6)
+            ax3.set_ylim(-1,1)
+            ax3.legend(frameon=False, loc=4)
 
-        plt.show()
-        #pdb.set_trace()
+            plt.show()
+            #pdb.set_trace()
 
 
         #Look at Real parts:
         print('Real parts')
-        fig = plt.figure(1, figsize=(width*1.5,height))
+        fig = plt.figure(2, figsize=(width*1.5,height))
         fig.set_tight_layout(True)
         grid = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
         ax1 = fig.add_subplot(grid[0,0])
@@ -970,12 +1016,13 @@ if PlotCDFsVsN == 1:
         #k not 0 case:
         ax1.plot(Nvec[0:idxE], C_IGW_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
-        ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+        #ax1.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
         ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
         ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_ylabel(r'Relative contribution')
         #ax1.set_xlim(0,6)
-        ax1.set_ylim(-.25,1.5)
+        #ax1.set_ylim(-.25,1.5)
+        ax1.set_ylim(-0.5,1.5)
 
         #plot mean flow results:
         ax2 = fig.add_subplot(grid[0,1])
@@ -996,12 +1043,13 @@ if PlotCDFsVsN == 1:
         #k not 0 case:
         ax2.plot(Nvec[0:idxE], C_MF_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
 
-        ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+        #ax2.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
         ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
         ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax2.set_ylabel(r'Contribution to solution (%)')
         #ax2.set_xlim(0,6)
-        ax2.set_ylim(-.25,1.5)
+        #ax2.set_ylim(-.25,1.5)
+        ax2.set_ylim(-0.5,1.5)
         ax2.legend(frameon=False, loc=1, labelspacing=0.05)
 
         #plot coupled results:
@@ -1023,14 +1071,16 @@ if PlotCDFsVsN == 1:
         #k not 0 case:
         ax3.plot(Nvec[0:idxE], C_both_knot0_01_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
 
-        ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
+        #ax3.plot([0,5],[0,0], linestyle='-',color='silver', linewidth=1)
         ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
         ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         #ax3.set_xlim(0,6)
-        ax3.set_ylim(-.25,1.5)
+        #ax3.set_ylim(-.25,1.5)
+        ax3.set_ylim(-0.5,1.5)
         ax3.legend(frameon=False)
 
-        plt.show()
+        plt.savefig('contributions_capOmega.eps')
+        #plt.show()
         #pdb.set_trace()
 
 
@@ -1114,95 +1164,97 @@ if PlotCDFsVsN == 1:
 
 
 
+        Teffect4capOmega0_01 = 0
+        if Teffect4capOmega0_01 == 1:
+            print('Look at effect of changing T, for CapOmega=0.01:')
 
-        print('Look at effect of changing T, for CapOmega=0.01:')
+            fig2 = plt.figure(figsize=(width*1.5,height))
+            fig2.set_tight_layout(True)
+            grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
 
-        fig2 = plt.figure(figsize=(width*1.5,height))
-        fig2.set_tight_layout(True)
-        grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
+            ax1 = fig2.add_subplot(grid2[0,0])
+            ax1.set_ylim(-1,1)
+            ax1.set_ylabel(r'Relative contribution')
+            ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
+            #ax1.plot(Nvec[0:idxE], C_IGW_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
+            ax1.plot([0,5],[0,0], color='gray', linewidth=0.5)
 
-        ax1 = fig2.add_subplot(grid2[0,0])
-        ax1.set_ylim(-1,1)
-        ax1.set_ylabel(r'Relative contribution')
-        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
-        #ax1.plot(Nvec[0:idxE], C_IGW_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
-        ax1.plot([0,5],[0,0], color='gray', linewidth=0.5)
+            ax2 = fig2.add_subplot(grid2[0,1])
+            ax2.set_ylim(-1,1)
+            ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
+            #ax2.plot(Nvec[0:idxE], C_MF_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
+            ax2.plot([0,5],[0,0], color='gray', linewidth=0.5)
 
-        ax2 = fig2.add_subplot(grid2[0,1])
-        ax2.set_ylim(-1,1)
-        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
-        #ax2.plot(Nvec[0:idxE], C_MF_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
-        ax2.plot([0,5],[0,0], color='gray', linewidth=0.5)
+            ax3 = fig2.add_subplot(grid2[0,2])
+            ax3.set_ylim(-1,1)
+            ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
+            #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
+            ax3.plot(Nvec[0:idxE], C_both_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
+            ax3.plot(Nvec[0:idxE], C_both_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
+            ax3.plot(Nvec[0:idxE], C_both_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
+            ax3.plot(Nvec[0:idxE], C_both_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
+            ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
+            ax3.legend(frameon=False)
 
-        ax3 = fig2.add_subplot(grid2[0,2])
-        ax3.set_ylim(-1,1)
-        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
-        #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_01_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
-        ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
-        ax3.legend(frameon=False)
+            plt.show()
+            #pdb.set_trace()
 
-        plt.show()
-        #pdb.set_trace()
+        Teffect4capOmega0_1 = 0
+        if Teffect4capOmega0_1 == 1:
+            print('Look at effect of changing T, for CapOmega=0.1:')
 
+            fig2 = plt.figure(figsize=(width*1.5,height))
+            fig2.set_tight_layout(True)
+            grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
 
-        print('Look at effect of changing T, for CapOmega=0.1:')
+            ax1 = fig2.add_subplot(grid2[0,0])
+            ax1.set_ylim(-1,1)
+            ax1.set_ylabel(r'Relative contribution')
+            ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
+            #ax1.plot(Nvec[0:idxE], C_IGW_abs_1_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+            ax1.plot(Nvec[0:idxE], C_IGW_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
+            ax1.plot([0,5],[0,0], color='gray', linewidth=0.5)
 
-        fig2 = plt.figure(figsize=(width*1.5,height))
-        fig2.set_tight_layout(True)
-        grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
+            ax2 = fig2.add_subplot(grid2[0,1])
+            ax2.set_ylim(-1,1)
+            ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
+            #ax2.plot(Nvec[0:idxE], C_MF_abs_1_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
+            ax2.plot(Nvec[0:idxE], C_MF_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
+            ax2.plot([0,5],[0,0], color='gray', linewidth=0.5)
 
-        ax1 = fig2.add_subplot(grid2[0,0])
-        ax1.set_ylim(-1,1)
-        ax1.set_ylabel(r'Relative contribution')
-        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
-        #ax1.plot(Nvec[0:idxE], C_IGW_abs_1_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
-        ax1.plot(Nvec[0:idxE], C_IGW_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
-        ax1.plot([0,5],[0,0], color='gray', linewidth=0.5)
+            ax3 = fig2.add_subplot(grid2[0,2])
+            ax3.set_ylim(-1,1)
+            ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+            ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
+            #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
+            ax3.plot(Nvec[0:idxE], C_both_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
+            ax3.plot(Nvec[0:idxE], C_both_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
+            ax3.plot(Nvec[0:idxE], C_both_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
+            ax3.plot(Nvec[0:idxE], C_both_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
+            ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
+            ax3.legend(frameon=False)
 
-        ax2 = fig2.add_subplot(grid2[0,1])
-        ax2.set_ylim(-1,1)
-        ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
-        #ax2.plot(Nvec[0:idxE], C_MF_abs_1_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2)
-        ax2.plot(Nvec[0:idxE], C_MF_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3)
-        ax2.plot([0,5],[0,0], color='gray', linewidth=0.5)
-
-        ax3 = fig2.add_subplot(grid2[0,2])
-        ax3.set_ylim(-1,1)
-        ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-        ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
-        #ax3.plot(Nvec[0:idxE], C_both_abs_01_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_5, linestyle='--', marker='.', markersize=7, color='k', linewidth=1, label=r'$T\approx \tau_{end}-\tau_0$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_1, linestyle='-', marker='.', markersize=7, color='k', linewidth=1, label=r'$T=2\pi/N_{\rm bv}\,10$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_2, linestyle='-', marker='.', markersize=7, color='k', linewidth=2, label=r'$T=2\pi/N_{\rm bv}\,5$')
-        ax3.plot(Nvec[0:idxE], C_both_abs_1_3, linestyle='-', marker='.', markersize=7, color='k', linewidth=3, label=r'$T=2\pi/N_{\rm bv}$')
-        ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
-        ax3.legend(frameon=False)
-
-        plt.show()
-        #pdb.set_trace()
+            plt.show()
+            #pdb.set_trace()
 
 
         print('Look at effect of changing T, for CapOmega=1., consider Real parts only:')
@@ -1212,7 +1264,8 @@ if PlotCDFsVsN == 1:
         grid2 = plt.GridSpec(1, 3, wspace=0.4, hspace=0.)
 
         ax1 = fig2.add_subplot(grid2[0,0])
-        ax1.set_ylim(-.25,1.25)
+        #ax1.set_ylim(-.25,1.25)
+        ax1.set_ylim(-0.5,1.5)
         ax1.set_ylabel(r'Relative contribution')
         ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax1.set_title(r'$c_{\omega_{\rm IGW}} / \sum$')
@@ -1225,10 +1278,11 @@ if PlotCDFsVsN == 1:
         ax1.plot(Nvec[0:idxE], C_IGW_k0_10_3, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
         #k not 0 case:
         ax1.plot(Nvec[0:idxE], C_IGW_knot0_10_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
-        ax1.plot([0,5],[0,0], color='gray', linewidth=0.5)
+        #ax1.plot([0,5],[0,0], color='gray', linewidth=0.5)
 
         ax2 = fig2.add_subplot(grid2[0,1])
-        ax2.set_ylim(-.25,1.25)
+        #ax2.set_ylim(-.25,1.25)
+        ax2.set_ylim(-0.5,1.5)
         ax2.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax2.set_title(r'$c_{\omega_{\rm MF}} / \sum$')
         #ax2.plot(Nvec[0:idxE], C_MF_10_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
@@ -1240,11 +1294,12 @@ if PlotCDFsVsN == 1:
         ax2.plot(Nvec[0:idxE], C_MF_k0_10_3, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2)
         #k not 0 case:
         ax2.plot(Nvec[0:idxE], C_MF_knot0_10_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2)
-        ax2.plot([0,5],[0,0], color='gray', linewidth=0.5)
-        ax2.legend(frameon=False, handlelength=1.5)
+        #ax2.plot([0,5],[0,0], color='gray', linewidth=0.5)
+        ax2.legend(frameon=False, handlelength=1.25)
 
         ax3 = fig2.add_subplot(grid2[0,2])
-        ax3.set_ylim(-.25,1.25)
+        #ax3.set_ylim(-.25,1.25)
+        ax3.set_ylim(-0.5,1.5)
         ax3.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
         ax3.set_title(r'$c_{\omega_{\rm IGW,MF}} / \sum$')
         #ax3.plot(Nvec[0:idxE], C_both_10_0, linestyle='-', marker='.', markersize=5, color='k', linewidth=0.5)
@@ -1256,10 +1311,11 @@ if PlotCDFsVsN == 1:
         ax3.plot(Nvec[0:idxE], C_both_k0_10_3, linestyle='--', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k=0$')
         #k not 0 case:
         ax3.plot(Nvec[0:idxE], C_both_knot0_10_3, linestyle=':', marker='.', markersize=7, color='silver', linewidth=2, label=r'$k\ne0$')
-        ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
+        #ax3.plot([0,5],[0,0], color='gray', linewidth=0.5)
         ax3.legend(frameon=False)
 
-        plt.show()
+        plt.savefig('contributions_window.eps')
+        #plt.show()
 
         pdb.set_trace()
 
@@ -1745,7 +1801,8 @@ if FindMainBasisParts == 1:
             xlabel = r'$t$ (s)'
             ylabel = r'$z$ (m)'
             #xlim = (np.min(t),np.max(t))
-            xlim = (0,60)
+            #xlim = (0,60)
+            xlim = (0,10)
             ylim = (0,Lz)
         if PlotXZ==1:
             tIdx = int(Nt/2.)
@@ -2329,11 +2386,11 @@ if Resonances == 1:
 
     if NearResonanceSearch == 1:
         if len(sys.argv) <= 2:
-            OmegaLimit = 0.
+            #OmegaLimit = 0.
             #OmegaLimit = 0.001
             #OmegaLimit = 0.005
             #OmegaLimit = 0.01
-            #OmegaLimit = 0.1
+            OmegaLimit = 0.1
             #OmegaLimit = 1.0
             #OmegaLimit = 999
         Omega = []
@@ -2653,9 +2710,10 @@ if Resonances == 1:
 
                     if windowMethod == 0:
                         #Compute contributions using Modulation equation instead of the approximate wave-averaged equation:
-                        tIdx = t0 + int((te - t0)/2.)
+                        #tIdx = t0 + int((te - t0)/2.)
+                        tIdx = t0 
                         time = tIdx*dt
-                        capOmegaIntWeights[:,i] = -1j/8 * np.exp(-1j*np.array(Omega)*time)
+                        capOmegaIntWeights[:,i] = -1j/8. * np.exp(-1j*np.array(Omega)*time)
 
                     if PlotWeightFnc == 1:
                         #print(capOmegaIntegral[:,i], T)
@@ -2711,8 +2769,9 @@ if Resonances == 1:
                 tmp2 = (res_sets[:,0:3] == (1,0,1)).all(axis=1).nonzero()[0]
                 tmp3 = (res_sets[:,0:3] == (1,1,0)).all(axis=1).nonzero()[0]
                 tmp4 = (res_sets[:,0:3] == (1,1,1)).all(axis=1).nonzero()[0]
-                idxs = tmp2
+                idxs = tmp1
                 #idxs = tmp3
+                #idxs = np.concatenate((tmp1,tmp2,tmp3,tmp4))
             #Check ordering:
             #print(idxs)
             #plt.plot(idxs)
@@ -2754,7 +2813,7 @@ if Resonances == 1:
             if InteractionCoef == 1:
                 interactCoef = np.zeros((Nk2))
             if SigmaSigma == 1:
-                sigmaSigma = np.zeros((Nk2,Nt))*1j
+                sigmaSigma = np.zeros((Nk2))*1j
             if MainWaveSpeeds == 1:
                 cgx_vec = np.zeros((Nk))
                 cgx_n_vec = np.zeros((Nk))
@@ -3016,33 +3075,36 @@ if Resonances == 1:
                     #if (k1*n2-k2*n1)==0: count01 += 1
 
                 if SigmaSigma == 1:
-                    if alpha1 == 0: sig1 = sigma_1_3D[i1,j1,:]
-                    if alpha1 == 1: sig1 = sigma1_3D[i1,j1,:]
-                    if alpha2 == 0: sig2 = sigma_1_3D[i2,j2,:]
-                    if alpha2 == 1: sig2 = sigma1_3D[i2,j2,:]
-                    sigmaSigma[ii,:] = sig1*sig2 
+                    tpnt = 0
+                    if alpha1 == 0: sig1 = sigma_1_3D[i1,j1,tpnt]
+                    if alpha1 == 1: sig1 = sigma1_3D[i1,j1,tpnt]
+                    if alpha2 == 0: sig2 = sigma_1_3D[i2,j2,tpnt]
+                    if alpha2 == 1: sig2 = sigma1_3D[i2,j2,tpnt]
+                    sigmaSigma[ii] = sig1*sig2 
 
                 if SubSums == 1:
 
                     if ii==0: past_key_modes.append([i,j])
 
-                    tpnt = 0
-                    #tpnt = int(Nt/2.)
-                    #tpnt = Nt-1
                     xpnt = int(Nx/2.)
                     zpnt = int(Nz/2.)
-                    contribution1 = sigmaSigma[ii,tpnt]*capOmegaWeights[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
-                    contribution2 = sigmaSigma[ii,tpnt]*capOmegaWeights[ii]*interactCoef[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
+                    #xpnt = int(Nx/3.)
+                    #zpnt = int(Nz/3.)
+                    #xpnt = int(Nx/2.)
+                    #zpnt = int(Nz/5.)
+                    contribution1 = sigmaSigma[ii]*capOmegaWeights[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
+                    contribution2 = sigmaSigma[ii]*capOmegaWeights[ii]*interactCoef[ii]*np.exp(1j*k*x[xpnt])*np.sin(n*z[zpnt])
+                    #contribution1 = sigmaSigma[ii]*capOmegaWeights[ii]
+                    #contribution2 = sigmaSigma[ii]*capOmegaWeights[ii]*interactCoef[ii]
                     #contribution1 = capOmegaWeights[ii]
                     #contribution2 = capOmegaWeights[ii]*interactCoef[ii]
 
                     if interactCoef[ii] != 0:
 
                         #contribution from IGW:
-                        
                         logic1c = (abs(omega_k1) > wellmode) and (abs(omega_k2) > wellmode)
                         if inverse == 1:
-                            logic2c = abs(omega_k) == 0		#logic2 
+                            logic2c = abs(omega_k) > wellmode	#logic2 
                         else: logic2c = 1			
                         #logic2c = 1				#logic1
                         if logic1c and logic2c:
@@ -3055,7 +3117,8 @@ if Resonances == 1:
                         #contribution from MF:
                         logic1a = (abs(omega_k1) <= wellmode) and (abs(omega_k2) <= wellmode)
                         #if excludeLFMF == 1: logic2a = (abs(omega_k1) > OmegaLimit) and (abs(omega_k2) > OmegaLimit)	#logic2
-                        if excludeLFMF == 1: logic2a = (abs(omega_k1) > OmegaLimit) or (abs(omega_k2) > OmegaLimit)	#logic1
+                        #if excludeLFMF == 1: logic2a = (abs(omega_k1) > OmegaLimit) or (abs(omega_k2) > OmegaLimit)	#logic1
+                        if excludeLFMF == 1: logic2a = abs(omega_k) > wellmode
                         else: logic2a = True
                         if inverse == 1:
                             tmp = (abs(omega_k1) > OmegaLimit) or (abs(omega_k2) > OmegaLimit)
@@ -3079,7 +3142,8 @@ if Resonances == 1:
 
                         #contribution from waves in IGW interacting with waves in MF:
                         logic1b = ((abs(omega_k1) <= wellmode) and (abs(omega_k2) > wellmode)) or ((abs(omega_k1) > wellmode) and (abs(omega_k2) <= wellmode))
-                        if excludeLFMF == 1: logic2b = (abs(omega_k1) > OmegaLimit) and (abs(omega_k2) > OmegaLimit)
+                        #if excludeLFMF == 1: logic2b = (abs(omega_k1) > OmegaLimit) and (abs(omega_k2) > OmegaLimit)
+                        if excludeLFMF == 1: logic2b = abs(omega_k) > wellmode 
                         else: logic2b = True
                         if inverse == 1:
                             if keyNonWaveModes == 1:
@@ -3088,6 +3152,7 @@ if Resonances == 1:
                             if keyWaveModes == 1:
                                 if abs(omega_k2) > wellmode: logic3b = abs(omega_k1) == 0
                                 if abs(omega_k1) > wellmode: logic3b = abs(omega_k2) == 0			#logic2
+                            
                         else: logic3b = 1
                         if (logic1b and logic2b) and logic3b:
                             #sumDomegaBoth1 = sumDomegaBoth1 + contribution1
@@ -3205,27 +3270,27 @@ if Resonances == 1:
                #print(' ')
 
                sumDomegaIGW2 = np.reshape(sumDomegaIGW2, (Nk*2))
-               print( sumDomegaIGW2.shape )
+               #print( sumDomegaIGW2.shape )
                sumDomegaMF2 = np.reshape(sumDomegaMF2, (Nk*2))
                sumDomegaBoth2 = np.reshape(sumDomegaBoth2, (Nk*2))
-               total1 = np.sum( np.abs( np.add(np.add(sumDomegaIGW2,sumDomegaMF2),sumDomegaBoth2) )**2 )
-               total2 = np.sum( np.add(np.add(np.abs(sumDomegaIGW2)**2,np.abs(sumDomegaMF2)**2),np.abs(sumDomegaBoth2)**2) )
-               print(total1,total2)
-               print( np.sum(np.abs(sumDomegaIGW2)**2), np.sum(np.abs(sumDomegaMF2)**2), np.sum(np.abs(sumDomegaBoth2)**2) )
-               print( np.abs(np.sum(sumDomegaIGW2))**2, np.abs(np.sum(sumDomegaMF2))**2, np.abs(np.sum(sumDomegaBoth2))**2 )
-               print( np.sum(sumDomegaIGW2), np.sum(sumDomegaMF2), np.sum(sumDomegaBoth2) )
-               print(' ')
+               #total1 = np.sum( np.abs( np.add(np.add(sumDomegaIGW2,sumDomegaMF2),sumDomegaBoth2) )**2 )
+               #total2 = np.sum( np.add(np.add(np.abs(sumDomegaIGW2)**2,np.abs(sumDomegaMF2)**2),np.abs(sumDomegaBoth2)**2) )
+               #print(total1,total2)
+               #print( np.sum(np.abs(sumDomegaIGW2)**2), np.sum(np.abs(sumDomegaMF2)**2), np.sum(np.abs(sumDomegaBoth2)**2) )
+               #print( np.abs(np.sum(sumDomegaIGW2))**2, np.abs(np.sum(sumDomegaMF2))**2, np.abs(np.sum(sumDomegaBoth2))**2 )
+               #print( np.sum(sumDomegaIGW2), np.sum(sumDomegaMF2), np.sum(sumDomegaBoth2) )
+               #print(' ')
 
                sumDomegaIGW3 = np.reshape(sumDomegaIGW3, (Nk*2))
                sumDomegaMF3 = np.reshape(sumDomegaMF3, (Nk*2))
                sumDomegaBoth3 = np.reshape(sumDomegaBoth3, (Nk*2))
-               total3 = np.sum( np.abs( np.add(np.add(sumDomegaIGW3,sumDomegaMF3),sumDomegaBoth3) )**2 )
-               total4 = np.sum( np.add(np.add(np.abs(sumDomegaIGW3)**2,np.abs(sumDomegaMF3)**2),np.abs(sumDomegaBoth3)**2) )
-               print(total3,total4)
-               print( np.sum(np.abs(sumDomegaIGW3)**2), np.sum(np.abs(sumDomegaMF3)**2), np.sum(np.abs(sumDomegaBoth3)**2) )
-               print( np.abs(np.sum(sumDomegaIGW3))**2, np.abs(np.sum(sumDomegaMF3))**2, np.abs(np.sum(sumDomegaBoth3))**2 )
-               print( np.sum(sumDomegaIGW3), np.sum(sumDomegaMF3), np.sum(sumDomegaBoth3) )
-               print(' ')
+               #total3 = np.sum( np.abs( np.add(np.add(sumDomegaIGW3,sumDomegaMF3),sumDomegaBoth3) )**2 )
+               #total4 = np.sum( np.add(np.add(np.abs(sumDomegaIGW3)**2,np.abs(sumDomegaMF3)**2),np.abs(sumDomegaBoth3)**2) )
+               #print(total3,total4)
+               #print( np.sum(np.abs(sumDomegaIGW3)**2), np.sum(np.abs(sumDomegaMF3)**2), np.sum(np.abs(sumDomegaBoth3)**2) )
+               #print( np.abs(np.sum(sumDomegaIGW3))**2, np.abs(np.sum(sumDomegaMF3))**2, np.abs(np.sum(sumDomegaBoth3))**2 )
+               #print( np.sum(sumDomegaIGW3), np.sum(sumDomegaMF3), np.sum(sumDomegaBoth3) )
+               #print(' ')
 
                #Write data to file:             
                #write results using integral and interaction coefficient: 
@@ -3249,10 +3314,10 @@ if Resonances == 1:
                #print(sumDomegaMF3)
                #print(' ')
                #print(sumDomegaBoth3)
-
-
                #print(sumDomegaIGW4,sumDomegaMF4,sumDomegaBoth4)
 
+               #print('write complete for ', str(N2), str(OmegaLimit), str(windowMethod), str(keyModes) )
+ 
 
             if FindMaxModes == 1:
                 #plt.figure()
