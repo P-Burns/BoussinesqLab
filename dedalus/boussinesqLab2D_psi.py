@@ -57,14 +57,14 @@ ImplicitDiffusion	= 1
 MolecularDiffusion 	= 1
 ScaleDiffusion 		= 0
 
-ICsRandomPert 		= 1
+ICsRandomPert 		= 0
 ReadICs 		= 1
 Interpolate		= 0 
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 0
+AddForce 		= 1
 ForceFullDomain 	= 1
 ForceSingleColumn 	= 0
 SimpleWave		= 0
@@ -127,7 +127,7 @@ if w2f_grid == 1:
     fnm_gridz = dir_grid + 'ZGridDedalus.txt'
     np.savetxt(fnm_gridx,x)
     np.savetxt(fnm_gridz,z)
-    pdb.set_trace()
+    #pdb.set_trace()
 
 
 #Set physical constants
@@ -320,9 +320,11 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
-            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
-            tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
+            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_320_720_4_18_.txt').view(complex)
+            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_320_720_4_2_1.txt').view(complex)
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
