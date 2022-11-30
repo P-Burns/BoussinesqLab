@@ -46,17 +46,17 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-FullDomain      = 0
-SinglePoint	= 1
+FullDomain      = 1
+SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
-VaryN           = 0
+VaryN           = 1
 #ParkRun 	= 14
 #ParkRun 	= 18
 ParkRun 	= -1
 scalePert	= 0
-forced          = 1
+forced          = 0
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
@@ -93,7 +93,7 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
@@ -104,7 +104,7 @@ PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
 dbdz			= 0
-drhodz			= 0
+drhodz			= 1
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -124,7 +124,7 @@ check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -169,7 +169,7 @@ FieldMaxMin 	= 1
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 0
+PlotTZ 		= 1
 PlotT 		= 0
 PlotZ 		= 0
 MakeMovie 	= 0
@@ -178,7 +178,7 @@ NoPlotLabels    = 0
 logscale	= 0
 
 #Write analysis to file
-w2f_analysis 	= 1
+w2f_analysis 	= 0
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -236,8 +236,8 @@ if VaryN == 1:
         if Modulated == 1 and forced == 0 and SinglePoint == 0:
             RunName = RunName + '_R'
         if Linear ==1 : RunName = RunName + '_linear'
-    #dir_state = './Results/' + RunName + '/'
-    dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
+    dir_state = './Results/' + RunName + '/'
+    #dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
 
 
 if Gusto == 0:
@@ -255,7 +255,7 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 5
+        nfiles = 10
 
     #Model output/write timestep:
     if FullDomain == 1: 

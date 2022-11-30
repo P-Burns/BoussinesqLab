@@ -183,7 +183,8 @@ dz = z[1]-z[0]
 dt = .1
 
 #make analysis during period of step existance:
-dat = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/stairStartEnd.txt')
+#dat = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/stairStartEnd.txt')
+dat = np.loadtxt('/lustre/home/pb412/BoussinesqLab/dedalus/stairStartEnd.txt')
 N_vec = dat[0,:]
 stairStart = dat[1,:]
 stairEnd = dat[2,:]

@@ -59,7 +59,7 @@ ScaleDiffusion 		= 0
 
 ICsRandomPert 		= 1
 ReadICs 		= 1
-Interpolate		= 1 
+Interpolate		= 0 
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
@@ -760,9 +760,9 @@ if ProblemType == "Layers":
                 if factor == 2: fDedalus = np.loadtxt('./RandomPhase_160_360.txt')
                 if factor == 4: fDedalus = np.loadtxt('./RandomPhase_320_720.txt')
             else:
-                if factor == 1: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
-                if factor == 2: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
-                if factor == 4: fDedalus = np.loadtxt('/home/ubuntu/BoussinesqLab/RandomPhase_320_720_Dedalus.txt')
+                if factor == 1: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
+                if factor == 2: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
+                if factor == 4: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_320_720_Dedalus.txt')
             fDedalus = fDedalus/np.max(fDedalus)
         
             #check symmetry:
