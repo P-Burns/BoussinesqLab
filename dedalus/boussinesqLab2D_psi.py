@@ -38,8 +38,8 @@ ProblemType 		= "Layers"
 ParkRun 		= -1
 scalePert		= 0
 #N2			= 0.09
-#N2			= 0.25
-#N2			= 1
+N2			= 0.25
+N2			= 1
 N2			= 2.25
 #N2			= 4
 #N2			= 6.25
@@ -52,19 +52,26 @@ N2			= 2.25
 #N2			= 20.25
 #N2			= 25
 
+if N2 < 10:
+    if len(str(N2)) > 1:	RunName = 'StateN2_' + str(N2)[0].zfill(2) + '_' + str(N2)[2:]
+    else:			RunName = 'StateN2_' + str(N2).zfill(2)
+else:
+    if len(str(N2)) > 2: 	RunName = 'StateN2_' + str(N2)[0:2] + '_' + str(N2)[3:]
+    else: 			RunName = 'StateN2_' + str(N2)
+
+
 Inviscid          	= 0
 ImplicitDiffusion	= 1
-MolecularDiffusion 	= 1
-ScaleDiffusion 		= 0
+nrMolecularDiff 	= 0
 
-ICsRandomPert 		= 0
+ICsRandomPert 		= 1
 ReadICs 		= 1
 Interpolate		= 0 
 MeshTest		= 0
 ICsWaves 		= 0
 ICsTestModulation	= 0
 
-AddForce 		= 1
+AddForce 		= 0
 ForceFullDomain 	= 1
 ForceSingleColumn 	= 0
 SimpleWave		= 0
@@ -75,17 +82,17 @@ ForceDecay		= 0
 PassiveTracer 		= 0
 compute_p		= 0
 
-CoordinateRotation	= 0
+CoordinateRotation	= 1
 nvars			= 2
 
-Linear			= 0
+Linear			= 1
 
 domain3D		= 0
 
 w2f_grid 		= 0
-w2f_state 		= 1
-w2f_SinglePoint 	= 0
-w2f_dt		 	= 1
+w2f_state 		= 0
+w2f_SinglePoint 	= 1
+w2f_dt		 	= 0
 w2f_energy		= 0
 
 
@@ -95,9 +102,10 @@ Nx 	= 80
 Nz 	= 180
 #factor	= 1./4
 #factor	= 1./2
-#factor	= 1
+factor	= 1
 #factor	= 2
-factor	= 4
+#factor	= 4  #final choice
+#factor	= 6
 Nx 	= int(Nx*factor)
 Nz 	= int(Nz*factor)
 if factor == 1./4: Nz += 1
@@ -127,7 +135,7 @@ if w2f_grid == 1:
     fnm_gridz = dir_grid + 'ZGridDedalus.txt'
     np.savetxt(fnm_gridx,x)
     np.savetxt(fnm_gridz,z)
-    #pdb.set_trace()
+    pdb.set_trace()
 
 
 #Set physical constants
@@ -136,17 +144,22 @@ ct = 2.0*10**(-4.)
 cs = 7.6*10**(-4.) 
 
 if Inviscid == 0:
-    if MolecularDiffusion == 1:
-        nu = 1.*10**(-6.)
-        kappat = 1.4*10**(-7.)
-        kappas = 1.4*10**(-7.)
-    if ScaleDiffusion == 1:
-        ScaleFact_T = 100
-        ScaleFact_nu = 100
-        ScaleFact_S = 100
-        nu = nu*ScaleFact_nu
-        kappat = kappat*ScaleFact_T
-        kappas = kappas*ScaleFact_S
+    # for the ocean
+    nu = 1.*10**(-6.)
+    kappat = 1.4*10**(-7.)
+    kappas = 1.4*10**(-7.)
+    if nrMolecularDiff == 1:
+        ScaleFact_T = 3
+        ScaleFact_nu = 3
+        ScaleFact_S = 3
+    else:
+        ScaleFact_T = 1E2
+        ScaleFact_nu = 1E2
+        ScaleFact_S = 1E2
+
+    nu = nu*ScaleFact_nu
+    kappat = kappat*ScaleFact_T
+    kappas = kappas*ScaleFact_S
 
 if ProblemType == "BarotropicKH":
     bt = 0.
@@ -320,11 +333,11 @@ if AddForce == 1:
             force = domain.new_field()
             force.meta['z']['parity'] = -1
 
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
-            #tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_320_720_4_18_.txt').view(complex)
-            tmp = np.loadtxt('/home/ubuntu/BoussinesqLab/ForcingPatterns/LpsiHat_320_720_4_2_1.txt').view(complex)
+            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_125_31.txt').view(complex)
+            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_080_180_125_13_31.txt').view(complex)
+            #tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_320_720_4_2_1.txt').view(complex)
+            tmp = np.loadtxt('/lustre/home/pb412/BoussinesqLab/ForcingPatterns/LpsiHat_320_720_4_18_1.txt').view(complex)
 
             #Get wavenumbers for distributed grid:
             kk = domain.elements(0).flatten()
@@ -399,20 +412,8 @@ if CoordinateRotation == 1:
         out = args[3]
 
         #Read in eigenvectors computed by PostProcessDedalus.py: 
-        if N2 == 0.25: RunName = 'StateN2_00_25'
-        if N2 == 1: RunName = 'StateN2_01'
-        if N2 == 2.25: RunName = 'StateN2_02_25'
-        if N2 == 4: RunName = 'StateN2_04'
-        if N2 == 6.25: RunName = 'StateN2_06_25'
-        if N2 == 7.5625: RunName = 'StateN2_07_5625'
-        if N2 == 9: RunName = 'StateN2_09'
-        if N2 == 10.5625: RunName = 'StateN2_10_5625'
-        if N2 == 12.25: RunName = 'StateN2_12_25'
-        if N2 == 14.0625: RunName = 'StateN2_14_0625'
-        if N2 == 16: RunName = 'StateN2_16'
-        if N2 == 20.25: RunName = 'StateN2_20_25'
-        if N2 == 25: RunName = 'StateN2_25'
-        dir_ivec = './Results/' + RunName + '/NaturalBasis/'
+        #dir_ivec = './Results/' + '/NaturalBasis/'
+        dir_ivec = './Results_bigNu/' + '/NaturalBasis/'
 
         ivec_1 = np.zeros((Nx,Nz,nvars))
         ivec1 = np.zeros((Nx,Nz,nvars))
@@ -713,8 +714,8 @@ if ProblemType == "Layers":
                 fAegir = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_1.txt')
 
                 #Add more symmetry to ICs:
-                #fAegir_flipx = np.flipud(fAegir)
-                #fAegir = fAegir + fAegir_flipx
+                fAegir_flipx = np.flipud(fAegir)
+                fAegir = fAegir + fAegir_flipx
 
                 #check symmetry:
                 #plt.contourf(fAegir)
@@ -751,7 +752,10 @@ if ProblemType == "Layers":
                 fDedalus = InterpolateFromAegir(NxAegir, NzAegir, x[:,0], z[0,:], kk, kk_cosine, fhat_Aegir)
           
                 if factor == 1: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_Dedalus.txt'
+                #if factor == 1: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_Dedalus_test4Reviewer.txt'
                 if factor == 2: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_160_360_Dedalus.txt'
+                if factor == 4: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_320_720_Dedalus.txt'
+                if factor == 6: fname = '/lustre/home/pb412/BoussinesqLab/RandomPhase_480_1080_Dedalus.txt'
                 np.savetxt(fname, fDedalus) 
                 #pdb.set_trace()
 
@@ -765,6 +769,7 @@ if ProblemType == "Layers":
                 if factor == 1: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_080_180_Dedalus.txt')
                 if factor == 2: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_160_360_Dedalus.txt')
                 if factor == 4: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_320_720_Dedalus.txt')
+                if factor == 6: fDedalus = np.loadtxt('/lustre/home/pb412/BoussinesqLab/RandomPhase_480_1080_Dedalus.txt')
             fDedalus = fDedalus/np.max(fDedalus)
         
             #check symmetry:
@@ -820,17 +825,21 @@ if ProblemType == "Layers":
 
 
 # Integration parameters
-dir_state = 'State'
+#baseDir = 'Results/'
+baseDir = 'Results_bigNu/'
+if w2f_SinglePoint == 1: RunName = RunName + '_sp'
+if Linear == 1: RunName = RunName + '_lnr'
+dir_state = RunName
 if Restart == 1:
     # Load restart file
-    write, dt = solver.load_state('Results/' + dir_state + '/State_s3.h5', -1)
+    write, dt = solver.load_state(baseDir + dir_state + '/' + RunName + '_s10.h5', -1)
 else:
     #dt = 1./600.
     dt = 8e-3
 
 SimDays = 0.
 SimHrs = 0.
-SimMins = 30.
+SimMins = 40.
 SimSecs = 0.
 te = SimDays*(24*60*60) + SimHrs*(60*60) + SimMins*60 + SimSecs
 solver.stop_sim_time = te
@@ -845,23 +854,33 @@ solver.stop_iteration = np.inf
 
 #Set data write frequency.
 if (w2f_state == 1 and w2f_SinglePoint == 0) or w2f_energy == 1: 
-    if ScaleDiffusion == 1: write_dt = 1e-1
-    if ScaleDiffusion == 0: write_dt = 5e-1
+    if nrMolecularDiff == 1: write_dt = 1
+    if nrMolecularDiff == 0: write_dt = 1e-1
+    max_dt = write_dt
 
 if w2f_SinglePoint == 1 and w2f_state == 0: 
     if AddForce == 0: 
-        if ScaleDiffusion==1: write_dt = 1e-2
-        if ScaleDiffusion==0: write_dt = 1e-3
+        if nrMolecularDiff==1:
+            #write_dt = 1e-3
+            write_dt = 1e-2
+            max_dt = write_dt 
+        if nrMolecularDiff==0:
+            #write_dt = 1e-3
+            write_dt = 1e-2
+            max_dt = write_dt 
     if AddForce == 1: 
-        #write_dt = 5e-3
+        #write_dt = 1e-3
+        #write_dt = 8e-3
         #write_dt = 1e-2
-        #write_dt = 1e-1
-        write_dt = 8e-3
+        write_dt = 1e-1
+        max_dt  = write_dt
+  
+
 
 # Analysis:
 file_nt = 60./write_dt	#Each file contains 1 min of data
 #file_nt = 1./write_dt	#Each file contains 1 sec of data
-Results = solver.evaluator.add_file_handler('Results/' + dir_state, sim_dt=write_dt, max_writes=file_nt, mode='append')
+Results = solver.evaluator.add_file_handler(baseDir + dir_state, sim_dt=write_dt, max_writes=file_nt, mode='append')
 
 if w2f_state == 1:
     Results.add_system(solver.state)
@@ -942,17 +961,17 @@ if w2f_SinglePoint == 1:
 if w2f_dt == 1:
     #Open file to write out clocktime, simulation time, and timestep:
     if Restart == 1: 
-        fileDt = open("Results/" + dir_state + "/dt_" + str(solver.iteration) + ".txt","w")
+        fileDt = open(baseDir + dir_state + "/dt_" + str(solver.iteration) + ".txt","w")
         NextWriteT = solver.sim_time
     else: 
-        fileDt = open("Results/" + dir_state + "/dt.txt","w")
+        fileDt = open(baseDir + dir_state + "/dt.txt","w")
         NextWriteT = 0.
     WriteDt = write_dt
 
 
 # CFL
 #CFL = flow_tools.CFL(solver, initial_dt=dt, max_dt=write_dt, cadence=1, safety=1., threshold=0.1)
-CFL = flow_tools.CFL(solver, initial_dt=dt, max_dt=write_dt, cadence=1, safety=1., threshold=0.1)
+CFL = flow_tools.CFL(solver, initial_dt=dt, max_dt=max_dt, cadence=1, safety=1., threshold=0.1)
 CFL.add_velocities(('u', 'w'))
 
 

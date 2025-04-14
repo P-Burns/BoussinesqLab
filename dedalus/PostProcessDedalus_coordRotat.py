@@ -1,4 +1,4 @@
-## Code to post process Dedalus results for EPSRC project ###
+# Code to post process Dedalus results for EPSRC project ###
 #Authors: Paul Burns, Beth Wingate
 #Date: 2019
 #Email: p.burns2@exeter.ac.uk, b.wingate@exeter.ac.uk
@@ -25,6 +25,8 @@ import sys
 from netCDF4 import Dataset
 import netCDF4 as nc4
 from matplotlib.colors import LogNorm
+import copy
+import random
 
 plt.rcParams.update({'font.size': 20})
 
@@ -36,18 +38,19 @@ plt.rcParams.update({'font.size': 20})
 if len(sys.argv) > 1:
     tIdx = int(sys.argv[1])
 if len(sys.argv) > 2:
-    N2 = float(sys.argv[2])
+    RunName = str(sys.argv[2])
+    #Extract N2 value of file from name:
+    N2_array_MJ = [0.09, 0.25, 1, 2.25, 4, 6.25, 7.5625, 9, 10.5625, 12.25, 14.0625, 16, 20.25, 25]
+    tmp = RunName.split('_')
+    N2 = N2_array_MJ[int(tmp[1])]
     print(N2)
-    Modulated = int(sys.argv[3])
-    AnalyseLayerDecay = int(sys.argv[4])
-    AnalyseLayerCreation = int(sys.argv[5])
 
 #Program control:
 Gusto		= 0
-if len(sys.argv) < 2: Modulated = 0
+Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-nrMolecularDiff	= 1
+ScaleDiffusion	= 1
 FullDomain      = 0
 SinglePoint	= 1
 MultiPoint	= 0
@@ -59,17 +62,17 @@ VaryN           = 1
 ParkRun 	= -1
 scalePert	= 0
 forced          = 0
-if len(sys.argv) < 2 and VaryN == 1:
+if VaryN == 1:
     #N2		= 0.09
-    N2		= 0.25
+    #N2		= 0.25
     #N2		= 1
     #N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
-    #N2          = 9
+    N2          = 9
     #N2		= 10.5625
-    #N2          = 12.25
+    #N2         = 12.25
     #N2		= 14.0625
     #N2		= 16
     #N2		= 20.25
@@ -78,10 +81,10 @@ if len(sys.argv) < 2 and VaryN == 1:
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
 #var_nms = ['S']
-#var_nms = ['psi','S']
+var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-var_nms = ['S','S_r']
+#var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -99,14 +102,8 @@ StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-
-if Modulated == 1: 
-    Density 	= 1
-    Density_2 	= 0
-if Modulated == 0: 
-    Density 	= 0
-    Density_2 	= 1
-
+Density			= 1
+Density_2		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
@@ -141,24 +138,25 @@ PlotBigMode		= 0
 CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
-PSD_mod_unmod_plot	= 1
-PSD_add_linear          = 1
+PSD_mod_unmod_plot	= 0
+PSD_add_linear          = 0
 PSD_linear_nonlinear	= 0
-if len(sys.argv) < 2: AnalyseLayerCreation    = 0
-if len(sys.argv) < 2: AnalyseLayerDecay       = 0
+AnalyseLayerCreation    = 0
+AnalyseLayerDecay       = 0
 FindPeaks 		= 0
 
 TimescaleSeparation	= 0
 OverlayModulated	= 1
-IGWmethod 		= 1
+IGWmethod 		= 0
 step_prediction		= 0
 
-NaturalBasis            = 0
+NaturalBasis            = 1
 noSigmas		= 1
+readEigenvecs		= 1
 nvars	            	= 2
 BasisCheck1             = 0
 BasisCheck2             = 0
-MakeCoordRotation       = 0
+MakeCoordRotation       = 1
 TestModulation		= 0
 
 #General statistical processing:
@@ -180,7 +178,7 @@ FieldMaxMin 	= 1
 MakePlot 	= 1
 PlotXZ 		= 0
 PlotTZ 		= 0
-PlotT 		= 0
+PlotT 		= 1
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
@@ -189,7 +187,7 @@ logscale	= 0
 savePlots       = 1
 
 #Write analysis to file
-w2f_analysis 	= 0
+w2f_analysis 	= 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -235,15 +233,20 @@ if VaryN == 1:
     if N2 == 16:	RunName = 'StateN2_16'
     if N2 == 20.25:	RunName = 'StateN2_20_25'
     if N2 == 25:	RunName = 'StateN2_25'
-    if forced == 1:
-        RunName = RunName + '_k04n02'
-        #RunName = RunName + '_k04n18'
-    if SinglePoint == 1:
-        #RunName = RunName + '_dt0.005_sp'
-        RunName = RunName + '_sp'
-    if Linear ==1 : RunName = RunName + '_lnr'
+    if forced==1 or SinglePoint==1:
+        if forced == 1:
+            RunName = RunName + '_k04n02'
+            #RunName = RunName + '_k04n18'
+            #RunName = RunName + '_k05n028x10'
+            #RunName = RunName + '_k05n028x2'
+            #RunName = RunName + '_k05n014x5'
+            #RunName = RunName + '_k05n014'
+        if SinglePoint == 1:
+            #RunName = RunName + '_dt0.01_sp'
+            #RunName = RunName + '_dt0.005_sp'
+            RunName = RunName + '_sp'
+        if Linear ==1 : RunName = RunName + '_linear'
     dir_state = './Results/' + RunName + '/'
-    #dir_state = './Results_bigNu/' + RunName + '/'
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
@@ -252,30 +255,30 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 30
-        #nfiles = 10
+        nfiles = 3
+        #nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 10
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: 
-        if nrMolecularDiff==1: 
+        if ScaleDiffusion==1: 
+            #dt = 1e-1
             dt = 1
-        if nrMolecularDiff==0: 
-            dt = 1e-1
+        if ScaleDiffusion==0: 
+            #dt = 1e-1
+            dt = 1
     if SinglePoint==1: 
-        if nrMolecularDiff==0: dt = 1e-1
-        if nrMolecularDiff==1: dt = 1e-1 
+        if ScaleDiffusion==1: dt = 1e-3
+        if ScaleDiffusion==0: dt = 1e-3 
     if MultiPoint==1: 
         dt = 8e-3
 
 if Gusto == 1: dt = 0.004
-
-
 
 #Analysis timestep:
 #(This is important for computations involving numerous large arrays - 
@@ -283,8 +286,8 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: 
-        if AnalyseLayerCreation == 0: dt2 = 0.2
-        if AnalyseLayerCreation == 1: dt2 = 0.2
+        dt2 = 1
+        #dt2 = 0.2
         #dt2 = 1e-2
     if forced == 1: 
         dt2 = 0.2
@@ -501,8 +504,7 @@ if Gusto == 0:
     for jj in range(0,Nvars):
         for ii in fileIdx:
             if len(sys.argv) > 2: 
-                #fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
-                fnm = dir_state + RunName + '_s' + str(ii+StartMin) + '.h5'
+                fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
             else:
                 fnm = dir_state + RunName + '_s' + str(ii+StartMin) + '.h5'
             hdf5obj = h5py.File(fnm,'r')
@@ -690,8 +692,8 @@ def spectral_analysis(data,dt2,Welch=True):
         #nperseg = (nfiles/3.*60)/dt2	#(tested for 15 min of data - possibly adjust otherwise).
         #nwindows = Nt/(nperseg*0.5)+1
         if MeanFlowAnalysis == 1 or AnalyseLayerCreation==1: nwindows = 1
-        else: nwindows = 7
-        if nwindows != 1: nperseg = int(2.*Nt/(nwindows-1))
+        else: nwindows = 3
+        if nwindows != 1: nperseg = int(2*Nt/(nwindows-1))
         else: nperseg = Nt
         print(Nt,nperseg,nwindows)
 
@@ -750,6 +752,328 @@ def spectral_analysis(data,dt2,Welch=True):
     return spectralCoef, freqvec, nperseg;
 
 
+if NaturalBasis == 1:
+
+    if noSigmas == 0:
+        # Eigenvectors are not a fnc of time.
+        # There is one eigenvector for each alpha.
+        # Eigenvectors are assumed to be a fnc of k and m wavenumbers 
+        # (see structure of NaturalFreq.py).
+        # An eigenvector, for some k and m, has nvar elements.
+        ivec_1 = np.zeros((Nx,Nz,nvars))
+        if nvars == 3: ivec0 = np.zeros((Nx,Nz,nvars))
+        ivec1 = np.zeros((Nx,Nz,nvars))
+
+    if BasisCheck1 == 1:
+        State_2 = np.zeros((Nt,Nx,Nz,nvars))
+
+    if BasisCheck2 == 1:
+        #Store wavenumber-vector magnitude array to transform back to original State 
+        #in NaturalFreq.py 
+        kmag_arr = np.zeros((Nx,Nz))
+
+    #Initialise Dedalus objects and arrays for computing Fourier-SinCos coefficients:
+    tmp_Psi = domain.new_field()
+    tmp_Psi.meta['z']['parity'] = -1
+    if nvars == 3:
+        tmp_T = domain.new_field()
+        tmp_T.meta['z']['parity'] = -1
+    tmp_S = domain.new_field()
+    tmp_S.meta['z']['parity'] = -1
+
+    #Psi_hat = np.zeros((Nx,Nz))*1j
+    #if nvars == 3: T_hat = np.zeros((Nx,Nz))*1j
+    #S_hat = np.zeros((Nx,Nz))*1j
+
+    #When rotating into space of waves using matrix exponential:
+    if MakeCoordRotation == 1:
+        S_r = np.zeros((Nt,Nx,Nz))
+        psi_r = np.zeros((Nt,Nx,Nz))
+
+    if readEigenvecs == 1:
+        dir_ivec = './Results/' + '/NaturalBasis/'
+        ivec_1 = np.zeros((Nx,Nz,nvars))
+        ivec1 = np.zeros((Nx,Nz,nvars))
+        for ll in range(0,nvars):
+            fnm_ivec_1 = dir_ivec + 'ivec_1_' + str(ll+1) + '.txt'
+            fnm_ivec1 = dir_ivec + 'ivec1_' + str(ll+1) + '.txt'
+            ivec_1[:,:,ll] = np.loadtxt(fnm_ivec_1)
+            ivec1[:,:,ll] = np.loadtxt(fnm_ivec1)
+
+    for tt in range(0,Nt):
+        print(tt)
+
+        if FullDomain == 1:
+            tmp_Psi['g'] = np.copy(Psi[tt,:,:])
+            tmp_S['g'] = np.copy(S[tt,:,:])
+            if nvars == 3: tmp_T['g'] = np.copy(T[tt,:,:])
+        if SinglePoint == 1:
+            tmp_Psi['g'][xIdx,zIdx] = np.copy(Psi[tt,0,0])
+            tmp_S['g'][xIdx,zIdx] = np.copy(S[tt,0,0])
+            if nvars == 3: tmp_T['g'][xIdx,zIdx] = np.copy(T[tt,0,0])
+
+        #Add coefficients for positive wavenumbers given by Dedalus:
+        #Psi_hat[0:int(Nx/2.),:] = tmp_Psi['c']
+        #if nvars == 3: T_hat[0:int(Nx/2.),:] = tmp_T['c']
+        #S_hat[0:int(Nx/2.),:] = tmp_S['c']
+
+        #Define coefficients for negative wavenumbers in x using
+        #Fourier transform symmetry relation for Real functions: 
+        #for j in range(0,Nz):
+        #    for i in range(0,int(Nx/2.)):
+        #        if i > 0:
+        #            #Apply symmetry property of real-valued functions:
+        #            Psi_hat[Nx-i,j] = np.conj(tmp_Psi['c'][i,j])
+        #            if nvars == 3: T_hat[Nx-i,j] = np.conj(tmp_T['c'][i,j])
+        #            S_hat[Nx-i,j] = np.conj(tmp_S['c'][i,j])
+
+        if noSigmas == 0:
+            # There is one sigma for each alpha.
+            # Sigmas are complex and depend on k and m wavenumbers, and vary through time, 
+            # so here we re-define the arrays for each time point in the loop. 
+            # n.b. _1: alpha=-1, 0: alpha=0, 1: alpha=+1 
+            sigma_1 = np.zeros((Nx,Nz))*1j
+            if nvars == 3: sigma0 = np.zeros((Nx,Nz))*1j
+            sigma1 = np.zeros((Nx,Nz))*1j
+
+        if MakeCoordRotation == 1:
+            tmp_psi_r = domain.new_field()
+            tmp_S_r = domain.new_field()
+            tmp_psi_r.meta['z']['parity'] = -1
+            tmp_S_r.meta['z']['parity'] = -1
+
+        #Loop over wavenumbers:
+        for jj in range(0,Nz):
+            for ii in range(0,int(Nx/2.)):
+
+                k = kk[ii]
+                n = kk_cosine[jj]
+
+                kvec    = np.array([k,n])
+                kmag    = np.linalg.norm(kvec)
+                if (BasisCheck2==1) and (tt==0): kmag_arr[ii,jj] = kmag
+
+                if readEigenvecs == 1:
+                    r_1 = ivec_1[ii,jj,:]
+                    r1 = ivec1[ii,jj,:]
+
+                if kmag != 0:
+
+                    if nvars == 3: c1 = sqrt(-ct/bt)
+                    c2 = sqrt(cs/bs)
+                    c3 = abs(k)/kmag*sqrt(-(ct*bt-cs*bs))          #N.B. omega = c3*sqrt(g)
+
+                    if Modulated == 0:
+                        #Transform spectral coefficients - required to make 
+                        #linear operator skew hermitian
+                        #Psi_hat[ii,jj]          = Psi_hat[ii,jj]*kmag
+                        #if nvars == 3:
+                        #    T_hat[ii,jj]        = T_hat[ii,jj]*sqrt(g)*c1
+                        #S_hat[ii,jj]            = S_hat[ii,jj]*sqrt(g)*c2
+                        Psi_hat = tmp_Psi['c'][ii,jj]*kmag
+                        if nvars == 3:
+                            T_hat = tmp_T['c'][ii,jj]*sqrt(g)*c1
+                        S_hat = tmp_S['c'][ii,jj]*sqrt(g)*c2
+
+                    if readEigenvecs == 0:
+                        if k != 0:
+                        #k=0 is a special case with different eigenvectors.
+                            if nvars == 3:
+                                #Construct eigenvectors:
+                                r0      = np.array([0,c2/c1,1]).real
+                                r0mag   = np.linalg.norm(r0)
+                                r0      = r0/r0mag
+
+                                r1      = np.array([-c3/c2,-c1/c2,1]).real
+                                r1mag   = np.linalg.norm(r1)
+                                r1      = r1/r1mag
+
+                                r_1     = np.array([c3/c2,-c1/c2,1]).real
+                                r_1mag  = np.linalg.norm(r_1)
+                                r_1     = r_1/r_1mag
+                            if nvars == 2:
+                                r1      = np.array([-abs(k)/k,1])
+                                r1mag   = np.linalg.norm(r1)
+                                r1      = r1/r1mag
+
+                                r_1     = np.array([k/abs(k),1])
+                                r_1mag  = np.linalg.norm(r_1)
+                                r_1     = r_1/r_1mag
+
+                        if k == 0:
+                            if nvars == 3:
+                                #Construct eigenvectors:
+                                r0      = np.array([0,1,0]).real
+                                r0mag   = np.linalg.norm(r0)
+                                r0      = r0/r0mag
+
+                                r1      = np.array([-1,0,1]).real
+                                r1mag   = np.linalg.norm(r1)
+                                r1      = r1/r1mag
+
+                                r_1     = np.array([1,0,1]).real
+                                r_1mag  = np.linalg.norm(r_1)
+                                r_1     = r_1/r_1mag
+                            if nvars == 2:
+                                r1      = np.array([0,1])
+                                r1mag   = np.linalg.norm(r1)
+                                r1      = r1/r1mag
+
+                                r_1     = np.array([1,0])
+                                r_1mag  = np.linalg.norm(r_1)
+                                r_1     = r_1/r_1mag
+
+                                r_1_read = ivec_1[ii,jj,:]
+                                r1_read = ivec1[ii,jj,:]
+
+                    if noSigmas == 0:
+                        #Store eigenvectors for printing later:
+                        #There are n eigenvectors, each with nvar components, where each component is assumed to 
+                        #depend on k and m wavenumbers (see structure of NaturalFreq.py). 
+                        #Eigenvectors are time invariant. 
+                        #There are many ways you could print the eigenvectors, each with shape (Nx,Nz,nvar).
+                        #I looped over the index with nvar elements and printed out each 2D array of (Nx,Nz) numbers. 
+                        #Python doesn't like printing 3D arrays.
+                        #I simply reverse this procedure when reading in my eigenvectors in NaturalFreq.py.
+                        if tt == 0:
+                            ivec_1[ii,jj,:] = r_1
+                            if nvars == 3: ivec0[ii,jj,:] = r0
+                            ivec1[ii,jj,:] = r1
+
+                    #construct matrix of eigenvectors for some k and n, and
+                    #construct vector of spectral coefficients for some k,n 
+                    if nvars == 3:
+                        EigenVecsM = np.array([r_1,r0,r1]).transpose()
+                        #f_hat_vec = np.array([Psi_hat[ii,jj],T_hat[ii,jj],S_hat[ii,jj]])
+                        f_hat_vec = np.array([Psi_hat,T_hat,S_hat])
+                    if nvars == 2:
+                        EigenVecsM = np.array([r_1,r1]).transpose()
+                        #f_hat_vec = np.array([Psi_hat[ii,jj],S_hat[ii,jj]])
+                        f_hat_vec = np.array([Psi_hat,S_hat])
+
+                    #Make transformation to find amplitudes of Natural basis 
+                    EigenVecsM_inv = linalg.inv(EigenVecsM)
+                    if noSigmas == 0:
+                        sigma_kn = np.mat(EigenVecsM_inv)*np.mat(f_hat_vec).T
+                        if nvars == 3:
+                            sigma_1[ii,jj] = sigma_kn[0,0]
+                            sigma0[ii,jj] = sigma_kn[1,0]
+                            sigma1[ii,jj] = sigma_kn[2,0]
+                        if nvars == 2:
+                            sigma_1[ii,jj] = sigma_kn[0,0]
+                            sigma1[ii,jj] = sigma_kn[1,0]
+
+                    if MakeCoordRotation == 1 and ii < int(Nx/2.):
+                        diagonalM = np.zeros((2,2))*1j
+                        omega_1 = -c3*sqrt(g)*1j
+                        omega1 = c3*sqrt(g)*1j
+                        diagonalM[0,0] = np.exp(-omega_1*t[tt]*60)
+                        diagonalM[1,1] = np.exp(-omega1*t[tt]*60)
+                        
+                        MatrixExp = np.mat(EigenVecsM)*np.mat(diagonalM)*np.mat(EigenVecsM_inv)
+                        fnc_r = np.mat(MatrixExp)*np.mat(f_hat_vec).T
+
+                        #print(MatrixExp)
+                        #print(fnc_r)
+                        #print(fnc_r.shape)
+                        tmp_psi_r['c'][ii,jj] = fnc_r[0,0]
+                        tmp_S_r['c'][ii,jj] = fnc_r[1,0]
+
+                else:
+
+                    if MakeCoordRotation and ii < int(Nx/2.):
+                        #tmp_psi_r['c'][ii,jj] = Psi_hat[ii,jj]
+                        #tmp_S_r['c'][ii,jj] = S_hat[ii,jj]
+                        tmp_psi_r['c'][ii,jj] = tmp_Psi['c'][ii,jj]
+                        tmp_S_r['c'][ii,jj] = tmp_S['c'][ii,jj]
+
+        if MakeCoordRotation == 1:
+            psi_r[tt,:,:] = tmp_psi_r['g']
+            S_r[tt,:,:] = tmp_S_r['g']
+
+        if BasisCheck1 == 1:
+            #Reverse transform back to the new State:
+            if nvars == 3:
+                tmp_Psi = domain.new_field()
+                tmp_T = domain.new_field()
+                tmp_S = domain.new_field()
+                tmp_Psi.meta['z']['parity'] = -1
+                tmp_T.meta['z']['parity'] = -1
+                tmp_S.meta['z']['parity'] = -1
+
+                tmp_Psi['c'] = Psi_hat[0:int(Nx/2.),:]
+                tmp_T['c'] = T_hat[0:int(Nx/2.),:]
+                tmp_S['c'] = S_hat[0:int(Nx/2.),:]
+
+                State_2[tt,:,:,0] = tmp_Psi['g']
+                State_2[tt,:,:,1] = tmp_T['g']
+                State_2[tt,:,:,2] = tmp_S['g']
+            if nvars == 2:
+                tmp_Psi = domain.new_field()
+                tmp_S = domain.new_field()
+                tmp_Psi.meta['z']['parity'] = -1
+                tmp_S.meta['z']['parity'] = -1
+
+                tmp_Psi['c'] = Psi_hat[0:int(Nx/2.),:]
+                tmp_S['c'] = S_hat[0:int(Nx/2.),:]
+
+                State_2[tt,:,:,0] = tmp_Psi['g']
+                State_2[tt,:,:,1] = tmp_S['g']
+
+        # For writing natural basis to a file:
+        if w2f_analysis == 1 and noSigmas == 0:
+
+            #First write the coefficients (sigmas) of the natural basis:
+            if tt == 0:
+                dir_sigma = './Results/' + RunName + '/NaturalBasis/'
+                #Create directory if it doesn't exist:
+                if not os.path.exists(dir_sigma):
+                    os.makedirs(dir_sigma)
+
+
+            fnm_sigma_1 = dir_sigma + 'sigma_1_' + str(tt) + '.txt'
+            fnm_sigma1 = dir_sigma + 'sigma1_' + str(tt) + '.txt'
+            np.savetxt(fnm_sigma_1,sigma_1.view(float))
+            np.savetxt(fnm_sigma1,sigma1.view(float))
+            if nvars == 3:
+                fnm_sigma0 = dir_sigma + 'sigma0_' + str(tt) + '.txt'
+                np.savetxt(fnm_sigma0,sigma0.view(float))
+
+            #Then write out the eigenvectors (as explained above): 
+            if tt == 0 and Modulated == 0:
+                dir_ivec = './Results/' + RunName + '/NaturalBasis/'
+                #Create directory if it doesn't exist:
+                if not os.path.exists(dir_ivec):
+                    os.makedirs(dir_ivec)
+
+                for ll in range(0,nvars):
+                    #For complex eigenvectors:
+                    #for nn in range(0,2):
+                        #fnm_ivec_1 = dir_ivec + 'ivec_1_' + str(ll+1) + str(nn+1) + '.txt'
+                        #fnm_ivec0 = dir_ivec + 'ivec0_' + str(ll+1) + str(nn+1) + '.txt'
+                        #fnm_ivec1 = dir_ivec + 'ivec1_' + str(ll+1) + str(nn+1) + '.txt'
+                        #pdb.set_trace()
+                        #ivec_1_float = ivec_1.view(float)
+                        #ivec0_float = ivec0.view(float)
+                        #ivec1_float = ivec1.view(float)
+                        #pdb.set_trace()
+                    fnm_ivec_1 = dir_ivec + 'ivec_1_' + str(ll+1) + '.txt'
+                    fnm_ivec1 = dir_ivec + 'ivec1_' + str(ll+1) + '.txt'
+                    np.savetxt(fnm_ivec_1,ivec_1[:,:,ll])
+                    np.savetxt(fnm_ivec1,ivec1[:,:,ll])
+                    if nvars == 3:
+                        fnm_ivec0 = dir_ivec + 'ivec0_' + str(ll+1) + '.txt'
+                        np.savetxt(fnm_ivec0,ivec0[:,:,ll])
+
+            if BasisCheck2==1 and tt==0 and Modulated==0:
+                fnm_kmag = dir_ivec + 'kmag_arr.txt'
+                np.savetxt(fnm_kmag,kmag_arr)
+
+    if SinglePoint == 1:
+        psi_r = psi_r[:,xIdx,zIdx] 
+        S_r =  S_r[:,xIdx,zIdx] 
+
+
 if FullFields==1 and Gusto==0 and Buoyancy==0 and Density==0:
     #add base state:
     if Modulated == 0: S += Sbase
@@ -779,13 +1103,13 @@ if Density == 1:
     #an average salinity when you do it the other way around (i.e. first find the full salinity
     #and then convert to density).
 
-    if Modulated == 0:
+    if Modulated == 0 and MakeCoordRotation == 0:
         #print(rho0)
         #pdb.set_trace()
         rho = rho0*cs*S
         if FullFields==1: rho += rho_base
         data = rho
-    if Modulated == 1:
+    if Modulated == 1 or (NaturalBasis and MakeCoordRotation):
         rho_r = rho0*cs*S_r
         if FullFields==1: rho_r += rho_base
         data = rho_r
@@ -804,8 +1128,8 @@ if Density == 1:
         #xlim=(0,60)
         #xlim=(0,100)
 
-        if Modulated == 0: PlotTitle=r'$\rho$ (kg m$^{-3}$)'
-        if Modulated == 1: PlotTitle = r'$\zeta$ (kg m$^{-3}$)'
+        if Modulated == 0 and NaturalBasis == 0: PlotTitle=r'$\rho$ (kg m$^{-3}$)'
+        if Modulated == 1 or (NaturalBasis and MakeCoordRotation): PlotTitle = r'$\zeta$ (kg m$^{-3}$)'
 
 
 if Density_2 == 1:
@@ -1623,17 +1947,16 @@ if TrackSteps == 1:
         tmp8 = np.zeros((Nt,Nl))	#to compute d_dt(mid step point)
 
     if forced == 0:
-        if nrMolecularDiff == 0:
+        if ScaleDiffusion == 1:
             #Exclude boundary layer effects:
             if (N2 == 0.09) or (N2 == 0.25): zIdx_offset = int(.1/dz)
             if (N2 != 0.09) and (N2 != 0.25): zIdx_offset = int(.05/dz)
             if UseShear == 1: zIdx_offset = 0
-        if nrMolecularDiff == 1:
-            if N2 == 0.25: zIdx_offset = int(.1/dz)
-            if N2 != 0.25: zIdx_offset = int(.025/dz)
+        if ScaleDiffusion == 0:
+            zIdx_offset = int(.025/dz)
     if forced == 1: zIdx_offset = 0
 
-    if nrMolecularDiff == 0 or nrMolecularDiff == 1:
+    if ScaleDiffusion == 1:
         #Automatically exclude initial chaos (depends on N2):
         if FullFields == 1 and forced == 0:
             i = 0
@@ -1647,7 +1970,7 @@ if TrackSteps == 1:
                 i += 1
             print("offset time: ", offset_t)
 
-    if FullFields == 0 and forced == 0 and nrMolecularDiff==0:
+    if FullFields == 0 and forced == 0 and ScaleDiffusion==1:
         if N2 == 0.25:		offset_t = 19.
         if N2 == 1:		offset_t = 8.8
         if N2 == 2.25:		offset_t = 6.7
@@ -1664,8 +1987,7 @@ if TrackSteps == 1:
         tIdx_offset = int(offset_t/dt2)
         print("offset time: ", offset_t)
 
-    ManualOffset = 0
-    if nrMolecularDiff==0 and ManualOffset==1:
+    if ScaleDiffusion==0:
         #if N2 == 0.09: tIdx_offset = int(30./dt2)
         #if N2 == 0.25: tIdx_offset = int(20./dt2)
         #if N2 == 1: tIdx_offset = int(10./dt2)
@@ -1802,8 +2124,6 @@ if TrackSteps == 1:
             if FullFields == 0: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
         if Gusto == 1:
             dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
-        if Linear: dir_TrackSteps = dir_TrackSteps + '_lnr'
-
         #Create directory if it doesn't exist:
         if not os.path.exists(dir_TrackSteps):
             os.makedirs(dir_TrackSteps)
@@ -1855,10 +2175,7 @@ if TrackSteps == 1:
 
         #plt.show()
         FigNmBase = 'TrackSteps'
-        plotName = FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) 
-        if Linear: plotName = plotName + '_lnr'
-        plotName = plotName + '.eps'
-        plt.savefig(plotName) 
+        plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps') 
 
 
 if TrackInterfaces == 1:
@@ -2029,307 +2346,6 @@ if Fluxes == 1:
     plt.show()
 
 
-if NaturalBasis == 1:
-
-    # Eigenvectors are not a fnc of time.
-    # There is one eigenvector for each alpha.
-    # Eigenvectors are assumed to be a fnc of k and m wavenumbers 
-    # (see structure of NaturalFreq.py).
-    # An eigenvector, for some k and m, has nvar elements.
-    ivec_1 = np.zeros((Nx,Nz,nvars))
-    if nvars == 3: ivec0 = np.zeros((Nx,Nz,nvars))
-    ivec1 = np.zeros((Nx,Nz,nvars))
-
-    if BasisCheck1 == 1:
-        State_2 = np.zeros((Nt,Nx,Nz,nvars))
-
-    if BasisCheck2 == 1:
-        #Store wavenumber-vector magnitude array to transform back to original State 
-        #in NaturalFreq.py 
-        kmag_arr = np.zeros((Nx,Nz))
-
-    #Initialise Dedalus objects and arrays for computing Fourier-SinCos coefficients:
-    tmp_Psi = domain.new_field()
-    tmp_Psi.meta['z']['parity'] = -1
-    if nvars == 3: 
-        tmp_T = domain.new_field()
-        tmp_T.meta['z']['parity'] = -1
-    tmp_S = domain.new_field()
-    tmp_S.meta['z']['parity'] = -1
-
-    Psi_hat = np.zeros((Nx,Nz))*1j
-    if nvars == 3: T_hat = np.zeros((Nx,Nz))*1j
-    S_hat = np.zeros((Nx,Nz))*1j
-
-    #When rotating into space of waves using matrix exponential:
-    if MakeCoordRotation == 1: 
-        S_r = np.zeros((Nt,Nx,Nz))
-        psi_r = np.zeros((Nt,Nx,Nz))
-
-    if Modulated == 0:
-        dataA = Psi
-        dataB = S
-        if nvars == 3: dataC = T
-    else:
-        dataA = Psi_r
-        dataB = S_r
-        if nvars == 3: dataC = T_r
-
-    for tt in range(0,Nt):
-        print(tt)
-        
-        if FullDomain == 1:
-            tmp_Psi['g'] = dataA[tt,:,:]
-            tmp_S['g'] = dataB[tt,:,:]
-            if nvars == 3: tmp_T['g'] = dataC[tt,:,:]
-        if SinglePoint == 1:
-            tmp_Psi['g'][xIdx,zIdx] = dataA[tt,0,0]
-            tmp_S['g'][xIdx,zIdx] = dataB[tt,0,0]
-            if nvars == 3: tmp_T['g'][xIdx,zIdx] = dataC[tt,0,0]
-
-        #Add coefficients for positive wavenumbers given by Dedalus:
-        Psi_hat[0:int(Nx/2.),:] = tmp_Psi['c']
-        if nvars == 3: T_hat[0:int(Nx/2.),:] = tmp_T['c']
-        S_hat[0:int(Nx/2.),:] = tmp_S['c']
-
-        #Define coefficients for negative wavenumbers in x using
-        #Fourier transform symmetry relation for Real functions: 
-        for j in range(0,Nz):
-            for i in range(0,int(Nx/2.)):
-                if i > 0:
-                    #Apply symmetry property of real-valued functions:
-                    Psi_hat[Nx-i,j] = np.conj(tmp_Psi['c'][i,j])
-                    if nvars == 3: T_hat[Nx-i,j] = np.conj(tmp_T['c'][i,j])
-                    S_hat[Nx-i,j] = np.conj(tmp_S['c'][i,j])
-        
-        if noSigmas == 0:
-            # There is one sigma for each alpha.
-            # Sigmas are complex and depend on k and m wavenumbers, and vary through time, 
-            # so here we re-define the arrays for each time point in the loop. 
-            # n.b. _1: alpha=-1, 0: alpha=0, 1: alpha=+1 
-            sigma_1 = np.zeros((Nx,Nz))*1j
-            if nvars == 3: sigma0 = np.zeros((Nx,Nz))*1j
-            sigma1 = np.zeros((Nx,Nz))*1j
-
-        if MakeCoordRotation == 1:
-            tmp_psi_r = domain.new_field()
-            tmp_S_r = domain.new_field()
-            tmp_psi_r.meta['z']['parity'] = -1
-            tmp_S_r.meta['z']['parity'] = -1
-
-        #Loop over wavenumbers:
-        for jj in range(0,Nz):
-            for ii in range(0,int(Nx/2.)):
-
-                k = kk[ii]
-                n = kk_cosine[jj]
-
-                kvec    = np.array([k,n])
-                kmag    = np.linalg.norm(kvec)
-                if (BasisCheck2==1) and (tt==0): kmag_arr[ii,jj] = kmag
-
-                if kmag != 0:
-
-                    if nvars == 3: c1 = sqrt(-ct/bt)
-                    c2      = sqrt(cs/bs) 
-                    c3 = abs(k)/kmag*sqrt(-(ct*bt-cs*bs))          #N.B. omega = c3*sqrt(g)
-
-                    if Modulated == 0:
-                        #Transform spectral coefficients - required to make 
-                        #linear operator skew hermitian
-                        Psi_hat[ii,jj]        	= Psi_hat[ii,jj]*kmag
-                        if nvars == 3:
-                            T_hat[ii,jj]       	= T_hat[ii,jj]*sqrt(g)*c1
-                        S_hat[ii,jj]           	= S_hat[ii,jj]*sqrt(g)*c2
-
-                    if k != 0:
-                    #k=0 is a special case with different eigenvectors.
-                        if nvars == 3:
-                            #Construct eigenvectors:
-                            r0      = np.array([0,c2/c1,1]).real
-                            r0mag   = np.linalg.norm(r0)
-                            r0      = r0/r0mag
-
-                            r1      = np.array([-c3/c2,-c1/c2,1]).real
-                            r1mag   = np.linalg.norm(r1)
-                            r1      = r1/r1mag
-
-                            r_1     = np.array([c3/c2,-c1/c2,1]).real
-                            r_1mag  = np.linalg.norm(r_1)
-                            r_1     = r_1/r_1mag
-                        if nvars == 2:
-                            r1      = np.array([-abs(k)/k,1])
-                            r1mag   = np.linalg.norm(r1)
-                            r1      = r1/r1mag
-
-                            r_1     = np.array([k/abs(k),1])
-                            r_1mag  = np.linalg.norm(r_1)
-                            r_1     = r_1/r_1mag
-
-                    if k == 0:
-                        if nvars == 3:
-                            #Construct eigenvectors:
-                            r0      = np.array([0,1,0]).real
-                            r0mag   = np.linalg.norm(r0)
-                            r0      = r0/r0mag
-
-                            r1      = np.array([-1,0,1]).real
-                            r1mag   = np.linalg.norm(r1)
-                            r1      = r1/r1mag
-
-                            r_1     = np.array([1,0,1]).real
-                            r_1mag  = np.linalg.norm(r_1)
-                            r_1     = r_1/r_1mag
-                        if nvars == 2:
-                            r1      = np.array([0,1])
-                            r1mag   = np.linalg.norm(r1)
-                            r1      = r1/r1mag
-
-                            r_1     = np.array([1,0])
-                            r_1mag  = np.linalg.norm(r_1)
-                            r_1     = r_1/r_1mag
-
-                    if noSigmas == 0: 
-                        #Store eigenvectors for printing later:
-                        #There are n eigenvectors, each with nvar components, where each component is assumed to 
-                        #depend on k and m wavenumbers (see structure of NaturalFreq.py). 
-                        #Eigenvectors are time invariant. 
-                        #There are many ways you could print the eigenvectors, each with shape (Nx,Nz,nvar).
-                        #I looped over the index with nvar elements and printed out each 2D array of (Nx,Nz) numbers. 
-                        #Python doesn't like printing 3D arrays.
-                        #I simply reverse this procedure when reading in my eigenvectors in NaturalFreq.py.
-                        if tt == 0:
-                            ivec_1[ii,jj,:] = r_1
-                            if nvars == 3: ivec0[ii,jj,:] = r0
-                            ivec1[ii,jj,:] = r1
-
-                    #construct matrix of eigenvectors for some k and n, and
-                    #construct vector of spectral coefficients for some k,n 
-                    if nvars == 3:
-                        EigenVecsM = np.array([r_1,r0,r1]).transpose()
-                        f_hat_vec = np.array([Psi_hat[ii,jj],T_hat[ii,jj],S_hat[ii,jj]])
-                    if nvars == 2:
-                        EigenVecsM = np.array([r_1,r1]).transpose()
-                        f_hat_vec = np.array([Psi_hat[ii,jj],S_hat[ii,jj]])
-
-                    #Make transformation to find amplitudes of Natural basis 
-                    EigenVecsM_inv = linalg.inv(EigenVecsM)
-                    if noSigmas == 0:
-                        sigma_kn = np.mat(EigenVecsM_inv)*np.mat(f_hat_vec).T
-                        if nvars == 3:
-                            sigma_1[ii,jj] = sigma_kn[0,0]
-                            sigma0[ii,jj] = sigma_kn[1,0]
-                            sigma1[ii,jj] = sigma_kn[2,0]
-                        if nvars == 2:
-                            sigma_1[ii,jj] = sigma_kn[0,0]
-                            sigma1[ii,jj] = sigma_kn[1,0]
-
-                    if MakeCoordRotation == 1 and ii < int(Nx/2.):
-                        diagonalM = np.zeros((2,2))*1j
-                        omega_1 = -c3*sqrt(g)*1j
-                        omega1 = c3*sqrt(g)*1j
-                        diagonalM[0,0] = np.exp(-omega_1*t[tt])
-                        diagonalM[1,1] = np.exp(-omega1*t[tt])
-
-                        MatrixExp = np.mat(EigenVecsM)*np.mat(diagonalM)*np.mat(EigenVecsM_inv)
-                        fnc_r = np.mat(MatrixExp)*np.mat(f_hat_vec).T
-
-                        #print(MatrixExp)
-                        #print(fnc_r)
-                        #print(fnc_r.shape)
-                        tmp_psi_r['c'][ii,jj] = fnc_r[0,0]
-                        tmp_S_r['c'][ii,jj] = fnc_r[1,0]
-                    
-                else:
-
-                    if MakeCoordRotation and ii < int(Nx/2.):
-                        tmp_psi_r['c'][ii,jj] = Psi_hat[ii,jj] 
-                        tmp_S_r['c'][ii,jj] = S_hat[ii,jj]
-
-        if MakeCoordRotation == 1:
-            psi_r[tt,:,:] = tmp_psi_r['g']
-            S_r[tt,:,:] = tmp_S_r['g']
-
-        if BasisCheck1 == 1:
-            #Reverse transform back to the new State:
-            if nvars == 3:
-                tmp_Psi = domain.new_field()
-                tmp_T = domain.new_field()
-                tmp_S = domain.new_field()
-                tmp_Psi.meta['z']['parity'] = -1
-                tmp_T.meta['z']['parity'] = -1
-                tmp_S.meta['z']['parity'] = -1
-
-                tmp_Psi['c'] = Psi_hat[0:int(Nx/2.),:]
-                tmp_T['c'] = T_hat[0:int(Nx/2.),:]
-                tmp_S['c'] = S_hat[0:int(Nx/2.),:]
-
-                State_2[tt,:,:,0] = tmp_Psi['g']
-                State_2[tt,:,:,1] = tmp_T['g']
-                State_2[tt,:,:,2] = tmp_S['g']
-            if nvars == 2:
-                tmp_Psi = domain.new_field()
-                tmp_S = domain.new_field()
-                tmp_Psi.meta['z']['parity'] = -1
-                tmp_S.meta['z']['parity'] = -1
-
-                tmp_Psi['c'] = Psi_hat[0:int(Nx/2.),:]
-                tmp_S['c'] = S_hat[0:int(Nx/2.),:]
-
-                State_2[tt,:,:,0] = tmp_Psi['g']
-                State_2[tt,:,:,1] = tmp_S['g']
-
-        # For writing natural basis to a file:
-        if w2f_analysis == 1 and noSigmas == 0:
-
-            #First write the coefficients (sigmas) of the natural basis:
-            if tt == 0:
-                dir_sigma = './Results/' + RunName + '/NaturalBasis/'
-                #Create directory if it doesn't exist:
-                if not os.path.exists(dir_sigma):
-                    os.makedirs(dir_sigma)
-
-            fnm_sigma_1 = dir_sigma + 'sigma_1_' + str(tt) + '.txt'
-            fnm_sigma1 = dir_sigma + 'sigma1_' + str(tt) + '.txt'
-            np.savetxt(fnm_sigma_1,sigma_1.view(float))
-            np.savetxt(fnm_sigma1,sigma1.view(float))
-            if nvars == 3:
-                fnm_sigma0 = dir_sigma + 'sigma0_' + str(tt) + '.txt'
-                np.savetxt(fnm_sigma0,sigma0.view(float))
-
-            #Then write out the eigenvectors (as explained above): 
-            if tt == 0 and Modulated == 0:
-                dir_ivec = './Results/' + RunName + '/NaturalBasis/'
-                #Create directory if it doesn't exist:
-                if not os.path.exists(dir_ivec):
-                    os.makedirs(dir_ivec)
-
-                for ll in range(0,nvars):
-                    #For complex eigenvectors:
-                    #for nn in range(0,2):
-                        #fnm_ivec_1 = dir_ivec + 'ivec_1_' + str(ll+1) + str(nn+1) + '.txt'
-                        #fnm_ivec0 = dir_ivec + 'ivec0_' + str(ll+1) + str(nn+1) + '.txt'
-                        #fnm_ivec1 = dir_ivec + 'ivec1_' + str(ll+1) + str(nn+1) + '.txt'
-                        #pdb.set_trace()
-                        #ivec_1_float = ivec_1.view(float)
-                        #ivec0_float = ivec0.view(float)
-                        #ivec1_float = ivec1.view(float)
-                        #pdb.set_trace()
-                    fnm_ivec_1 = dir_ivec + 'ivec_1_' + str(ll+1) + '.txt'
-                    fnm_ivec1 = dir_ivec + 'ivec1_' + str(ll+1) + '.txt'
-                    np.savetxt(fnm_ivec_1,ivec_1[:,:,ll])
-                    np.savetxt(fnm_ivec1,ivec1[:,:,ll])
-                    if nvars == 3:
-                        fnm_ivec0 = dir_ivec + 'ivec0_' + str(ll+1) + '.txt'
-                        np.savetxt(fnm_ivec0,ivec0[:,:,ll])
-
-            if BasisCheck2==1 and tt==0 and Modulated==0:
-                fnm_kmag = dir_ivec + 'kmag_arr.txt'
-                np.savetxt(fnm_kmag,kmag_arr)
-
-    if SinglePoint == 1:
-        psi_r = psi_r[:,xIdx,zIdx] 
-        S_r = S_r[:,xIdx,zIdx] 
 
 if StateS_2 == 1:
 #New salinity after transformation to make linear operator Skew Hermitian:
@@ -2401,8 +2417,8 @@ if StateS == 1:
     #pdb.set_trace()
 
     if NaturalBasis == 1 and MakeCoordRotation == 1:
-        if FullDomain == 1: data = State_R[:,:,:,1]
-        if SinglePoint == 1: data = State_R[:,xIdx,zIdx,1]
+        if FullDomain == 1: data = S_r
+        if SinglePoint == 1: data = S_r[:,xIdx,zIdx,1]
     if NaturalBasis == 0 and Modulated == 1: 
         data = S_r
     if NaturalBasis == 0 and Modulated == 0:
@@ -2414,7 +2430,7 @@ if StateS == 1:
 
         if CoefficientSpace == 0:
             nlevs = 41
-            if Modulated == 1:
+            if Modulated == 1 or (NaturalBasis == 1 and MakeCoordRotation == 1):
                 PlotTitle = r'$\zeta$ (g/kg)'
                 SMin = -.02
                 SMax = .02
@@ -2490,8 +2506,8 @@ if StatePsi == 1:
 #New salinity after applying coordinate rotation (matrix exponential):
 
     if NaturalBasis == 1 and MakeCoordRotation == 1:
-        if FullDomain == 1: data = State_R[:,:,:,0]
-        if SinglePoint == 1: data = State_R[:,xIdx,zIdx,0]
+        if FullDomain == 1: data = psi_r
+        if SinglePoint == 1: data = psi_r[:,xIdx,zIdx]
     if NaturalBasis == 0 and Modulated == 1: 
         data = Psi_r
     if NaturalBasis == 0 and Modulated == 0:
@@ -2527,7 +2543,6 @@ if StatePsi == 1:
 if ForwardTransform == 1:
     data = S
     #data = Psi
-    #data = State_R[:,:,:,1]
 
     #Compute Fourier-SinCos basis coefficients:    
     tmp = domain.new_field()
@@ -2614,28 +2629,17 @@ if PhasePortraits == 1:
 
 if SpectralAnalysis == 1:
     if AnalyseS == 1:
-        if Modulated == 0 and MakeCoordRotation==0: 
-            data = S2
-            fnmVar = 'S2'
-        if Modulated == 1 or MakeCoordRotation==1: 
-            data = S_r
-            fnmVar = 'S_r'
-
+        fnmVar = 'S'
+        if Modulated == 0 and MakeCoordRotation==0: data = S2
+        if Modulated == 1 or MakeCoordRotation==1: data = S_r
     if AnalyseRho == 1:
-        if Modulated == 0 and MakeCoordRotation==0: 
-            data = rho2
-            fnmVar = 'Rho2'
-        if Modulated == 1 or MakeCoordRotation==1: 
-            data = rho_r
-            fnmVar = 'Rho_r'
-
+        fnmVar = 'Rho2'
+        if Modulated == 0 and MakeCoordRotation==0: data = rho2
+        if Modulated == 1 or MakeCoordRotation==1: data = rho_r
     if AnalysePsi == 1:
-        if Modulated == 0 and MakeCoordRotation==0: 
-            data = Psi2
-            fnmVar = 'Psi2'
-        if Modulated == 1 or MakeCoordRotation==1: 
-            data = Psi_r
-            fnmVar = 'Psi_r'
+        fnmVar = 'Psi'
+        if Modulated == 0: data = Psi
+        if Modulated == 1 or MakeCoordRotation: data = Psi_r
 
     #idx0 = int(10./dt2)
     #tmp = data[idx0:,:,:]
@@ -2645,10 +2649,6 @@ if SpectralAnalysis == 1:
         N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
         #t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
         t_offset_vec0 = np.array([188.0, 92.0, 43.0, 35.0, 32.0, 24.0, 21.0, 20.0, 17.0, 17.0, 14.0, 14.0, 12.0])
-
-        #round up to make length of series more uniform
-        t_offset_vec0 = np.ceil(t_offset_vec0/10.)*10
-
         t_offset_vec = (t_offset_vec0/dt2).astype(int) 
         idx = int(np.where(N_vec == np.sqrt(N2))[0])
         if AnalyseLayerDecay==1:
@@ -2700,15 +2700,14 @@ if SpectralAnalysis == 1:
         RunName_ = separator.join(tmp)
 
         file_dir = './Results/' + RunName + '/'
-        #file_dir = './Results_bigNu/' + RunName + '/'
         fnm_w2f = file_dir + 'psd_' + fnmVar 
-        #if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
-        fnm_w2f = fnm_w2f + '_' + RunName + '_' + npersegStr
+        if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
+        fnm_w2f = fnm_w2f + RunName + '_' + npersegStr
         if CheckPSD == 1: fnm_w2f = fnm_w2f + '_' + str(dt2)
         if MeanFlowAnalysis == 1: fnm_w2f = fnm_w2f + '_mf'
         if AnalyseLayerDecay == 1: fnm_w2f = fnm_w2f + '_decayPhase'
         if AnalyseLayerCreation == 1: fnm_w2f = fnm_w2f + '_layerCreation'
-        #if Linear == 1: fnm_w2f = fnm_w2f + '_lnr'
+        if Linear == 1: fnm_w2f = fnm_w2f + '_linear'
         fnm_w2f = fnm_w2f + '.txt'
         np.savetxt(fnm_w2f, (f,freqvec))
 
@@ -2749,12 +2748,13 @@ if SpectralAnalysis == 1:
 
             xgrid = freqvec*(2*np.pi)
             xlim = (0,5)
-            if nrMolecularDiff == 1: ylim = (1e-12,1e+0)
-            xlabel = r'$|\omega|$ (rad/s)'
-            if Modulated == 0: ylabel = r'PSD ([$\rho^{\prime}_{\diamond}$]$^2$/(rad/s))'
+            #if ScaleDiffusion == 1: ylim = (1e-7,1e+3)
+            #if ScaleDiffusion == 0: ylim = (1e-7,1e+3)
+            xlabel = r'$\omega$ (rad/s)'
+            if Modulated == 0: ylabel = r'PSD ([$\rho^{\prime}_{\rm H}$]$^2$/(rad/s))'
             if Modulated == 1 or MakeCoordRotation==1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
             PlotTitle = ''
-            FigNmBase = 'psd_' + fnmVar + '_'
+            FigNmBase = 'psd_'
 
         if PSD_mod_unmod_plot == 1:
             fig1 = plt.figure(figsize=(width*1.2,height))
@@ -2762,13 +2762,19 @@ if SpectralAnalysis == 1:
             ax1 = fig1.add_subplot(grid1[0,0])
             fig1.set_tight_layout(True) 
 
-            #data = np.loadtxt('./SpectralAnalysis/unmodulated/' + fname + '_' + npersegStr + '.txt')
-            #data_mod = np.loadtxt('./SpectralAnalysis/modulated/' + fname + '_' + npersegStr + '_R.txt')
-            data = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            data_mod = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
-            #data = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            #data_mod = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
+            if N2 == 0.25: 	fname = 'psd_N2_00_25'
+            if N2 == 1: 	fname = 'psd_N2_01'
+            if N2 == 2.25: 	fname = 'psd_N2_02_25'
+            if N2 == 4: 	fname = 'psd_N2_04'
+            if N2 == 6.25: 	fname = 'psd_N2_06_25'
+            if N2 == 9: 	fname = 'psd_N2_09'
+            if N2 == 12.25: 	fname = 'psd_N2_12_25'
+            if N2 == 16: 	fname = 'psd_N2_16'
+            if N2 == 20.25: 	fname = 'psd_N2_20_25'
+            if N2 == 25: 	fname = 'psd_N2_25'
 
+            data = np.loadtxt('./SpectralAnalysis/unmodulated/' + fname + '_' + npersegStr + '.txt')
+            data_mod = np.loadtxt('./SpectralAnalysis/modulated/' + fname + '_' + npersegStr + '_R.txt')
 
             intPSD = np.trapz(data[0,:],data[1,:])
             intPSD_mod = np.trapz(data_mod[0,:],data_mod[1,:])
@@ -2776,53 +2782,42 @@ if SpectralAnalysis == 1:
             print("integral of PSD for modulated system: ", intPSD_mod)
             print("intPSD/intPSD_mod: ", intPSD/intPSD_mod)
 
-            ax1.plot(xgrid,data[0,:],'k-', linewidth=2, label=r'$\rho^{\prime}_{\diamond}$')
-            ax1.plot(xgrid,data_mod[0,:],'-', color='gray', linewidth=3, label=r'$\zeta$')
+            ax1.plot(xgrid,data[0,:],'.k-', linewidth=2, label=r'$\rho^{\prime}_{\rm H}$')
+            ax1.plot(xgrid,data_mod[0,:],'.-', color='lightgrey', linewidth=1, label=r'$\zeta$')
             ax1.set_xlabel(xlabel)
             ax1.set_ylabel(ylabel)
             ax1.set_yscale("log")
             ax1.set_xlim(0,5)
-            #ax1.set_xscale("log")
-            #ax1.set_xlim(1e-2,1e1)
-            ylim = (1e-14,1e0)
             ax1.set_ylim(ylim)
-            ax1.set_yticks((np.logspace(-14, 0, num=8))) 
 
-            addBands = 1
-            if addBands == 1:
-                #Load tracked spectrum features files so we can overplot omega_well and 
-                #bandwidths of Meanflow and IGW:
-                datMF = np.loadtxt('/lustre/home/pb412/dedalus/meanflowarr.txt')
-                datIGW = np.loadtxt('/lustre/home/pb412/dedalus/psdIGWarr.txt')
-                N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
-                Nidx = np.where(N_vec == np.sqrt(N2))
-                omega_well = datMF[Nidx,3].flatten()[0]
-                IGW_mid = datIGW[Nidx,4].flatten()[0]
-                IGW_maxf = (datIGW[Nidx,4] + datIGW[Nidx,2]/2).flatten()[0]
-                PSD_well = datMF[Nidx,2].flatten()[0] 
-                ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'--k', label=r'$\omega_{\rm well}$')
-                ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'k')
-                yloc = 1e-12
-                if N2 != 0.25: ax1.text(IGW_mid, yloc, r'$\omega_{\rm IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
-                xoffset = 0.2
-                if N2 != 0.25: ax1.plot([omega_well,IGW_mid-xoffset], [yloc,yloc], 'k')
-                if N2 != 0.25: ax1.plot([IGW_mid+xoffset,IGW_maxf], [yloc,yloc], 'k')
-                if N2 != 0.25: ax1.text(omega_well/2, yloc, r'$\omega_{\rm MF}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
-                #ax1.scatter(omega_well,PSD_well, s=100, facecolors='none', edgecolors='k')
-                #ax1.scatter(IGW_maxf,PSD_well, s=100, facecolors='none', edgecolors='k')
+            #Load tracked spectrum features files so we can overplot omega_well and 
+            #bandwidths of Meanflow and IGW:
+            datMF = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr.txt')
+            datIGW = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/psdIGWarr.txt')
+            N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
+            Nidx = np.where(N_vec == np.sqrt(N2))
+            omega_well = datMF[Nidx,3].flatten()[0]
+            IGW_mid = datIGW[Nidx,4].flatten()[0]
+            IGW_maxf = (datIGW[Nidx,4] + datIGW[Nidx,2]/2).flatten()[0]
+            PSD_well = datMF[Nidx,2].flatten()[0] 
+            ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'k', label=r'$\omega_{\rm well}$')
+            ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'--k', label=r'$\omega_{\rm well} + \Delta\omega_{\rm IGW}$')
+            if N2 != 0.25: ax1.text(IGW_mid, 1e-16, r'$\omega_{\rm IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
+            xoffset = 0.2
+            if N2 != 0.25: ax1.plot([omega_well,IGW_mid-xoffset], [1e-16,1e-16], 'k')
+            if N2 != 0.25: ax1.plot([IGW_mid+xoffset,IGW_maxf], [1e-16,1e-16], 'k')
+            if N2 != 0.25: ax1.text(omega_well/2, 1e-16, r'$\omega_{\rm MF}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
+            #ax1.scatter(omega_well,PSD_well, s=100, facecolors='none', edgecolors='k')
+            #ax1.scatter(IGW_maxf,PSD_well, s=100, facecolors='none', edgecolors='k')
 
             if PSD_add_linear == 1:
-                dat = np.loadtxt('./Results/' + RunName + '_lnr/' + 'psd_Rho2_' + RunName + '_lnr_' + npersegStr + '.txt')
-                ax1.plot(xgrid,dat[0,:],':k', linewidth=2, label=r'$\left(\rho^{\prime}_{\diamond}\right)_{\rm linear}$')
+                dat = np.loadtxt('./SpectralAnalysis/unmodulated/psd_RhoStateN2_02_25_dt0.01_sp_linear_1000.txt')            
+                ax1.plot(xgrid,dat[0,:],'k-', linewidth=0.5, label=r'$\rho_{\rm linear}$')
 
 
-            if N2==9: legend_fontsize='20'
-            else: legend_fontsize=None
-
-            if N2 != 16: plt.legend(frameon=False, labelspacing = 0.1, fontsize=legend_fontsize)
+            plt.legend(frameon=False)
             #plt.show()
-            plt.savefig('psd_' + RunName + '_mod_unmod.eps')
-            #plt.savefig('psd_' + RunName + '_mod_unmod_bigNu.eps')
+            plt.savefig('psd_N2_' + RunName_ + '_mod_unmod.eps')
 
         if PSD_vs_N_plot == 1 and CheckPSD == 0:
             fig1 = plt.figure(figsize=(width*1.2,height))
@@ -2842,15 +2837,13 @@ if SpectralAnalysis == 1:
             #lstyle_vec('-','-','-','-','-')
             #lwidth_vec = (1,1,1,1,1)
 
-            #if Modulated == 1: 
-            #    fdir = './SpectralAnalysis/modulated/'
-            #    tag_R = '_R'
-            #else: 
-            #    fdir = './SpectralAnalysis/unmodulated/'
-            #    tag_R = ''
-            fdir = './Results/'           
-            tag_R = ''
- 
+            if Modulated == 1: 
+                fdir = './SpectralAnalysis/modulated/'
+                tag_R = '_R'
+            else: 
+                fdir = './SpectralAnalysis/unmodulated/'
+                tag_R = ''
+            
             #data1 = np.loadtxt(fdir + 'psd_N2_00_25' + '_' + npersegStr + tag_R + '.txt')
             #data2 = np.loadtxt(fdir + 'psd_N2_01' + '_' + npersegStr + tag_R + '.txt')
             #data3 = np.loadtxt(fdir + 'psd_N2_02_25' + '_' + npersegStr + tag_R + '.txt')
@@ -2858,10 +2851,10 @@ if SpectralAnalysis == 1:
             #data5 = np.loadtxt(fdir + 'psd_N2_16' + '_' + npersegStr + tag_R + '.txt')
             #data6 = np.loadtxt(fdir + 'psd_N2_25' + '_' + npersegStr + tag_R + '.txt')
 
-            data1 = np.loadtxt(fdir + 'StateN2_00_25_sp/' + 'psd_Rho2StateN2_00_25_sp' + '_' + npersegStr + tag_R + '.txt')
-            data2 = np.loadtxt(fdir + 'StateN2_01_sp/' + 'psd_Rho2StateN2_01_sp' + '_' + npersegStr + tag_R + '.txt')
-            data3 = np.loadtxt(fdir + 'StateN2_04_sp/' + 'psd_Rho2StateN2_04_sp' + '_' + npersegStr + tag_R + '.txt')
-            data4 = np.loadtxt(fdir + 'StateN2_16_sp/' + 'psd_Rho2StateN2_16_sp' + '_' + npersegStr + tag_R + '.txt')
+            data1 = np.loadtxt(fdir + 'psd_N2_00_25' + '_' + npersegStr + tag_R + '.txt')
+            data2 = np.loadtxt(fdir + 'psd_N2_01' + '_' + npersegStr + tag_R + '.txt')
+            data3 = np.loadtxt(fdir + 'psd_N2_04' + '_' + npersegStr + tag_R + '.txt')
+            data4 = np.loadtxt(fdir + 'psd_N2_16' + '_' + npersegStr + tag_R + '.txt')
 
             #lstyle_vec = ('-','-','-','-','-',':',':')
             #lwidth_vec = (3,1,3,2,1,2,1)
@@ -2876,16 +2869,16 @@ if SpectralAnalysis == 1:
             ax1.set_xlabel(r'$\omega$ (rad/s)')
             if Modulated == 0: 
                 #ax1.set_ylim(1e-12,1e+4)
-                ax1.set_ylim(1e-7,1e+3)
+                ax1.set_ylim(1e-18,1e+0)
                 ax1.set_ylabel(r'PSD ([$\rho^{\prime}_{\rm H}$]$^2$/(rad/s))')
             else: 
-                ax1.set_ylim(1e-7,1e+3)
+                ax1.set_ylim(1e-18,1e+0)
                 ax1.set_ylabel(r'PSD ($\left[{\zeta}\right]^2$/(rad/s))')
             c = 2*np.pi
             ax1.semilogy(data1[1,:]*c,data1[0,:], color=colorvec[0], linestyle=lstyle_vec[0], linewidth=lwidth_vec[0], label=labelvec[0])
             ax1.semilogy(data2[1,:]*c,data2[0,:], color=colorvec[1], linestyle=lstyle_vec[1], linewidth=lwidth_vec[1], label=labelvec[1])
             ax1.semilogy(data3[1,:]*c,data3[0,:], color=colorvec[2], linestyle=lstyle_vec[2], linewidth=lwidth_vec[2], label=labelvec[2])
-            #ax1.semilogy(data4[1,:]*c,data4[0,:], color=colorvec[3], linestyle=lstyle_vec[3], linewidth=lwidth_vec[3], label=labelvec[3])
+            ax1.semilogy(data4[1,:]*c,data4[0,:], color=colorvec[3], linestyle=lstyle_vec[3], linewidth=lwidth_vec[3], label=labelvec[3])
             #ax1.semilogy(data5[1,:]*c,data5[0,:], color=colorvec[4], linestyle=lstyle_vec[4], linewidth=lwidth_vec[4], label=labelvec[4])
             #ax1.semilogy(data6[1,:]*c,data6[0,:], color=colorvec[5], linestyle=lstyle_vec[5], linewidth=lwidth_vec[5], label=labelvec[5])
             #ax1.semilogy(data7[1,:]*c,data7[0,:], color=colorvec[6], linestyle=lstyle_vec[6], linewidth=lwidth_vec[6], label=labelvec[6])
@@ -3086,7 +3079,7 @@ if SpectralAnalysis == 1:
 if TimescaleSeparation == 1:
 
     #User input:
-    nperseg = 3000
+    nperseg = 1000
 
     npersegStr = str(nperseg)
     if Modulated == 0: N_vec = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
@@ -3096,35 +3089,38 @@ if TimescaleSeparation == 1:
     c = 2*np.pi
 
     if Modulated == 1:
-        varnm = 'Rho_r'
+        fdir = '/home/ubuntu/BoussinesqLab/dedalus/SpectralAnalysis/modulated/' 
+        tag_R = '_R'
     else: 
-        varnm = 'Rho2'
+        fdir = '/home/ubuntu/BoussinesqLab/dedalus/SpectralAnalysis/unmodulated/' 
+        tag_R = ''
 
-    data1 = np.loadtxt('./Results/StateN2_00_25_sp/psd_' + varnm + '_StateN2_00_25_sp_' + npersegStr + '.txt')
-    data2 = np.loadtxt('./Results/StateN2_01_sp/psd_' + varnm + '_StateN2_01_sp_' + npersegStr + '.txt')
-    data3 = np.loadtxt('./Results/StateN2_02_25_sp/psd_' + varnm + '_StateN2_02_25_sp_' + npersegStr + '.txt')
-    data4 = np.loadtxt('./Results/StateN2_04_sp/psd_' + varnm + '_StateN2_04_sp_' + npersegStr + '.txt')
-    data5 = np.loadtxt('./Results/StateN2_06_25_sp/psd_' + varnm + '_StateN2_06_25_sp_' + npersegStr + '.txt')
-    if IGWmethod==0: data6 = np.loadtxt('./Results/StateN2_07_5625_sp/psd_' + varnm + '_StateN2_07_5625_sp_' + npersegStr + '.txt')
-    data7 = np.loadtxt('./Results/StateN2_09_sp/psd_' + varnm + '_StateN2_09_sp_' + npersegStr + '.txt')
-    if IGWmethod==0: data8 = np.loadtxt('./Results/StateN2_10_5625_sp/psd_' + varnm + '_StateN2_10_5625_sp_' + npersegStr + '.txt')
-    data9 = np.loadtxt('./Results/StateN2_12_25_sp/psd_' + varnm + '_StateN2_12_25_sp_' + npersegStr + '.txt')
-    if IGWmethod==0: data10 = np.loadtxt('./Results/StateN2_14_0625_sp/psd_' + varnm + '_StateN2_14_0625_sp_' + npersegStr + '.txt')
-    data11 = np.loadtxt('./Results/StateN2_16_sp/psd_' + varnm + '_StateN2_16_sp_' + npersegStr + '.txt')
-    data12 = np.loadtxt('./Results/StateN2_20_25_sp/psd_' + varnm + '_StateN2_20_25_sp_' + npersegStr + '.txt')
-    data13 = np.loadtxt('./Results/StateN2_25_sp/psd_' + varnm + '_StateN2_25_sp_' + npersegStr + '.txt')
+    data1 = np.loadtxt(fdir + 'psd_N2_00_25' + '_' + npersegStr + tag_R + '.txt')
+    data2 = np.loadtxt(fdir + 'psd_N2_01' + '_' + npersegStr + tag_R + '.txt')
+    data3 = np.loadtxt(fdir + 'psd_N2_02_25' + '_' + npersegStr + tag_R + '.txt')
+    data4 = np.loadtxt(fdir + 'psd_N2_04' + '_' + npersegStr + tag_R + '.txt')
+    data5 = np.loadtxt(fdir + 'psd_N2_06_25' + '_' + npersegStr + tag_R + '.txt')
+    if IGWmethod==0: data6 = np.loadtxt(fdir + 'psd_N2_07_5625' + '_' + npersegStr + tag_R + '.txt')
+    data7 = np.loadtxt(fdir + 'psd_N2_09' + '_' + npersegStr + tag_R + '.txt')
+    if IGWmethod==0: data8 = np.loadtxt(fdir + 'psd_N2_10_5625' + '_' + npersegStr + tag_R + '.txt')
+    data9 = np.loadtxt(fdir + 'psd_N2_12_25' + '_' + npersegStr + tag_R + '.txt')
+    if IGWmethod==0: data10 = np.loadtxt(fdir + 'psd_N2_14_0625' + '_' + npersegStr + tag_R + '.txt')
+    data11 = np.loadtxt(fdir + 'psd_N2_16' + '_' + npersegStr + tag_R + '.txt')
+    data12 = np.loadtxt(fdir + 'psd_N2_20_25' + '_' + npersegStr + tag_R + '.txt')
+    data13 = np.loadtxt(fdir + 'psd_N2_25' + '_' + npersegStr + tag_R + '.txt')
 
     if IGWmethod == 1:
-        data1_R = np.loadtxt('./Results/StateN2_00_25_sp/psd_Rho_r_StateN2_00_25_sp_' + npersegStr + '.txt')
-        data2_R = np.loadtxt('./Results/StateN2_01_sp/psd_Rho_r_StateN2_01_sp_' + npersegStr + '.txt')
-        data3_R = np.loadtxt('./Results/StateN2_02_25_sp/psd_Rho_r_StateN2_02_25_sp_' + npersegStr + '.txt')
-        data4_R = np.loadtxt('./Results/StateN2_04_sp/psd_Rho_r_StateN2_04_sp_' + npersegStr + '.txt')
-        data5_R = np.loadtxt('./Results/StateN2_06_25_sp/psd_Rho_r_StateN2_06_25_sp_' + npersegStr + '.txt')
-        data7_R = np.loadtxt('./Results/StateN2_09_sp/psd_Rho_r_StateN2_09_sp_' + npersegStr + '.txt')
-        data9_R = np.loadtxt('./Results/StateN2_12_25_sp/psd_Rho_r_StateN2_12_25_sp_' + npersegStr + '.txt')
-        data11_R = np.loadtxt('./Results/StateN2_16_sp/psd_Rho_r_StateN2_16_sp_' + npersegStr + '.txt')
-        data12_R = np.loadtxt('./Results/StateN2_20_25_sp/psd_Rho_r_StateN2_20_25_sp_' + npersegStr + '.txt')
-        data13_R = np.loadtxt('./Results/StateN2_25_sp/psd_Rho_r_StateN2_25_sp_' + npersegStr + '.txt')
+        fdir_R = '/home/ubuntu/BoussinesqLab/dedalus/SpectralAnalysis/modulated/'
+        data1_R = np.loadtxt(fdir_R + 'psd_N2_00_25' + '_' + npersegStr + '_R' + '.txt')
+        data2_R = np.loadtxt(fdir_R + 'psd_N2_01' + '_' + npersegStr + '_R' + '.txt')
+        data3_R = np.loadtxt(fdir_R + 'psd_N2_02_25' + '_' + npersegStr + '_R' + '.txt')
+        data4_R = np.loadtxt(fdir_R + 'psd_N2_04' + '_' + npersegStr + '_R' + '.txt')
+        data5_R = np.loadtxt(fdir_R + 'psd_N2_06_25' + '_' + npersegStr + '_R' + '.txt')
+        data7_R = np.loadtxt(fdir_R + 'psd_N2_09' + '_' + npersegStr + '_R' + '.txt')
+        data9_R = np.loadtxt(fdir_R + 'psd_N2_12_25' + '_' + npersegStr + '_R' + '.txt')
+        data11_R = np.loadtxt(fdir_R + 'psd_N2_16' + '_' + npersegStr + '_R' + '.txt')
+        data12_R = np.loadtxt(fdir_R + 'psd_N2_20_25' + '_' + npersegStr + '_R' + '.txt')
+        data13_R = np.loadtxt(fdir_R + 'psd_N2_25' + '_' + npersegStr + '_R' + '.txt')
 
     #Search for largest psd frequencies excluding mean flow. 
     #This method also identifies the mean flow freq and psd, 
@@ -3205,88 +3201,74 @@ if TimescaleSeparation == 1:
         #meanflowarr[nn,0] = psdMax 
         meanflowarr[nn,1] = fhat[1,idxMax]*c 
 
-        if nrMolecularDiff == 0:
-            #starting from mean flow peak run up through frequencies and find first minima.
-            #Then search for max psd above this minima to find max psd associated with IGWs.
-            #Then use the max psd of IGW bandwidth to find last peak in IGW bandwidth.
-            flag1=0
-            flag2=0
-            for ff in range(idxMax,Nf-1):
+        #starting from mean flow peak run up through frequencies and find first minima.
+        #Then search for max psd above this minima to find max psd associated with IGWs.
+        #Then use the max psd of IGW bandwidth to find last peak in IGW bandwidth.
+        flag1=0
+        flag2=0
+        for ff in range(idxMax,Nf-1):
 
-                psd0 = fhat[0,ff] #(this is psdMax initially)
-                psd1 = fhat[0,ff+1]
+            psd0 = fhat[0,ff] #(this is psdMax initially)
+            psd1 = fhat[0,ff+1]
 
-                if (psd1 <= psd0) and (flag1==0):
-                    psdMinIdx = ff+1
+            if (psd1 <= psd0) and (flag1==0):
+                psdMinIdx = ff+1
 
-                    #carry this to find upper bound of IGW bandwidth, but 
-                    #don't use until energy well has been found.
-                    psdMin = fhat[0,psdMinIdx]
-                    if Modulated == 0:
-                        psdMaxIGW = np.max(fhat[0,psdMinIdx:])
-                        idx = np.where( fhat[0,psdMinIdx:] == psdMaxIGW )
-                        psdMaxIGWidx = int(np.asarray(idx) + psdMinIdx)
+                #carry this to find upper bound of IGW bandwidth, but 
+                #don't use until energy well has been found.
+                psdMin = fhat[0,psdMinIdx]
+                if Modulated == 0:
+                    psdMaxIGW = np.max(fhat[0,psdMinIdx:])
+                    idx = np.where( fhat[0,psdMinIdx:] == psdMaxIGW )
+                    psdMaxIGWidx = int(np.asarray(idx) + psdMinIdx)
                     
  
-                #When energy well has been found stop changing the well idx:
-                if psd1 > psd0: flag1=1
+            #When energy well has been found stop changing the well idx:
+            if psd1 > psd0: flag1=1
 
-                if Modulated == 0:                   
-                    if IGWmethod == 0: 
-                        lowerBoundIdx = psdMinIdx
-                        #find upper bound of IGW bandwidth and so compute IGW bandwidth.
-                        #Different method required as not always increase of psd after IGW peaks.
-                        #I used the energy well psd instead:
+            if Modulated == 0:                   
+                if IGWmethod == 0: 
+                    lowerBoundIdx = psdMinIdx
+                    #find upper bound of IGW bandwidth and so compute IGW bandwidth.
+                    #Different method required as not always increase of psd after IGW peaks.
+                    #I used the energy well psd instead:
 
-                        #The case of N=1 is unique and treated as such:
-                        if N_vec[nn] != 1: logical2 = (psd1 >= psdMin)
-                        if N_vec[nn] == 1: logical2 = (psd1 <= psd0)
+                    #The case of N=1 is unique and treated as such:
+                    if N_vec[nn] != 1: logical2 = (psd1 >= psdMin)
+                    if N_vec[nn] == 1: logical2 = (psd1 <= psd0)
 
-                        if (flag2==0) and (ff > psdMaxIGWidx) and logical2:
-                            upperBoundIdx = ff+1
+                    if (flag2==0) and (ff > psdMaxIGWidx) and logical2:
+                        upperBoundIdx = ff+1
 
-                        if N_vec[nn] != 1:
-                            #Add stop condition to avoid missing upper (high freq.) part of IGW bandwidth:
-                            #This code searches an interval of frequencies to check for expected trends: 
-                            df = fhat[1,1]-fhat[1,0]
-                            fwindow = 0.05
-                            search_width = int(fwindow/df)
-                            logical3 = fhat[0,(ff+1):(ff+1)+search_width] < psdMin
-                        if N_vec[nn] == 1: logical3=True
+                    if N_vec[nn] != 1:
+                        #Add stop condition to avoid missing upper (high freq.) part of IGW bandwidth:
+                        #This code searches an interval of frequencies to check for expected trends: 
+                        df = fhat[1,1]-fhat[1,0]
+                        fwindow = 0.05
+                        search_width = int(fwindow/df)
+                        logical3 = fhat[0,(ff+1):(ff+1)+search_width] < psdMin
+                    if N_vec[nn] == 1: logical3=True
 
-                        if N_vec[nn] != 1: logical4 = (psd1 < psdMin)
-                        if N_vec[nn] == 1: logical4 = (psd1 > psd0)
-                        #When upper bound has been found stop changing the upper bound idx:
-                        if (ff > psdMaxIGWidx) and logical4 and all(logical3): 
-                            flag2=1
+                    if N_vec[nn] != 1: logical4 = (psd1 < psdMin)
+                    if N_vec[nn] == 1: logical4 = (psd1 > psd0)
+                    #When upper bound has been found stop changing the upper bound idx:
+                    if (ff > psdMaxIGWidx) and logical4 and all(logical3): 
+                        flag2=1
                      
-        #Shortcut above code and simply set upper bound to N_{bv}, which makes more sense for a band named omega_{IGW}:
+        #Shortcut above code to simply set upper bound to N_{bv}, which makes more sense for a band named omega_{IGW}:
         tmp = np.where(fhat[1,:]*c >= N_bv)
         tmp = np.asarray(tmp).flatten()[0] 
         upperBoundIdx = np.min(tmp)
 
+
         if IGWmethod == 1:
             #use crossing points of unmodulated and modulated systems to define IGW bandwidth
-            #tmp = np.where(fhat_R[0,psdMinIdx:] < fhat[0,psdMinIdx:])
-            #lowerBoundIdx = np.min( tmp[0] ) + psdMinIdx
-            #tmp = np.where(fhat_R[0,psdMaxIGWidx:] > fhat[0,psdMaxIGWidx:])
-            #upperBoundIdx = np.min( tmp[0] ) + psdMaxIGWidx
-            #print(N_vec[nn], fhat[1,lowerBoundIdx]*c, fhat[1,upperBoundIdx]*c)
+            tmp = np.where(fhat_R[0,psdMinIdx:] < fhat[0,psdMinIdx:])
+            lowerBoundIdx = np.min( tmp[0] ) + psdMinIdx
+            tmp = np.where(fhat_R[0,psdMaxIGWidx:] > fhat[0,psdMaxIGWidx:])
+            upperBoundIdx = np.min( tmp[0] ) + psdMaxIGWidx
+            print(N_vec[nn], fhat[1,lowerBoundIdx]*c, fhat[1,upperBoundIdx]*c)
             #pdb.set_trace()
-
-            if Modulated == 0:
-                #use ratio of mapped to unmapped signal to find minima of spectral gap
-                ratios = np.divide(fhat[0,:],fhat_R[0,:])
-                #print(ratios)
-                tmp = np.where( ratios > 10 )
-                lowerBoundIdx = np.min( tmp[0] )
-                print(N_vec[nn], fhat[1,lowerBoundIdx]*c, fhat[1,upperBoundIdx]*c)
-                psdMinIdx = lowerBoundIdx
-
-                #now find max IGW frequency using lower and upper bound:
-                psdMaxIGW = np.max(fhat[0,psdMinIdx:])
-                idx = np.where( fhat[0,psdMinIdx:] == psdMaxIGW )
-                psdMaxIGWidx = int(np.asarray(idx) + psdMinIdx)
 
         if Modulated == 0:
             #Reverse the search from the upper bound to find the fequency of last IGW peak:
@@ -3298,15 +3280,9 @@ if TimescaleSeparation == 1:
                 psd0 = fhat[0,lastPeakIdx] 
                 psd1 = fhat[0,lastPeakIdx-1] 
 
-            #Shortcut to set upperbound to last peak of IGW signal:
-            #lastPeakIdx = upperBoundIdx
+            #Shortcut to set upperbound to last peak of IGW signal, which makes more sense for a band named omega_{IGW}:
+            lastPeakIdx = upperBoundIdx
 
-        if Modulated == 1:
-            dat__ = np.loadtxt('./meanflowarr.txt')
-            WellMode = dat__[nn,3]
-            idxs = np.where(fhat[1,:]>=WellMode)
-            psdMinIdx = np.min(idxs)
-            print(psdMinIdx, WellMode)
 
         meanflowarr[nn,0] = np.sum( fhat[0,0:psdMinIdx] )
         #meanflowarr[nn,0] = np.sum( fhat[0,:] )	#confirm that total energy in modulated system is energy contained in LFMF bandwidth.
@@ -3324,48 +3300,46 @@ if TimescaleSeparation == 1:
 
     if MakePlot == 1:
         fig=plt.figure(figsize=(width,height))
-        leftPanel = 1
-        if leftPanel == 1: grid = plt.GridSpec(1, 2, wspace=0.2, hspace=0.0)
-        if leftPanel == 0: grid = plt.GridSpec(1, 1, wspace=0., hspace=0.0)
+        fig.tight_layout() 
+        grid = plt.GridSpec(1, 2, wspace=0.6, hspace=0.0)
 
-        if leftPanel == 1:
-            ax1 = fig.add_subplot(grid[0,0])
-            if Modulated == 0:
-                i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{\rm IGW}$')
-                i1b = ax1.plot(N_vec,psdIGWarr[:,5], 'k', marker='s', linestyle = 'None', fillstyle='none', label=r'$\omega_{\rm IGW_E}$')
-                i1c = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{\rm IGW}$')
-                i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{\rm IGW}$')
-            i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{\rm MF}$')
-            i4 = ax1.plot(N_vec,meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{\rm well}$')
-            ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
-            ax1.set_ylabel(r'$\omega$ (rad/s)')
-            ax1.set_xlim(0,6)
-            ax1.set_ylim(0,6)
+        ax1 = fig.add_subplot(grid[0,0])
+        if Modulated == 0:
+            i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{\rm IGW}$')
+            i1b = ax1.plot(N_vec,psdIGWarr[:,5], 'k', marker='s', linestyle = 'None', fillstyle='none', label=r'$\omega_{\rm IGW_E}$')
+            i1c = ax1.plot(N_vec,psdIGWarr[:,1], '^k', fillstyle='none', label=r'$\omega^{\prime}_{\rm IGW}$')
+            i2 = ax1.plot(N_vec,psdIGWarr[:,2], 'ok', fillstyle='none', label=r'$\Delta \omega_{\rm IGW}$')
+        i3 = ax1.plot(N_vec,meanflowarr[:,1], 'ok', label=r'$\omega^{\prime}_{\rm MF}$')
+        #i4 = ax1.plot(N_vec0meanflowarr[:,3], '^k', fillstyle='none', label=r'$\omega_{well}$')
+        ax1.set_xlabel(r'$N_{\rm bv}$ (rad/s)')
+        ax1.set_ylabel(r'$\omega$ (rad/s)')
+        ax1.set_xlim(0,6)
+        ax1.set_ylim(0,6)
 
-            if Modulated == 0:
-                #Overplot linear models:
-                # model for last peak of IGW bandwidth:
-                c1 = 0.02462
-                c2 = 0.98154 
-                m1 = c1+c2*N_vec
-                l1 = '$0.0246+0.982\,N$'
-                i5 = ax1.plot(N_vec,m1,'-k',linewidth=1)
+        if Modulated == 0:
+            #Overplot linear models:
+            # model for last peak of IGW bandwidth:
+            c1 = 0.02462
+            c2 = 0.98154 
+            m1 = c1+c2*N_vec
+            l1 = '$0.0246+0.982\,N$'
+            i5 = ax1.plot(N_vec,m1,'-k',linewidth=1)
 
-            ax1.legend(frameon=False, loc=2, labelspacing=.3, fontsize=10)
+        ax1.legend(frameon=False, loc=2, labelspacing=.3, fontsize=10)
 
-        ax2 = ax1.twinx()
+        #ax2 = ax1.twinx()
         ax2 = fig.add_subplot(grid[0,1])
         if Modulated == 0:
-            #i7 = ax2.plot(N_vec,psdIGWarr[:,0], '^', color='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{\rm IGW}$)')
-            i8 = ax2.plot(N_vec,psdIGWarr[:,3], 'o', color='grey', fillstyle='none', label=r'PSD($\omega_{\rm IGW}$)')
-        i9 = ax2.plot(N_vec,meanflowarr[:,0], 'o', color='grey', label=r'PSD($\omega_{\rm MF}$)')
-        i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', color='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
+            i7 = ax2.plot(N_vec,psdIGWarr[:,0], '^', c='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{\rm IGW}$)')
+            i8 = ax2.plot(N_vec,psdIGWarr[:,3], 'o', c='grey', fillstyle='none', label=r'PSD($\omega_{\rm IGW}$)')
+        i9 = ax2.plot(N_vec,meanflowarr[:,0], 'o', c='grey', label=r'PSD($\omega_{\rm MF}$)')
+        #i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', c='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
 
         if OverlayModulated == 1:
-            data = np.loadtxt('/lustre/home/pb412/dedalus/meanflowarr_modulated.txt')
+            data = np.loadtxt('/home/ubuntu/BoussinesqLab/dedalus/meanflowarr_modulated.txt')
             #N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5))
             N_vec_mod = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
-            i10 = ax2.plot(N_vec_mod,data[:,0], 'o', color='grey', fillstyle='none', markersize=10, label=r'PSD($\omega_{\rm MF\zeta}$)')
+            i10 = ax2.plot(N_vec_mod,data[:,0], 'o', c='grey', fillstyle='none', markersize=10, label=r'PSD($\omega_{\rm MF\zeta}$)')
 
         #ax2.yaxis.label.set_color('grey')
         #ax2.spines['right'].set_color('grey')
@@ -3375,17 +3349,16 @@ if TimescaleSeparation == 1:
         ax2.set_ylabel(r'PSD ([$\rho$]$^2$/(rad/s))')
         ax2.set_yscale('log')
         #if Modulated == 0: ax2.set_ylim(1e-4,1e+4)
-        if Modulated == 0: ax2.set_ylim(1e-6,1e0)
-        if Modulated == 1: ax2.set_ylim(1e-6,1e-2)
+        if Modulated == 0: ax2.set_ylim(1e-10,1e0)
+        if Modulated == 1: ax2.set_ylim(1e-10,1e-2)
         #ax2.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
-        ax2.legend(frameon=False, fontsize=12)
+        ax2.legend(frameon=False, fontsize=10)
 
         #Make combined legend:
         #lns = i1+i2+i3+i4+i5
         #labs = [l.get_label() for l in lns]
         #ax1.legend(lns, labs, loc=0, frameon=False, ncol=2)
 
-        #fig.tight_layout()
         #plt.show()
         plt.savefig('psd_trends.eps')
 
@@ -3639,6 +3612,13 @@ if MakePlot >= 1:
             #Make sure plot axis labels fit within plot window:
             plt.tight_layout()
 
+        if len(sys.argv) > 2:
+            tmp = RunName.split('_')
+            #Pad with zeros to correctly order results:
+            tmp[1:]=[str(item).zfill(3) for item in tmp[1:]]
+            separator = '_'
+            RunName=separator.join(tmp)
+
         if w2f_analysis == 0: plt.show()
         if w2f_analysis == 1:
             if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.eps')
@@ -3646,7 +3626,7 @@ if MakePlot >= 1:
             if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.eps')
             if PlotT==1 and SpectralAnalysis==0: plt.savefig(FigNmBase + RunName + '_t' + '.eps')
             if PlotT==1 and SpectralAnalysis==1: 
-                fileName = FigNmBase + RunName
+                fileName = FigNmBase + RunName + '_f'
                 if AnalyseLayerDecay == 1: fileName = fileName + '_decayPhase'
                 if AnalyseLayerCreation == 1: fileName = fileName + '_layerCreation'
                 fileName = fileName + '.eps'

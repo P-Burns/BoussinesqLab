@@ -44,10 +44,10 @@ if len(sys.argv) > 2:
 
 #Program control:
 Gusto		= 0
-if len(sys.argv) < 2: Modulated = 0
+if len(sys.argv) < 2: Modulated = 0 
 Linear 		= 0
 Inviscid	= 0
-nrMolecularDiff	= 1
+nrMolecularDiff	= 0
 FullDomain      = 0
 SinglePoint	= 1
 MultiPoint	= 0
@@ -62,8 +62,8 @@ forced          = 0
 if len(sys.argv) < 2 and VaryN == 1:
     #N2		= 0.09
     N2		= 0.25
-    #N2		= 1
-    #N2		= 2.25		
+    N2		= 1
+    N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
@@ -142,7 +142,7 @@ CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 1
-PSD_add_linear          = 1
+PSD_add_linear          = 0
 PSD_linear_nonlinear	= 0
 if len(sys.argv) < 2: AnalyseLayerCreation    = 0
 if len(sys.argv) < 2: AnalyseLayerDecay       = 0
@@ -242,8 +242,8 @@ if VaryN == 1:
         #RunName = RunName + '_dt0.005_sp'
         RunName = RunName + '_sp'
     if Linear ==1 : RunName = RunName + '_lnr'
-    dir_state = './Results/' + RunName + '/'
-    #dir_state = './Results_bigNu/' + RunName + '/'
+    #dir_state = './Results/' + RunName + '/'
+    dir_state = './Results_bigNu/' + RunName + '/'
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
@@ -252,8 +252,8 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 30
-        #nfiles = 10
+        #nfiles = 30
+        nfiles = 10
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -268,8 +268,8 @@ if Gusto == 0:
         if nrMolecularDiff==0: 
             dt = 1e-1
     if SinglePoint==1: 
-        if nrMolecularDiff==0: dt = 1e-1
-        if nrMolecularDiff==1: dt = 1e-1 
+        if nrMolecularDiff==0: dt = 1e-2
+        if nrMolecularDiff==1: dt = 1e-2 
     if MultiPoint==1: 
         dt = 8e-3
 
@@ -312,9 +312,9 @@ Lz = 0.45
 
 #factor = 1./4
 #factor = 1./2
-#factor = 1
+factor = 1
 #factor = 2
-factor = 4
+#factor = 4
 #factor = 6
 Nx = 80
 Nz = 180
@@ -693,7 +693,7 @@ def spectral_analysis(data,dt2,Welch=True):
         else: nwindows = 7
         if nwindows != 1: nperseg = int(2.*Nt/(nwindows-1))
         else: nperseg = Nt
-        print(Nt,nperseg,nwindows)
+        print('Nt,nperseg,nwindows: ', Nt,nperseg,nwindows)
 
         spectralCoef = np.zeros((int(nperseg/2.)+1,Nx,Nz))
 
@@ -2641,7 +2641,7 @@ if SpectralAnalysis == 1:
     #tmp = data[idx0:,:,:]
     #data = tmp
 
-    if AnalyseLayerDecay == 1 or AnalyseLayerCreation:
+    if AnalyseLayerDecay or AnalyseLayerCreation:
         N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
         #t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
         t_offset_vec0 = np.array([188.0, 92.0, 43.0, 35.0, 32.0, 24.0, 21.0, 20.0, 17.0, 17.0, 14.0, 14.0, 12.0])
@@ -2699,8 +2699,8 @@ if SpectralAnalysis == 1:
         separator = '_'
         RunName_ = separator.join(tmp)
 
-        file_dir = './Results/' + RunName + '/'
-        #file_dir = './Results_bigNu/' + RunName + '/'
+        #file_dir = './Results/' + RunName + '/'
+        file_dir = './Results_bigNu/' + RunName + '/'
         fnm_w2f = file_dir + 'psd_' + fnmVar 
         #if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
         fnm_w2f = fnm_w2f + '_' + RunName + '_' + npersegStr
@@ -2764,10 +2764,10 @@ if SpectralAnalysis == 1:
 
             #data = np.loadtxt('./SpectralAnalysis/unmodulated/' + fname + '_' + npersegStr + '.txt')
             #data_mod = np.loadtxt('./SpectralAnalysis/modulated/' + fname + '_' + npersegStr + '_R.txt')
-            data = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            data_mod = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
-            #data = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            #data_mod = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
+            #data = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
+            #data_mod = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
+            data = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
+            data_mod = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
 
 
             intPSD = np.trapz(data[0,:],data[1,:])
@@ -2784,16 +2784,20 @@ if SpectralAnalysis == 1:
             ax1.set_xlim(0,5)
             #ax1.set_xscale("log")
             #ax1.set_xlim(1e-2,1e1)
-            ylim = (1e-14,1e0)
+            ylim = (1e-18,1e0)
             ax1.set_ylim(ylim)
-            ax1.set_yticks((np.logspace(-14, 0, num=8))) 
+            ax1.set_yticks((np.logspace(-18, 0, num=10))) 
 
             addBands = 1
             if addBands == 1:
                 #Load tracked spectrum features files so we can overplot omega_well and 
                 #bandwidths of Meanflow and IGW:
-                datMF = np.loadtxt('/lustre/home/pb412/dedalus/meanflowarr.txt')
-                datIGW = np.loadtxt('/lustre/home/pb412/dedalus/psdIGWarr.txt')
+                if nrMolecularDiff:
+                    datMF = np.loadtxt('/lustre/home/pb412/dedalus/meanflowarr.txt')
+                    datIGW = np.loadtxt('/lustre/home/pb412/dedalus/psdIGWarr.txt')
+                else:
+                    datMF = np.loadtxt('/lustre/home/pb412/dedalus/meanflowarr_bigNu.txt')
+                    datIGW = np.loadtxt('/lustre/home/pb412/dedalus/psdIGWarr_bigNu.txt')
                 N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
                 Nidx = np.where(N_vec == np.sqrt(N2))
                 omega_well = datMF[Nidx,3].flatten()[0]
@@ -2802,7 +2806,8 @@ if SpectralAnalysis == 1:
                 PSD_well = datMF[Nidx,2].flatten()[0] 
                 ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'--k', label=r'$\omega_{\rm well}$')
                 ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'k')
-                yloc = 1e-12
+                if nrMolecularDiff: yloc = 1e-11
+                else: yloc = 1e-16
                 if N2 != 0.25: ax1.text(IGW_mid, yloc, r'$\omega_{\rm IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
                 xoffset = 0.2
                 if N2 != 0.25: ax1.plot([omega_well,IGW_mid-xoffset], [yloc,yloc], 'k')
@@ -2812,17 +2817,18 @@ if SpectralAnalysis == 1:
                 #ax1.scatter(IGW_maxf,PSD_well, s=100, facecolors='none', edgecolors='k')
 
             if PSD_add_linear == 1:
-                dat = np.loadtxt('./Results/' + RunName + '_lnr/' + 'psd_Rho2_' + RunName + '_lnr_' + npersegStr + '.txt')
+                #dat = np.loadtxt('./Results/' + RunName + '_lnr/' + 'psd_Rho2_' + RunName + '_lnr_' + npersegStr + '.txt')
+                dat = np.loadtxt('./Results_bigNu/' + RunName + '_lnr/' + 'psd_Rho2_' + RunName + '_lnr_' + npersegStr + '.txt')
                 ax1.plot(xgrid,dat[0,:],':k', linewidth=2, label=r'$\left(\rho^{\prime}_{\diamond}\right)_{\rm linear}$')
 
 
             if N2==9: legend_fontsize='20'
-            else: legend_fontsize=None
+            else: legend_fontsize='20'
 
             if N2 != 16: plt.legend(frameon=False, labelspacing = 0.1, fontsize=legend_fontsize)
             #plt.show()
-            plt.savefig('psd_' + RunName + '_mod_unmod.eps')
-            #plt.savefig('psd_' + RunName + '_mod_unmod_bigNu.eps')
+            #plt.savefig('psd_' + RunName + '_mod_unmod.eps')
+            plt.savefig('psd_' + RunName + '_mod_unmod_bigNu.eps')
 
         if PSD_vs_N_plot == 1 and CheckPSD == 0:
             fig1 = plt.figure(figsize=(width*1.2,height))

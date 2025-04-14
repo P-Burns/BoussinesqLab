@@ -18,10 +18,11 @@ import sys
 
 
 #Program control:
+nrMolecularDiffusion = 1
 #Write data to file for statistical analysis using R:
 w2f 		= 1
 #Add Gusto data:
-AddGusto 	= 1
+AddGusto 	= 0
 #Choose statistical measure:
 Mean 		= 1
 Median 		= 0
@@ -41,22 +42,26 @@ N_vec = [0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5]
 name_vec = ['StateN2_00_25','StateN2_01','StateN2_02_25','StateN2_04','StateN2_06_25','StateN2_07_5625',\
           'StateN2_09','StateN2_10_5625','StateN2_12_25','StateN2_14_0625','StateN2_16','StateN2_20_25','StateN2_25']
 
-dt2 = 0.1
-t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
+if nrMolecularDiffusion == 0: 
+    dt2 = 0.1
+    t_offset_vec0 = np.array([19., 8.8, 6.7, 4.1, 2.9, 2.6, 2.4, 2.2, 1.9, 1.7, 1.6, 1.3, 1.1])
+else: 
+    dt2 = 1
+    t_offset_vec0 = np.array([188.0, 92.0, 43.0, 35.0, 32.0, 24.0, 21.0, 20.0, 17.0, 17.0, 14.0, 14.0, 12.0])
 t_offset_vec = (t_offset_vec0/dt2).astype(int)
 #t_offset_vec = np.arange(len(N_vec))*0
-Nmins = 12
+Nmins = 30
 Nt = Nmins*60./dt2
 Nt = int(Nt)
 t = np.arange(Nt)*dt2
 steps_arr = np.zeros((Nt,len(N_vec)))
-steps_dz = np.zeros((Nt,50,len(N_vec)))
-steps_dS = np.zeros((Nt,50,len(N_vec)))
+steps_dz = np.zeros((Nt,200,len(N_vec)))
+steps_dS = np.zeros((Nt,200,len(N_vec)))
 
 #Read in data:
 for i in range(0,len(N_vec)): 
-    #dir_state = './Results/' + name_vec[i] + '/TrackSteps/'
-    dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.9bs/'
+    dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.75bs/'
+    #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.9bs/'
     #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.95bs/'
     #dir_state = './Results/' + name_vec[i] + '/TrackSteps_0.98bs/'
     fnm1 = dir_state + 'steps_t.txt'
@@ -102,6 +107,8 @@ if AddGusto == 1:
 
 
 #Set general plotting parameters assuming A4 page size:
+plt.rcParams.update({'font.size': 20})
+
 A4Width = 8.27
 MarginWidth = 1
 width = A4Width-2*MarginWidth
@@ -142,7 +149,7 @@ steps_dS2[idxsNaN] = 0
 
 for i in range(0,len(N_vec)-5):
 
-    axs0[i,0].hist(steps_arr2[:,i], bins=bins0, color='k', label=label_vec2[i], alpha=alpha, density=density)
+    axs0[i,0].hist(steps_arr2[:,i], bins=bins0, color='k', label=label_vec2[i], alpha=alpha)
     h0,tmp = np.histogram(steps_arr2[:,i], bins=bins0, density=density)
     rounded = round_down(np.max(h0),10)
     if rounded >= 10: tickval = rounded
@@ -153,7 +160,7 @@ for i in range(0,len(N_vec)-5):
     axs0[i,0].set_xlabel('# of steps')    
     axs0[i,0].legend(handlelength=0, frameon=False)
 
-    axs0[i,1].hist(steps_dz2[:,:,i].flatten(),bins=bins1, color='k', label=label_vec2[i], alpha=alpha, density=density)
+    axs0[i,1].hist(steps_dz2[:,:,i].flatten(),bins=bins1, color='k', label=label_vec2[i], alpha=alpha)
     h1,tmp = np.histogram(steps_dz2[:,:,i].flatten(), bins=bins1, density=density)
     rounded = round_down(np.max(h1),10)
     if rounded >= 10: tickval = rounded
@@ -163,7 +170,7 @@ for i in range(0,len(N_vec)-5):
     axs0[i,1].set_xlabel(r'$h_s$ (m)') 
     #axs0[i,1].legend()
 
-    axs0[i,2].hist(np.abs(steps_dS2[:,:,i].flatten()), bins=bins2, color='k', label=label_vec2[i], alpha=alpha, density=density)
+    axs0[i,2].hist(np.abs(steps_dS2[:,:,i].flatten()), bins=bins2, color='k', label=label_vec2[i], alpha=alpha)
     h2,tmp = np.histogram(np.abs(steps_dS2[:,:,i].flatten()), bins=bins2, density=density)
     #print(tmp)
     rounded = round_down(np.max(h2),10)
@@ -258,9 +265,9 @@ axs1[2].plot(omega_well,m1, c='k')
 axs1[2].set_xlabel(r'$\omega_{well}$ (rad/s)')
 axs1[2].set_ylabel(r'Average # of steps')
 
-plt.show()
-
-
+#plt.show()
+plt.savefig('NstepMeans.eps')
+plt.close()
 
 
 
@@ -272,7 +279,8 @@ if ParkStepSize==1:
     #...not used due to too much uncertainty about units and also due to clear differences in experimental setup.
 
 if w2f == 1:
-    fnm = './steptracking_means.txt'
+    if nrMolecularDiffusion == 0: fnm = './steptracking_means.txt'
+    if nrMolecularDiffusion == 1: fnm = './steptracking_means_nrMolecular.txt'
     np.savetxt(fnm,(N_vec,means0))
 
 
@@ -321,7 +329,8 @@ axs2[1].legend(frameon=False)
 if w2f == 1:
     dat = np.vstack([N_vec,t_offset_vec0,stairAge])
     #print(dat.shape)
-    np.savetxt('./stairStartEnd.txt', dat)
+    if nrMolecularDiffusion == 0: np.savetxt('./stairStartEnd.txt', dat)
+    if nrMolecularDiffusion == 1: np.savetxt('./stairStartEnd_nrMolecular.txt', dat)
 
 if AddGusto == 1:
     stairAge_g = np.zeros(len(N_vec_gusto))
@@ -401,8 +410,10 @@ if PL83 == 1:
 
     #compute Pearson and Linden model:
     D     = np.sqrt(0.2**2 + 0.45**2)
-    nu    = 1e-4 
-    kappa = 1.4e-5
+    if nrMolecularDiffusion == 0: scaleFactor = 100
+    if nrMolecularDiffusion == 1: scaleFactor = 3
+    nu    = 1e-6*scaleFactor 
+    kappa = 1.4e-7*scaleFactor
     Nvec  = np.array(N_vec)
 
     PL83axis  = nu*kappa/(Nvec**2*D**4)
@@ -411,12 +422,12 @@ if PL83 == 1:
     #Use mean layer depths averaged across all time:
     data1 = steps_dz/D
     data1[data1 == 0] = np.nan
-    if Mean == 1: means1 = np.nanmean(data1.reshape((Nt*50,len(N_vec))), axis=0)
-    if Median == 1: means1 = np.nanmedian(data1.reshape((Nt*50,len(N_vec))), axis=0)
-    std1 = np.nanstd(data1.reshape((Nt*50,len(N_vec))), axis=0)
+    if Mean == 1: means1 = np.nanmean(data1.reshape((Nt*200,len(N_vec))), axis=0)
+    if Median == 1: means1 = np.nanmedian(data1.reshape((Nt*200,len(N_vec))), axis=0)
+    std1 = np.nanstd(data1.reshape((Nt*200,len(N_vec))), axis=0)
 
     #Use mean layer depths at a few specific time points:
-    #n.b. steps_dz = np.zeros((Nt,50,len(N_vec)))
+    #n.b. steps_dz = np.zeros((Nt,200,len(N_vec)))
 
     #Choose time points using above defined start/end time for layers (varys with N):
     tIdxs1 = t_offset_vec
@@ -455,15 +466,17 @@ if PL83 == 1:
     fig1.subplots_adjust(wspace=0., hspace=0.)
     fig1.set_tight_layout(True)
  
-    axs.loglog(PL83axis, means1, '.k', label=r'$\forall\,t$')
+    axs.loglog(PL83axis, means1, '.k', label=r'$t\geq\tau_0$')
     axs.loglog(PL83axis, means2, 'ok', label=r'$\tau_0$')
     axs.loglog(PL83axis, means3, 'sk', label=r'$(\tau_{end}-\tau_0)/2+\tau_0$')
-    axs.loglog(PL83axis, means4, '^k', label=r'$\tau_{end}$')
+    #axs.loglog(PL83axis, means4, '^k', label=r'$\tau_{end}$')
     axs.loglog(PL83axis, PL83model, 'k')
     axs.fill_between(PL83axis, means1-std1, means1 + std1, color='gray', alpha=0.4)
-    plt.legend()
-    axs.set_xlabel(r'$\nu\,\kappa/(N^2\,D^4)$')
-    axs.set_ylabel(r'$\overline{h_s}\,/\,D$')
+    #plt.legend(frameon=False, loc=4, numpoints=1)
+    plt.legend(frameon=False, loc=2, labelspacing=0.05, numpoints=1, fontsize='16')
+    axs.set_xlabel(r'$\nu_E\kappa_E/(N_{\rm bv}^2\,d^4)$')
+    axs.set_ylabel(r'$h_s/d$')
+    axs.set_xlim(1e-12,1e-10)
     axs.set_ylim(1e-3,1)
 
     nu_water    = 1.1e-6
@@ -474,8 +487,11 @@ if PL83 == 1:
     Nmin_PL83   = np.sqrt(nu_water*kappa_water/D_PL83**4/1e-11)
     print(Nmin_PL83,Nmax_PL83)
 
-    plt.savefig('PL83plot.png')
-    plt.savefig('PL83plot.eps')
-    plt.savefig('PL83plot.pdf')
+    pltName = 'PL83plot'
+    if nrMolecularDiffusion == 1: pltName = pltName + '_nrMolecular'
+    plt.savefig(pltName + '.png')
+    plt.savefig(pltName + '.eps')
+    plt.savefig(pltName + '.pdf')
 
-plt.show()
+#plt.show()
+plt.close()

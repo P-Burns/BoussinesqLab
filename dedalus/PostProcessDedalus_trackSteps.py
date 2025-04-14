@@ -35,21 +35,15 @@ plt.rcParams.update({'font.size': 20})
 #pass the plot time in as a dummy variable even though you won't use it).
 if len(sys.argv) > 1:
     tIdx = int(sys.argv[1])
-if len(sys.argv) > 2:
-    N2 = float(sys.argv[2])
-    print(N2)
-    Modulated = int(sys.argv[3])
-    AnalyseLayerDecay = int(sys.argv[4])
-    AnalyseLayerCreation = int(sys.argv[5])
 
 #Program control:
 Gusto		= 0
-if len(sys.argv) < 2: Modulated = 0
+Modulated 	= 0
 Linear 		= 0
 Inviscid	= 0
-nrMolecularDiff	= 1
-FullDomain      = 0
-SinglePoint	= 1
+nrMolecularDiff	= 0
+FullDomain      = 1
+SinglePoint	= 0
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
@@ -59,11 +53,11 @@ VaryN           = 1
 ParkRun 	= -1
 scalePert	= 0
 forced          = 0
-if len(sys.argv) < 2 and VaryN == 1:
+if VaryN == 1:
     #N2		= 0.09
     N2		= 0.25
-    #N2		= 1
-    #N2		= 2.25		
+    N2		= 1
+    N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
@@ -77,11 +71,11 @@ if len(sys.argv) < 2 and VaryN == 1:
 
 #User must make sure correct data is read in for some analysis:
 #var_nms = ['psi']
-#var_nms = ['S']
+var_nms = ['S']
 #var_nms = ['psi','S']
 #var_nms = ['psi','S','psi_r','S_r']
 #var_nms = ['psi_r','S_r']
-var_nms = ['S','S_r']
+#var_nms = ['S','S_r']
 #var_nms = ['PE_tot','PE_L','KE_tot']
 #var_nms = ['PE_L','PE_adv','PE_N','PE_diff','KE_b','KE_p','KE_adv','KE_diff','KE_x','KE_z','psi','S']
 #var_nms = ['PE_L','PE_N','PE_diff','KE_b','KE_p','KE_diff','KE_x','KE_z','S','psi']
@@ -94,25 +88,19 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 0
+FullFields              = 1
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-
-if Modulated == 1: 
-    Density 	= 1
-    Density_2 	= 0
-if Modulated == 0: 
-    Density 	= 0
-    Density_2 	= 1
-
+Density 		= 0
+Density_2 		= 0
 PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
 dbdz			= 0
 drhodz			= 0
-TrackSteps              = 0
+TrackSteps              = 1
 TrackInterfaces         = 0
 Fluxes			= 0
 UseProxySz 		= 0
@@ -132,7 +120,7 @@ ForwardTransform     	= 0
 CoefficientSpace	= 0
 PhasePortraits          = 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -144,8 +132,8 @@ PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 1
 PSD_add_linear          = 1
 PSD_linear_nonlinear	= 0
-if len(sys.argv) < 2: AnalyseLayerCreation    = 0
-if len(sys.argv) < 2: AnalyseLayerDecay       = 0
+AnalyseLayerCreation    = 0
+AnalyseLayerDecay       = 0
 FindPeaks 		= 0
 
 TimescaleSeparation	= 0
@@ -186,6 +174,7 @@ MakeMovie 	= 0
 filledContour 	= 1
 NoPlotLabels    = 0
 logscale	= 0
+tAxisMin	= 0
 savePlots       = 1
 
 #Write analysis to file
@@ -237,13 +226,13 @@ if VaryN == 1:
     if N2 == 25:	RunName = 'StateN2_25'
     if forced == 1:
         RunName = RunName + '_k04n02'
-        #RunName = RunName + '_k04n18'
+        #RunName = RunName + '_k05n014'
     if SinglePoint == 1:
         #RunName = RunName + '_dt0.005_sp'
         RunName = RunName + '_sp'
     if Linear ==1 : RunName = RunName + '_lnr'
-    dir_state = './Results/' + RunName + '/'
-    #dir_state = './Results_bigNu/' + RunName + '/'
+    #dir_state = './Results/' + RunName + '/'
+    dir_state = './Results_bigNu/' + RunName + '/'
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
@@ -253,13 +242,13 @@ if Gusto == 0:
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
         nfiles = 30
-        #nfiles = 10
+        #nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 10
+        nfiles = 1
 
     #Model output/write timestep:
     if FullDomain == 1: 
@@ -294,14 +283,14 @@ elif SpectralAnalysis==1 and CheckPSD2==1: dt2=dt
 else:
     #dt2 = dt
     #dt2 = 0.1
-    #dt2 = 0.2
+    dt2 = 0.2
     #dt2 = 0.4
     #dt2 = 0.5
     #dt2 = 0.02
     #dt2 = 0.04
     #dt2 = 0.08
     #dt2 = 0.16
-    dt2 = 1.
+    #dt2 = 1.
     #dt2 = 2.
     #dt2 = 5
 
@@ -312,9 +301,9 @@ Lz = 0.45
 
 #factor = 1./4
 #factor = 1./2
-#factor = 1
+factor = 1
 #factor = 2
-factor = 4
+#factor = 4
 #factor = 6
 Nx = 80
 Nz = 180
@@ -346,14 +335,14 @@ if Gusto == 0:
     Nt = ntPerFile*nfiles/tq
     Nt = int(Nt)
     t = np.arange(Nt)*dt2 + (StartMin-1)*secPerFile
-    t = t/60.
+    if PlotXZ==0 and tAxisMin==1: t = t/60.
 if Gusto == 1:
     te = 2*60.
     tq = dt2/dt
     Nt = te/dt/tq 
     Nt = int(Nt)
     t = np.arange(Nt)*dt2
-    t = t/60. 
+    if PlotXZ==0 and tAxisMin==1: t = t/60. 
 
 #Construct some general arrays for contour plots:
 if FullDomain == 1:
@@ -1684,12 +1673,12 @@ if TrackSteps == 1:
     if UseShear == 0: 
         #epsilon = -np.min(data)
         #if FullFields == 1: epsilon = bs*0.00001
-        if FullFields == 1: epsilon = bs*0.75
-        print(bs, epsilon)
-        #if FullFields == 1: epsilon = bs*0.9
+        #if FullFields == 1: epsilon = bs*0.75
+        if FullFields == 1: epsilon = bs*0.9
         #if FullFields == 1: epsilon = bs*0.95
         #if FullFields == 1: epsilon = bs*0.98
         if FullFields == 0: epsilon = 0.1
+        print(bs, epsilon)
     if UseShear == 1:
         print(np.max(abs(data))) 
         epsilon = 0.00025
@@ -1796,13 +1785,12 @@ if TrackSteps == 1:
 
     if w2f_analysis == 1:
         if Gusto == 0:
-            if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.9bs/'
+            if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.75bs/'
             #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.95bs/'
             #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.98bs/'
             if FullFields == 0: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
         if Gusto == 1:
             dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
-        if Linear: dir_TrackSteps = dir_TrackSteps + '_lnr'
 
         #Create directory if it doesn't exist:
         if not os.path.exists(dir_TrackSteps):
@@ -1834,11 +1822,18 @@ if TrackSteps == 1:
         i1 = ax1.contourf(xgrid,ygrid,plot_data, 1, colors=['white','black'])
         if forced == 0: ax1.plot([t[tIdx_offset],t[tIdx_offset]],[0,Lz],'grey')
         #ax1.set_xlabel(r'$t$ (s)')
-        ax1.set_xlabel(r'$t$ (min)')
+        if tAxisMin: ax1.set_xlabel(r'$t$ (min)')
+        else: ax1.set_xlabel(r'$t$ (s)')
         ax1.set_ylabel(r'$z$ (m)')
         ax1.set_ylim(0,Lz)
         ax1.set_xlim(0,np.max(t))
         #ax1.set_xlim(0,60)
+
+        ax1.yaxis.set_ticks((0,0.1,0.2,0.3,0.4))
+        ax1.locator_params(axis='x', nbins=5)
+        ax1.get_xaxis().set_tick_params(direction='out', width=1)
+        ax1.get_yaxis().set_tick_params(direction='out', width=1)
+
         cb = plt.colorbar(i1, ticks=[0,1])
 
         plt.tight_layout()
@@ -1855,9 +1850,10 @@ if TrackSteps == 1:
 
         #plt.show()
         FigNmBase = 'TrackSteps'
-        plotName = FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) 
-        if Linear: plotName = plotName + '_lnr'
-        plotName = plotName + '.eps'
+        if nrMolecularDiff: 
+            plotName = FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps'
+        else: 
+            plotName = FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '_bigNu.eps'
         plt.savefig(plotName) 
 
 
@@ -1900,7 +1896,13 @@ if TrackInterfaces == 1:
         #ax1.set_xlabel(r'$t$ (s)')
         ax1.set_xlabel(r'$t$ (min)')
         ax1.set_ylabel(r'$z$ (m)')
-        cb = plt.colorbar(i1, ticks=[0,1])
+
+        ax1.yaxis.set_ticks((0,0.1,0.2,0.3,0.4))
+        ax1.locator_params(axis='x', nbins=5)
+        ax1.get_xaxis().set_tick_params(direction='out', width=1)
+        ax1.get_yaxis().set_tick_params(direction='out', width=1)
+
+        #cb = plt.colorbar(i1, ticks=[0,1])
          
         plt.show()
         pdb.set_trace()
@@ -2700,7 +2702,6 @@ if SpectralAnalysis == 1:
         RunName_ = separator.join(tmp)
 
         file_dir = './Results/' + RunName + '/'
-        #file_dir = './Results_bigNu/' + RunName + '/'
         fnm_w2f = file_dir + 'psd_' + fnmVar 
         #if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
         fnm_w2f = fnm_w2f + '_' + RunName + '_' + npersegStr
@@ -2750,8 +2751,8 @@ if SpectralAnalysis == 1:
             xgrid = freqvec*(2*np.pi)
             xlim = (0,5)
             if nrMolecularDiff == 1: ylim = (1e-12,1e+0)
-            xlabel = r'$|\omega|$ (rad/s)'
-            if Modulated == 0: ylabel = r'PSD ([$\rho^{\prime}_{\diamond}$]$^2$/(rad/s))'
+            xlabel = r'$\omega$ (rad/s)'
+            if Modulated == 0: ylabel = r'PSD ([$\rho^{\prime}_{\rm H}$]$^2$/(rad/s))'
             if Modulated == 1 or MakeCoordRotation==1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
             PlotTitle = ''
             FigNmBase = 'psd_' + fnmVar + '_'
@@ -2766,9 +2767,6 @@ if SpectralAnalysis == 1:
             #data_mod = np.loadtxt('./SpectralAnalysis/modulated/' + fname + '_' + npersegStr + '_R.txt')
             data = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
             data_mod = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
-            #data = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            #data_mod = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
-
 
             intPSD = np.trapz(data[0,:],data[1,:])
             intPSD_mod = np.trapz(data_mod[0,:],data_mod[1,:])
@@ -2776,7 +2774,7 @@ if SpectralAnalysis == 1:
             print("integral of PSD for modulated system: ", intPSD_mod)
             print("intPSD/intPSD_mod: ", intPSD/intPSD_mod)
 
-            ax1.plot(xgrid,data[0,:],'k-', linewidth=2, label=r'$\rho^{\prime}_{\diamond}$')
+            ax1.plot(xgrid,data[0,:],'k-', linewidth=2, label=r'$\rho^{\prime}_{\rm H}$')
             ax1.plot(xgrid,data_mod[0,:],'-', color='gray', linewidth=3, label=r'$\zeta$')
             ax1.set_xlabel(xlabel)
             ax1.set_ylabel(ylabel)
@@ -2784,9 +2782,7 @@ if SpectralAnalysis == 1:
             ax1.set_xlim(0,5)
             #ax1.set_xscale("log")
             #ax1.set_xlim(1e-2,1e1)
-            ylim = (1e-14,1e0)
             ax1.set_ylim(ylim)
-            ax1.set_yticks((np.logspace(-14, 0, num=8))) 
 
             addBands = 1
             if addBands == 1:
@@ -2802,7 +2798,7 @@ if SpectralAnalysis == 1:
                 PSD_well = datMF[Nidx,2].flatten()[0] 
                 ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'--k', label=r'$\omega_{\rm well}$')
                 ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'k')
-                yloc = 1e-12
+                yloc = 1e-11
                 if N2 != 0.25: ax1.text(IGW_mid, yloc, r'$\omega_{\rm IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
                 xoffset = 0.2
                 if N2 != 0.25: ax1.plot([omega_well,IGW_mid-xoffset], [yloc,yloc], 'k')
@@ -2813,16 +2809,12 @@ if SpectralAnalysis == 1:
 
             if PSD_add_linear == 1:
                 dat = np.loadtxt('./Results/' + RunName + '_lnr/' + 'psd_Rho2_' + RunName + '_lnr_' + npersegStr + '.txt')
-                ax1.plot(xgrid,dat[0,:],':k', linewidth=2, label=r'$\left(\rho^{\prime}_{\diamond}\right)_{\rm linear}$')
+                ax1.plot(xgrid,dat[0,:],':k', linewidth=2, label=r'$\rho^{\prime}_{{\rm H}_{linear}}$')
 
 
-            if N2==9: legend_fontsize='20'
-            else: legend_fontsize=None
-
-            if N2 != 16: plt.legend(frameon=False, labelspacing = 0.1, fontsize=legend_fontsize)
+            plt.legend(frameon=False, labelspacing = 0.1)
             #plt.show()
             plt.savefig('psd_' + RunName + '_mod_unmod.eps')
-            #plt.savefig('psd_' + RunName + '_mod_unmod_bigNu.eps')
 
         if PSD_vs_N_plot == 1 and CheckPSD == 0:
             fig1 = plt.figure(figsize=(width*1.2,height))
@@ -3324,11 +3316,9 @@ if TimescaleSeparation == 1:
 
     if MakePlot == 1:
         fig=plt.figure(figsize=(width,height))
-        leftPanel = 1
-        if leftPanel == 1: grid = plt.GridSpec(1, 2, wspace=0.2, hspace=0.0)
-        if leftPanel == 0: grid = plt.GridSpec(1, 1, wspace=0., hspace=0.0)
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.0)
 
-        if leftPanel == 1:
+        if nrMolecularDiff == 0:
             ax1 = fig.add_subplot(grid[0,0])
             if Modulated == 0:
                 i1 = ax1.plot(N_vec,psdIGWarr[:,4], '.k', fillstyle='none', label=r'$\overline{\omega}_{\rm IGW}$')
@@ -3353,13 +3343,13 @@ if TimescaleSeparation == 1:
 
             ax1.legend(frameon=False, loc=2, labelspacing=.3, fontsize=10)
 
-        ax2 = ax1.twinx()
-        ax2 = fig.add_subplot(grid[0,1])
+        #ax2 = ax1.twinx()
+        ax2 = fig.add_subplot(grid[0,0])
         if Modulated == 0:
             #i7 = ax2.plot(N_vec,psdIGWarr[:,0], '^', color='grey', fillstyle='none', label=r'PSD($\omega^{\prime}_{\rm IGW}$)')
             i8 = ax2.plot(N_vec,psdIGWarr[:,3], 'o', color='grey', fillstyle='none', label=r'PSD($\omega_{\rm IGW}$)')
         i9 = ax2.plot(N_vec,meanflowarr[:,0], 'o', color='grey', label=r'PSD($\omega_{\rm MF}$)')
-        i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', color='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
+        #i10 = ax2.plot(N_vec,meanflowarr[:,3], '^', color='grey', fillstyle='none', label=r'PSD($\omega_{well}$)')
 
         if OverlayModulated == 1:
             data = np.loadtxt('/lustre/home/pb412/dedalus/meanflowarr_modulated.txt')
@@ -3385,7 +3375,7 @@ if TimescaleSeparation == 1:
         #labs = [l.get_label() for l in lns]
         #ax1.legend(lns, labs, loc=0, frameon=False, ncol=2)
 
-        #fig.tight_layout()
+        fig.tight_layout()
         #plt.show()
         plt.savefig('psd_trends.eps')
 

@@ -1,4 +1,4 @@
-### Code to post process Dedalus results for EPSRC project ###
+## Code to post process Dedalus results for EPSRC project ###
 #Authors: Paul Burns, Beth Wingate
 #Date: 2019
 #Email: p.burns2@exeter.ac.uk, b.wingate@exeter.ac.uk
@@ -13,6 +13,7 @@ from numpy import fft
 from scipy import fftpack
 from scipy.signal import welch
 from scipy.signal import periodogram
+from scipy.signal import get_window
 from scipy.signal.windows import tukey
 from scipy.integrate import simps
 import pdb #to pause execution use pdb.set_trace()
@@ -25,7 +26,7 @@ from netCDF4 import Dataset
 import netCDF4 as nc4
 from matplotlib.colors import LogNorm
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 20})
 
 
 #Passed variables:
@@ -47,9 +48,9 @@ Gusto		= 0
 Modulated       = 0
 Linear 		= 0
 Inviscid	= 0
-ScaleDiffusion	= 0
-FullDomain      = 1
-SinglePoint	= 0
+ScaleDiffusion	= 1
+FullDomain      = 0
+SinglePoint	= 1
 MultiPoint	= 0
 ProblemType 	= 'Layers'
 #ProblemType 	= 'KelvinHelmholtz'
@@ -62,8 +63,8 @@ forced          = 0
 if VaryN == 1:
     #N2		= 0.09
     #N2		= 0.25
-    #N2		= 1
-    N2		= 2.25		
+    N2		= 1
+    #N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
@@ -94,18 +95,18 @@ Nvars = len(var_nms)
 #largely independent of the others. This makes it easier for the
 #user and helped to make the code more object orientated/modular to 
 #minimise repetition.
-FullFields              = 1
+FullFields              = 0
 StatePsi                = 0
 StateS                  = 0
 StateS_2                = 0
 Buoyancy		= 0
-Density			= 1
-Density_2		= 0
-PlotStairStartEnd	= 1
+Density			= 0
+Density_2		= 1
+PlotStairStartEnd	= 0
 Flow                    = 0
 dSdz                    = 0
 dbdz			= 0
-drhodz			= 1
+drhodz			= 0
 TrackSteps              = 0
 TrackInterfaces         = 0
 Fluxes			= 0
@@ -124,8 +125,9 @@ read_energy		= 0
 check_p             	= 0
 ForwardTransform     	= 0
 CoefficientSpace	= 0
+PhasePortraits          = 0
 
-SpectralAnalysis        = 0
+SpectralAnalysis        = 1
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -139,6 +141,7 @@ PSD_add_linear          = 0
 PSD_linear_nonlinear	= 0
 AnalyseLayerCreation    = 0
 AnalyseLayerDecay       = 0
+FindPeaks 		= 0
 
 TimescaleSeparation	= 0
 OverlayModulated	= 1
@@ -146,10 +149,11 @@ IGWmethod 		= 0
 step_prediction		= 0
 
 NaturalBasis            = 0
+noSigmas		= 1
 nvars	            	= 2
 BasisCheck1             = 0
 BasisCheck2             = 0
-MakeCoordRotation       = 0
+MakeCoordRotation       = 1
 TestModulation		= 0
 
 #General statistical processing:
@@ -170,16 +174,17 @@ FieldMaxMin 	= 1
 #Choose type of plot:
 MakePlot 	= 1
 PlotXZ 		= 0
-PlotTZ 		= 1
-PlotT 		= 0
+PlotTZ 		= 0
+PlotT 		= 1
 PlotZ 		= 0
 MakeMovie 	= 0
 filledContour 	= 1
 NoPlotLabels    = 0
 logscale	= 0
+savePlots       = 1
 
 #Write analysis to file
-w2f_analysis 	= 0
+w2f_analysis 	= 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -225,7 +230,7 @@ if VaryN == 1:
     if N2 == 16:	RunName = 'StateN2_16'
     if N2 == 20.25:	RunName = 'StateN2_20_25'
     if N2 == 25:	RunName = 'StateN2_25'
-    if forced==1 or SinglePoint==1 or Modulated==1:
+    if forced==1 or SinglePoint==1:
         if forced == 1:
             RunName = RunName + '_k04n02'
             #RunName = RunName + '_k04n18'
@@ -237,12 +242,8 @@ if VaryN == 1:
             #RunName = RunName + '_dt0.01_sp'
             #RunName = RunName + '_dt0.005_sp'
             RunName = RunName + '_sp'
-        if Modulated == 1 and forced == 0 and SinglePoint == 0:
-            RunName = RunName + '_R'
         if Linear ==1 : RunName = RunName + '_linear'
-    #dir_state = './Results/' + RunName + '/'
-    if ScaleDiffusion == 1: dir_state = '/home/ubuntu/dedalus/Results/' + RunName + '/'
-    if ScaleDiffusion == 0: dir_state = '/home/ubuntu/dedalus/Results/molecularDiffusion/' + RunName + '/'
+    dir_state = './Results/' + RunName + '/'
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
@@ -250,8 +251,8 @@ if Gusto == 0:
     #secPerFile = 1.
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
-        #StartMin = 3
         StartMin = 1
+        #StartMin = 5
         nfiles = 10
         #nfiles = 29
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
@@ -259,15 +260,19 @@ if Gusto == 0:
         nfiles = 30
     else:
         StartMin = 1
-        nfiles = 1
+        nfiles = 20
 
     #Model output/write timestep:
     if FullDomain == 1: 
-        if ScaleDiffusion==1: dt = 1e-1
-        if ScaleDiffusion==0: dt = 5e-1
+        if ScaleDiffusion==1: 
+            #dt = 1e-1
+            dt = 1
+        if ScaleDiffusion==0: 
+            #dt = 1e-1
+            dt = 1
     if SinglePoint==1: 
-        if ScaleDiffusion==1: dt = 1e-2
-        if ScaleDiffusion==0: dt = 1e-3
+        if ScaleDiffusion==1: dt = 1e-3
+        if ScaleDiffusion==0: dt = 1e-3 
     if MultiPoint==1: 
         dt = 8e-3
 
@@ -281,8 +286,8 @@ if Gusto == 1: dt = 0.004
 #Effectively we use a subset of the model output data for the analysis:
 if SpectralAnalysis==1 and MeanFlowAnalysis==0 and CheckPSD2==0: 
     if forced == 0: 
-        #dt2 = 0.2
-        dt2 = 1e-3
+        dt2 = 0.2
+        #dt2 = 1e-3
     if forced == 1: 
         dt2 = 0.2
         #dt2 = dt
@@ -293,6 +298,7 @@ else:
     #dt2 = 0.1
     #dt2 = 0.2
     #dt2 = 0.4
+    #dt2 = 0.5
     #dt2 = 0.02
     #dt2 = 0.04
     #dt2 = 0.08
@@ -311,6 +317,7 @@ Lz = 0.45
 #factor = 1
 #factor = 2
 factor = 4
+#factor = 6
 Nx = 80
 Nz = 180
 Nx = int(Nx*factor)
@@ -332,6 +339,7 @@ if Gusto == 1:
     z = points[:,1]
     dz = points[2,1]-points[1,1]
     dx = dz
+#print(dx,dz)
 
 #Create time axis for plotting:
 if Gusto == 0:
@@ -496,7 +504,7 @@ if Gusto == 0:
             if len(sys.argv) > 2: 
                 fnm = dir_state + 'State' + RunName + '_s' + str(ii+StartMin) + '.h5'
             else:
-                fnm = dir_state + 'State_s' + str(ii+StartMin) + '.h5'
+                fnm = dir_state + RunName + '_s' + str(ii+StartMin) + '.h5'
             hdf5obj = h5py.File(fnm,'r')
 
             #with h5py.File(fnm,'r') as hdf5obj:
@@ -583,29 +591,31 @@ def t_mean_slide(f,Nt,Nx,Nz,wing):
         data[tt,:,:] = np.mean(f[tt-wing:tt+wing,:,:],0)
     return data
 
-def d_dz(f,Nt,Nx,Nz,z):
+def d_dz(f,Nt,Nx,Nz,z,step=1):
     fz = np.zeros((Nt,Nx,Nz))
-    for jj in range(0,Nz):
+    dz = z[step]-z[0]
+    for jj in range(0,Nz-(step-1)):
         for ii in range(0,Nx):
             #Use centered scheme except next to boundaries:
-            if (jj != 0) and (jj != Nz-1): df = f[:,ii,jj+1] - f[:,ii,jj-1]
-            if jj == 0: df = f[:,ii,jj+1] - f[:,ii,jj]
-            if jj == Nz-1: df = f[:,ii,jj] - f[:,ii,jj-1]
+            if (jj != 0) and (jj != Nz-step): df = f[:,ii,jj+step] - f[:,ii,jj-step]
+            if jj == 0: df = f[:,ii,jj+step] - f[:,ii,jj]
+            if jj == Nz-step: df = f[:,ii,jj] - f[:,ii,jj-step]
 
-            if (jj != 0) and (jj != Nz-1): fz[:,ii,jj] = df/(2*dz)
+            if (jj != 0) and (jj != Nz-step): fz[:,ii,jj] = df/(2*dz)
             else: fz[:,ii,jj] = df/dz
     return fz
 
-def d_dx(f,Nt,Nx,Nz,x):
+def d_dx(f,Nt,Nx,Nz,x,step=1):
     fx = np.zeros((Nt,Nx,Nz))
+    dx = x[step]-x[0]
     for jj in range(0,Nz):
-        for ii in range(0,Nx):
+        for ii in range(0,Nx0-(step-1)):
             #Use centered scheme except next to boundaries:
-            if (ii != 0) and (ii != Nx-1): df = f[:,ii+1,jj] - f[:,ii-1,jj]
-            if ii == 0: df = f[:,ii+1,jj] - f[:,ii,jj]
-            if ii == Nx-1: df = f[:,ii,jj] - f[:,ii-1,jj]
+            if (ii != 0) and (ii != Nx-step): df = f[:,ii+step,jj] - f[:,ii-step,jj]
+            if ii == 0: df = f[:,ii+step,jj] - f[:,ii,jj]
+            if ii == Nx-step: df = f[:,ii,jj] - f[:,ii-step,jj]
 
-            if (ii != 0) and (ii != Nx-1): fx[:,ii,jj] = df/(2*dx)
+            if (ii != 0) and (ii != Nx-step): fx[:,ii,jj] = df/(2*dx)
             else: fx[:,ii,jj] = df/dx
     return fx
 
@@ -700,7 +710,7 @@ def spectral_analysis(data,dt2,Welch=True):
                 #ts2 = np.concatenate((ts,ts_reflect))
                  
                 #Try applying a window function (a Tukey window here):  
-                window = tukey(signal_L, alpha=0.05)
+                window = tukey(signal_L, alpha=0.5, sym=False)
                 ts2 = ts*window 
                 #plt.plot(ts2)
                 #plt.show()
@@ -792,7 +802,7 @@ if Density == 1:
         clevels = np.arange(nlevs)*drho + rhoMin
 
         #xlim=(0,60)
-        xlim=(0,10)
+        #xlim=(0,100)
 
         if Modulated == 0: PlotTitle=r'$\rho$ (kg m$^{-3}$)'
         if Modulated == 1: PlotTitle = r'$\zeta$ (kg m$^{-3}$)'
@@ -823,7 +833,7 @@ if Density_2 == 1:
         clevels = np.arange(nlevs)*drho + rhoMin
 
         #xlim=(0,np.max(t))
-        xlim=(0,10)
+        #xlim=(0,100)
 
         PlotTitle=r'$\rho$ (kg m$^{-3}$)'
 
@@ -836,6 +846,9 @@ if Flow == 1:
     else:
         data = d_dz(Psi_r,Nt,Nx,Nz,z)
         data2 = -d_dx(Psi_r,Nt,Nx,Nz,x)
+
+    print(np.max(data),np.min(data),np.max(data2),np.min(data2), np.mean(np.abs(data)), np.mean(np.abs(data2)))
+    pdb.set_trace()
 
     if MakePlot == 1:
         PlotTitle = r'$u$'
@@ -1254,6 +1267,7 @@ if drhodz == 1:
             #cmap = 'PRGn'
             cmap = 'bwr'
             #cmap = 'tab20b'
+            #cmap = 'gist_ncar'
         else:
             col1 = ['k']*(int(nlevs/2.-1))
             col2 = ['grey']*(int(nlevs/2.))
@@ -1575,7 +1589,7 @@ if TrackSteps == 1:
             data = uz
     
     if UseShear == 0: 
-        if Gusto == 0: Sz = d_dz(S,Nt,Nx,Nz,z)
+        if Gusto == 0: Sz = d_dz(S,Nt,Nx,Nz,z,1)
 
         if xMean == 1:
             tmp = x_mean(Sz)
@@ -1658,7 +1672,9 @@ if TrackSteps == 1:
 
     if UseShear == 0: 
         #epsilon = -np.min(data)
-        if FullFields == 1: epsilon = bs*0.0001
+        #if FullFields == 1: epsilon = bs*0.00001
+        if FullFields == 1: epsilon = bs*0.75
+        print(bs, epsilon)
         #if FullFields == 1: epsilon = bs*0.9
         #if FullFields == 1: epsilon = bs*0.95
         #if FullFields == 1: epsilon = bs*0.98
@@ -1680,13 +1696,13 @@ if TrackSteps == 1:
         for tt in range(0,Nt):        
             for ii in range(0,Nx):
                 for jj in range(0+zIdx_offset,Nz-zIdx_offset):
-                    if forced == 0 and ScaleDiffusion==1: logical0 = (data[tt,ii,jj] <= 0) or UseShear==1
-                    if forced == 1 or ScaleDiffusion==0: logical0 = True
+                    if forced == 0: logical0 = (data[tt,ii,jj] <= 0) or UseShear==1
+                    if forced == 1: logical0 = True
                     if logical0:
-                        if forced == 0 and ScaleDiffusion==1: 
+                        if forced == 0: 
                             if UseShear == 0: logical1 = abs(data[tt,ii,jj]) <= epsilon
                             if UseShear == 1: logical1 = abs(data[tt,ii,jj]) >= epsilon
-                        if forced == 1 or ScaleDiffusion==0: logical1 = abs(data[tt,ii,jj]) <= epsilon or data[tt,ii,jj] > 0
+                        if forced == 1: logical1 = (abs(data[tt,ii,jj]) <= epsilon or data[tt,ii,jj] > 0)
                         
                         if logical1 == True: 
                             tmp1[tt,ii,jj] = True
@@ -1743,8 +1759,8 @@ if TrackSteps == 1:
         MaxSteps1 = np.max(tmp2[tIdx_offset:])
         print('max # steps: ', MaxSteps1, MaxSteps0, ' epsilon: ', epsilon)
 
-        if (MaxSteps1 >= MaxSteps0):
-            epsilon = epsilon - epsilon*0.1
+        #if (MaxSteps1 >= MaxSteps0):
+        #    epsilon = epsilon - epsilon*0.1
 
         #if (MaxSteps1 > MaxSteps0):
         step_mask = tmp1
@@ -1769,17 +1785,12 @@ if TrackSteps == 1:
 
     if w2f_analysis == 1:
         if Gusto == 0:
-            if FullFields == 1: 
-                if ScaleDiffusion == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.9bs/'
-                if ScaleDiffusion == 0: dir_TrackSteps = './Results/' + 'molecularDiffusion/' + RunName + '/TrackSteps_0.9bs/'
+            if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.9bs/'
             #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.95bs/'
             #if FullFields == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps_0.98bs/'
-            if FullFields == 0: 
-                if ScaleDiffusion == 1: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
-                if ScaleDiffusion == 0: dir_TrackSteps = './Results/' + 'molecularDiffusion/' + RunName + '/TrackSteps2/'
+            if FullFields == 0: dir_TrackSteps = './Results/' + RunName + '/TrackSteps2/'
         if Gusto == 1:
-            if ScaleDiffusion == 1: dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
-            if ScaleDiffusion == 0: dir_TrackSteps =  './Results/' + 'molecularDiffusion/' + RunName + '_gusto' + '/TrackSteps/'
+            dir_TrackSteps =  './Results/' + RunName + '_gusto' + '/TrackSteps/'
         #Create directory if it doesn't exist:
         if not os.path.exists(dir_TrackSteps):
             os.makedirs(dir_TrackSteps)
@@ -1830,8 +1841,7 @@ if TrackSteps == 1:
 
         #plt.show()
         FigNmBase = 'TrackSteps'
-        if ScaleDiffusion == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps') 
-        if ScaleDiffusion == 0: plt.savefig('./molecularDiffusion/' + FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps') 
+        plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_'  + str(nfiles) + '.eps') 
 
 
 if TrackInterfaces == 1:
@@ -2034,7 +2044,9 @@ if NaturalBasis == 1:
     S_hat = np.zeros((Nx,Nz))*1j
 
     #When rotating into space of waves using matrix exponential:
-    if MakeCoordRotation == 1: State_R = np.zeros((Nt,Nx,Nz,nvars))
+    if MakeCoordRotation == 1: 
+        S_r = np.zeros((Nt,Nx,Nz))
+        psi_r = np.zeros((Nt,Nx,Nz))
 
     if Modulated == 0:
         dataA = Psi
@@ -2071,14 +2083,15 @@ if NaturalBasis == 1:
                     Psi_hat[Nx-i,j] = np.conj(tmp_Psi['c'][i,j])
                     if nvars == 3: T_hat[Nx-i,j] = np.conj(tmp_T['c'][i,j])
                     S_hat[Nx-i,j] = np.conj(tmp_S['c'][i,j])
-
-        # There is one sigma for each alpha.
-        # Sigmas are complex and depend on k and m wavenumbers, and vary through time, 
-        # so here we re-define the arrays for each time point in the loop. 
-        # n.b. _1: alpha=-1, 0: alpha=0, 1: alpha=+1 
-        sigma_1 = np.zeros((Nx,Nz))*1j
-        if nvars == 3: sigma0 = np.zeros((Nx,Nz))*1j
-        sigma1 = np.zeros((Nx,Nz))*1j
+        
+        if noSigmas == 0:
+            # There is one sigma for each alpha.
+            # Sigmas are complex and depend on k and m wavenumbers, and vary through time, 
+            # so here we re-define the arrays for each time point in the loop. 
+            # n.b. _1: alpha=-1, 0: alpha=0, 1: alpha=+1 
+            sigma_1 = np.zeros((Nx,Nz))*1j
+            if nvars == 3: sigma0 = np.zeros((Nx,Nz))*1j
+            sigma1 = np.zeros((Nx,Nz))*1j
 
         if MakeCoordRotation == 1:
             tmp_psi_r = domain.new_field()
@@ -2088,7 +2101,7 @@ if NaturalBasis == 1:
 
         #Loop over wavenumbers:
         for jj in range(0,Nz):
-            for ii in range(0,Nx):
+            for ii in range(0,int(Nx/2.)):
 
                 k = kk[ii]
                 n = kk_cosine[jj]
@@ -2158,18 +2171,19 @@ if NaturalBasis == 1:
                             r_1mag  = np.linalg.norm(r_1)
                             r_1     = r_1/r_1mag
 
-                    #Store eigenvectors for printing later:
-                    #There are n eigenvectors, each with nvar components, where each component is assumed to 
-                    #depend on k and m wavenumbers (see structure of NaturalFreq.py). 
-                    #Eigenvectors are time invariant. 
-                    #There are many ways you could print the eigenvectors, each with shape (Nx,Nz,nvar).
-                    #I looped over the index with nvar elements and printed out each 2D array of (Nx,Nz) numbers. 
-                    #Python doesn't like printing 3D arrays.
-                    #I simply reverse this procedure when reading in my eigenvectors in NaturalFreq.py.
-                    if tt == 0:
-                        ivec_1[ii,jj,:] = r_1
-                        if nvars == 3: ivec0[ii,jj,:] = r0
-                        ivec1[ii,jj,:] = r1
+                    if noSigmas == 0: 
+                        #Store eigenvectors for printing later:
+                        #There are n eigenvectors, each with nvar components, where each component is assumed to 
+                        #depend on k and m wavenumbers (see structure of NaturalFreq.py). 
+                        #Eigenvectors are time invariant. 
+                        #There are many ways you could print the eigenvectors, each with shape (Nx,Nz,nvar).
+                        #I looped over the index with nvar elements and printed out each 2D array of (Nx,Nz) numbers. 
+                        #Python doesn't like printing 3D arrays.
+                        #I simply reverse this procedure when reading in my eigenvectors in NaturalFreq.py.
+                        if tt == 0:
+                            ivec_1[ii,jj,:] = r_1
+                            if nvars == 3: ivec0[ii,jj,:] = r0
+                            ivec1[ii,jj,:] = r1
 
                     #construct matrix of eigenvectors for some k and n, and
                     #construct vector of spectral coefficients for some k,n 
@@ -2182,15 +2196,15 @@ if NaturalBasis == 1:
 
                     #Make transformation to find amplitudes of Natural basis 
                     EigenVecsM_inv = linalg.inv(EigenVecsM)
-                    sigma_kn = np.mat(EigenVecsM_inv)*np.mat(f_hat_vec).T
-
-                    if nvars == 3:
-                        sigma_1[ii,jj] = sigma_kn[0,0]
-                        sigma0[ii,jj] = sigma_kn[1,0]
-                        sigma1[ii,jj] = sigma_kn[2,0]
-                    if nvars == 2:
-                        sigma_1[ii,jj] = sigma_kn[0,0]
-                        sigma1[ii,jj] = sigma_kn[1,0]
+                    if noSigmas == 0:
+                        sigma_kn = np.mat(EigenVecsM_inv)*np.mat(f_hat_vec).T
+                        if nvars == 3:
+                            sigma_1[ii,jj] = sigma_kn[0,0]
+                            sigma0[ii,jj] = sigma_kn[1,0]
+                            sigma1[ii,jj] = sigma_kn[2,0]
+                        if nvars == 2:
+                            sigma_1[ii,jj] = sigma_kn[0,0]
+                            sigma1[ii,jj] = sigma_kn[1,0]
 
                     if MakeCoordRotation == 1 and ii < int(Nx/2.):
                         diagonalM = np.zeros((2,2))*1j
@@ -2215,8 +2229,8 @@ if NaturalBasis == 1:
                         tmp_S_r['c'][ii,jj] = S_hat[ii,jj]
 
         if MakeCoordRotation == 1:
-            State_R[tt,:,:,0] = tmp_psi_r['g']
-            State_R[tt,:,:,1] = tmp_S_r['g']
+            psi_r[tt,:,:] = tmp_psi_r['g']
+            S_r[tt,:,:] = tmp_S_r['g']
 
         if BasisCheck1 == 1:
             #Reverse transform back to the new State:
@@ -2248,7 +2262,7 @@ if NaturalBasis == 1:
                 State_2[tt,:,:,1] = tmp_S['g']
 
         # For writing natural basis to a file:
-        if w2f_analysis == 1:
+        if w2f_analysis == 1 and noSigmas == 0:
 
             #First write the coefficients (sigmas) of the natural basis:
             if tt == 0:
@@ -2295,6 +2309,9 @@ if NaturalBasis == 1:
                 fnm_kmag = dir_ivec + 'kmag_arr.txt'
                 np.savetxt(fnm_kmag,kmag_arr)
 
+    if SinglePoint == 1:
+        psi_r = psi_r[:,xIdx,zIdx] 
+        S_r = S_r[:,xIdx,zIdx] 
 
 if StateS_2 == 1:
 #New salinity after transformation to make linear operator Skew Hermitian:
@@ -2396,7 +2413,7 @@ if StateS == 1:
             dS = (SMax-SMin)/(nlevs-1)
             clevels = np.arange(nlevs)*dS + SMin
 
-            xlim=(0,60)
+            #xlim=(0,60)
         
         if CoefficientSpace == 1:
             tIdx = 1
@@ -2492,7 +2509,7 @@ if StatePsi == 1:
 if ForwardTransform == 1:
     data = S
     #data = Psi
-    data = State_R[:,:,:,1]
+    #data = State_R[:,:,:,1]
 
     #Compute Fourier-SinCos basis coefficients:    
     tmp = domain.new_field()
@@ -2517,7 +2534,7 @@ if ForwardTransform == 1:
     plt.contourf(data_hat[1,0:int(Nx/2.),:],50)
     plt.colorbar()
     plt.show()
-    pdb.set_trace()
+    #pdb.set_trace()
 
     if MakePlot == 1:
         count1 = 0
@@ -2537,7 +2554,7 @@ if ForwardTransform == 1:
                 #PowerLimit = 5*10**(2)
                 PowerLimit = 10**(3)
                 #PowerLimit = 5*10**(4)
-                #PowerLimit = 5*10**(5)
+                PowerLimit = 5*10**(5)
                 if sum(f) > PowerLimit:
 
                     label = str(ii) + ',' + str(jj)
@@ -2553,14 +2570,34 @@ if ForwardTransform == 1:
         plt.xlabel('t (s)')
         plt.ylim(10**(-4),10**(2))
         plt.legend()
-        plt.show()
+        #plt.show()
+        plt.savefig('Shat.eps')
 
+
+if PhasePortraits == 1:
+
+    fig1 = plt.figure(figsize=(width,height))
+    grid1 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+    ax1 = fig1.add_subplot(grid1[0,0])
+    fig1.set_tight_layout(True)
+
+    S_t = d_dt(S,Nt,t)
+   
+    ax1.plot( S[:,int(Nx/2.),int(Nz/2.)],S_t[:,int(Nx/2.),int(Nz/2.)], 'k', linewidth=1 )
+    minS = np.min(S[:,int(Nx/2.),int(Nz/2.)])
+    maxS = np.max(S[:,int(Nx/2.),int(Nz/2.)])
+    ax1.plot( [minS, maxS], [0,0], ':k', linewidth=0.5 )
+    ax1.set_xlabel(r'$S$ (g/kg)')
+    ax1.set_ylabel(r'$\dot{S}$ (g/kg/t)')
+
+    plt.savefig('phaseSpace.eps')
+    pdb.set_trace()
 
 if SpectralAnalysis == 1:
     if AnalyseS == 1:
         fnmVar = 'S'
-        if Modulated == 0: data = S2
-        if Modulated == 1: data = S_r
+        if Modulated == 0 and MakeCoordRotation==0: data = S2
+        if Modulated == 1 or MakeCoordRotation==1: data = S_r
     if AnalyseRho == 1:
         fnmVar = 'Rho'
         if Modulated == 0: data = rho
@@ -2569,8 +2606,7 @@ if SpectralAnalysis == 1:
     if AnalysePsi == 1:
         fnmVar = 'Psi'
         if Modulated == 0: data = Psi
-        if Modulated == 1: data = Psi_r
-
+        if Modulated == 1 or MakeCoordRotation: data = Psi_r
 
     #idx0 = int(10./dt2)
     #tmp = data[idx0:,:,:]
@@ -2588,13 +2624,17 @@ if SpectralAnalysis == 1:
             data = data[0:t_offset_vec[idx]]
 
     
-    Welch = 0
+    Welch = 1
     if Welch == 1:
         spectralCoef, freqvec, nperseg = spectral_analysis(data,dt2,Welch=Welch)
         npersegStr = str(nperseg)
     else:
-        window = tukey(len(data[:,0,0]), alpha=0.05)
+        window = tukey(Nt, alpha=1, sym=False)
+        #tmp = np.concatenate( (np.zeros((10)),data.flatten()) )
+        #dat = np.concatenate( (tmp,np.zeros((10))) )
+        #window=None
         freqvec, spectralCoef = periodogram(data, fs=1./dt2, axis=0, return_onesided=True, detrend=False, window=window)
+        npersegStr = str(int(Nt/2.))
 
     print(freqvec.shape)
     print(spectralCoef.shape)
@@ -2605,7 +2645,8 @@ if SpectralAnalysis == 1:
     #intPSD = np.trapz(spectralCoef.flatten(),freqvec)
     #print("integral of PSD: ", intPSD)
 
-    if w2f_analysis == 1:
+    switch=0
+    if w2f_analysis == 1 and switch==1:
         if FullDomain == 1:
             Idx1 = int(Nx/2.)
             Idx2 = int(Nz/2.)
@@ -2641,8 +2682,8 @@ if SpectralAnalysis == 1:
 
 
     if MakePlot == 1:
+        #xscale = 'log'
         yscale = 'log'
-        #yscale = 'linear'
         PlotGrid = False
 
         if PSD_vs_N_plot==0 and CheckPSD==0 and MultiPoint==0:
@@ -2666,15 +2707,16 @@ if SpectralAnalysis == 1:
                 Idx1 = 0
                 Idx2 = 0
 
-            data = spectralCoef[:,Idx1,Idx2]
+            #data = spectralCoef[:,Idx1,Idx2]
+            data = spectralCoef
 
             xgrid = freqvec*(2*np.pi)
             xlim = (0,5)
-            if ScaleDiffusion == 1: ylim = (1e-18,1e+0)
-            if ScaleDiffusion == 0: ylim = (1e-6,1e+5)
+            if ScaleDiffusion == 1: ylim = (1e-15,1e+3)
+            if ScaleDiffusion == 0: ylim = (1e-15,1e+3)
             xlabel = r'$\omega$ (rad/s)'
             if Modulated == 0: ylabel = r'PSD ([$\rho$]$^2$/(rad/s))'
-            if Modulated == 1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
+            if Modulated == 1 or MakeCoordRotation==1: ylabel = r'PSD ($\left[{\zeta}\right]^2$/(rad/s))'
             PlotTitle = ''
             FigNmBase = 'psd_'
 
@@ -2958,7 +3000,44 @@ if SpectralAnalysis == 1:
                 #Save and close image:
                 plt.savefig('psd_linear_nonlinear' + RunName_ + '.png')
                 plt.close(fig0)
+                
+        if FindPeaks == 1:
+                
+            fig0 = plt.figure(figsize=(width,height))
+            fig0.set_tight_layout(True)
+            grid0 = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+            ax0 = fig0.add_subplot(grid0[0,0])
 
+            ax0.plot(xgrid,data.flatten(), '.-k', linewidth=2)
+
+            ax0.set_yscale('log')
+            xscale = 'linear'
+            #xscale = 'log'
+            ax0.set_xscale(xscale)
+
+            if xscale == 'log': 
+                xlim = [1e-3,1e3]
+                linewidth = 0.1
+            if xscale == 'linear': 
+                xlim = [-0.1,3]
+                linewidth = 0.5
+            ax0.set_xlim(xlim)
+            ax0.set_ylim(ylim)
+            ax0.set_xlabel(xlabel)
+            ax0.set_ylabel(ylabel)
+            ax0.set_title(PlotTitle)
+
+            #plot list of frequencies
+            if StartMin ==1: f_list = [0,0.55,0.7,0.8,1,1.1,1.45,1.5,1.6]
+            if StartMin !=1: f_list = [0,1,1.5]
+
+            for ff in range(len(f_list)):
+                if f_list[ff] == 1.5: color = 'r'
+                else: color='g'
+                ax0.plot( [f_list[ff],f_list[ff]], [np.min(ylim),np.max(ylim)], '-', color=color, linewidth=linewidth )
+
+            plt.savefig('./psd_N2_' + str(N2) + '_' + str(StartMin) + '_' + xscale + '.eps')
+                
 
 if TimescaleSeparation == 1:
 
@@ -3423,9 +3502,11 @@ if MakePlot >= 1:
 
         if PlotXZ==0 and PlotTZ==0:
             if PlotT == 1: 
-                i1=ax1.plot(xgrid,data.flatten(), '-', c='k', linewidth=2)
+                i1=ax1.plot(xgrid,data.flatten(), '-', color='k', linewidth=2)
                 if 'yscale' not in locals(): yscale='linear'
                 ax1.set_yscale(yscale)
+                if 'xscale' not in locals(): xscale='linear'
+                ax1.set_xscale(xscale)
                 if 'PlotGrid' not in locals(): PlotGrid=False
                 ax1.grid(PlotGrid)
             if PlotZ == 1:
@@ -3500,7 +3581,6 @@ if MakePlot >= 1:
 
         if w2f_analysis == 0: plt.show()
         if w2f_analysis == 1:
-            if ScaleDiffusion == 0: FigNmBase = './molecularDiffusion/' + FigNmBase
             if PlotXZ == 1: plt.savefig(FigNmBase + RunName + '_xz_' + str(tIdx) + '.eps')
             if PlotTZ == 1: plt.savefig(FigNmBase + RunName + '_tz_' + str(StartMin) + '_' + str(nfiles) + '.eps')
             if PlotZ == 1: plt.savefig(FigNmBase + RunName + '_z' + '.eps')

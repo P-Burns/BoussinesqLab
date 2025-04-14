@@ -47,7 +47,7 @@ Gusto		= 0
 if len(sys.argv) < 2: Modulated = 0
 Linear 		= 0
 Inviscid	= 0
-nrMolecularDiff	= 1
+nrMolecularDiff	= 0
 FullDomain      = 0
 SinglePoint	= 1
 MultiPoint	= 0
@@ -62,8 +62,8 @@ forced          = 0
 if len(sys.argv) < 2 and VaryN == 1:
     #N2		= 0.09
     N2		= 0.25
-    #N2		= 1
-    #N2		= 2.25		
+    N2		= 1
+    N2		= 2.25		
     #N2		= 4
     #N2		= 6.25
     #N2		= 7.5625
@@ -132,7 +132,7 @@ ForwardTransform     	= 0
 CoefficientSpace	= 0
 PhasePortraits          = 0
 
-SpectralAnalysis        = 1
+SpectralAnalysis        = 0
 AnalyseS                = 0
 AnalyseRho              = 1
 AnalysePsi              = 0
@@ -142,13 +142,13 @@ CheckPSD		= 0
 CheckPSD2		= 0
 PSD_vs_N_plot		= 0
 PSD_mod_unmod_plot	= 1
-PSD_add_linear          = 1
+PSD_add_linear          = 0
 PSD_linear_nonlinear	= 0
 if len(sys.argv) < 2: AnalyseLayerCreation    = 0
 if len(sys.argv) < 2: AnalyseLayerDecay       = 0
 FindPeaks 		= 0
 
-TimescaleSeparation	= 0
+TimescaleSeparation	= 1
 OverlayModulated	= 1
 IGWmethod 		= 1
 step_prediction		= 0
@@ -177,7 +177,7 @@ FieldMaxMin 	= 1
 
 
 #Choose type of plot:
-MakePlot 	= 1
+MakePlot 	= 0
 PlotXZ 		= 0
 PlotTZ 		= 0
 PlotT 		= 0
@@ -189,7 +189,7 @@ logscale	= 0
 savePlots       = 1
 
 #Write analysis to file
-w2f_analysis 	= 0
+w2f_analysis 	= 1
 
 
 #Setup parameters for reading Dedalus data into this program:
@@ -242,8 +242,8 @@ if VaryN == 1:
         #RunName = RunName + '_dt0.005_sp'
         RunName = RunName + '_sp'
     if Linear ==1 : RunName = RunName + '_lnr'
-    dir_state = './Results/' + RunName + '/'
-    #dir_state = './Results_bigNu/' + RunName + '/'
+    #dir_state = './Results/' + RunName + '/'
+    dir_state = './Results_bigNu/' + RunName + '/'
 
 if Gusto == 0:
     #Each Dedalus output file contains 1 min of data - this is assumed constant:
@@ -252,8 +252,8 @@ if Gusto == 0:
 
     if SpectralAnalysis==1 and MeanFlowAnalysis==0:
         StartMin = 1
-        nfiles = 30
-        #nfiles = 10
+        #nfiles = 30
+        nfiles = 10
     elif (SpectralAnalysis==1 and MeanFlowAnalysis==1) or (SpectralAnalysis==1 and CheckPSD2==1):
         StartMin = 1
         nfiles = 30
@@ -268,8 +268,8 @@ if Gusto == 0:
         if nrMolecularDiff==0: 
             dt = 1e-1
     if SinglePoint==1: 
-        if nrMolecularDiff==0: dt = 1e-1
-        if nrMolecularDiff==1: dt = 1e-1 
+        if nrMolecularDiff==0: dt = 1e-2
+        if nrMolecularDiff==1: dt = 1e-2 
     if MultiPoint==1: 
         dt = 8e-3
 
@@ -312,9 +312,9 @@ Lz = 0.45
 
 #factor = 1./4
 #factor = 1./2
-#factor = 1
+factor = 1
 #factor = 2
-factor = 4
+#factor = 4
 #factor = 6
 Nx = 80
 Nz = 180
@@ -2699,8 +2699,8 @@ if SpectralAnalysis == 1:
         separator = '_'
         RunName_ = separator.join(tmp)
 
-        file_dir = './Results/' + RunName + '/'
-        #file_dir = './Results_bigNu/' + RunName + '/'
+        #file_dir = './Results/' + RunName + '/'
+        file_dir = './Results_bigNu/' + RunName + '/'
         fnm_w2f = file_dir + 'psd_' + fnmVar 
         #if Modulated == 1: fnm_w2f = fnm_w2f + '_r'
         fnm_w2f = fnm_w2f + '_' + RunName + '_' + npersegStr
@@ -2764,10 +2764,10 @@ if SpectralAnalysis == 1:
 
             #data = np.loadtxt('./SpectralAnalysis/unmodulated/' + fname + '_' + npersegStr + '.txt')
             #data_mod = np.loadtxt('./SpectralAnalysis/modulated/' + fname + '_' + npersegStr + '_R.txt')
-            data = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            data_mod = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
-            #data = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
-            #data_mod = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
+            #data = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
+            #data_mod = np.loadtxt('./Results/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
+            data = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho2_' + RunName + '_' + npersegStr + '.txt')
+            data_mod = np.loadtxt('./Results_bigNu/' + RunName + '/' + 'psd_Rho_r_' + RunName + '_' + npersegStr + '.txt')
 
 
             intPSD = np.trapz(data[0,:],data[1,:])
@@ -2784,11 +2784,11 @@ if SpectralAnalysis == 1:
             ax1.set_xlim(0,5)
             #ax1.set_xscale("log")
             #ax1.set_xlim(1e-2,1e1)
-            ylim = (1e-14,1e0)
+            ylim = (1e-18,1e0)
             ax1.set_ylim(ylim)
-            ax1.set_yticks((np.logspace(-14, 0, num=8))) 
+            ax1.set_yticks((np.logspace(-18, 0, num=10))) 
 
-            addBands = 1
+            addBands = 0
             if addBands == 1:
                 #Load tracked spectrum features files so we can overplot omega_well and 
                 #bandwidths of Meanflow and IGW:
@@ -2802,7 +2802,7 @@ if SpectralAnalysis == 1:
                 PSD_well = datMF[Nidx,2].flatten()[0] 
                 ax1.plot([omega_well,omega_well],[min(ylim),max(ylim)],'--k', label=r'$\omega_{\rm well}$')
                 ax1.plot([IGW_maxf,IGW_maxf],[min(ylim),max(ylim)],'k')
-                yloc = 1e-12
+                yloc = 1e-11
                 if N2 != 0.25: ax1.text(IGW_mid, yloc, r'$\omega_{\rm IGW}$', horizontalalignment='center', verticalalignment='center', fontsize=14)
                 xoffset = 0.2
                 if N2 != 0.25: ax1.plot([omega_well,IGW_mid-xoffset], [yloc,yloc], 'k')
@@ -2817,12 +2817,12 @@ if SpectralAnalysis == 1:
 
 
             if N2==9: legend_fontsize='20'
-            else: legend_fontsize=None
+            else: legend_fontsize='20'
 
             if N2 != 16: plt.legend(frameon=False, labelspacing = 0.1, fontsize=legend_fontsize)
             #plt.show()
-            plt.savefig('psd_' + RunName + '_mod_unmod.eps')
-            #plt.savefig('psd_' + RunName + '_mod_unmod_bigNu.eps')
+            #plt.savefig('psd_' + RunName + '_mod_unmod.eps')
+            plt.savefig('psd_' + RunName + '_mod_unmod_bigNu.eps')
 
         if PSD_vs_N_plot == 1 and CheckPSD == 0:
             fig1 = plt.figure(figsize=(width*1.2,height))
@@ -3086,7 +3086,8 @@ if SpectralAnalysis == 1:
 if TimescaleSeparation == 1:
 
     #User input:
-    nperseg = 3000
+    if nrMolecularDiff==1: nperseg = 3000
+    if nrMolecularDiff==0: nperseg = 1000
 
     npersegStr = str(nperseg)
     if Modulated == 0: N_vec = np.array((0.5, 1, 1.5, 2, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5, 5))
@@ -3100,31 +3101,37 @@ if TimescaleSeparation == 1:
     else: 
         varnm = 'Rho2'
 
-    data1 = np.loadtxt('./Results/StateN2_00_25_sp/psd_' + varnm + '_StateN2_00_25_sp_' + npersegStr + '.txt')
-    data2 = np.loadtxt('./Results/StateN2_01_sp/psd_' + varnm + '_StateN2_01_sp_' + npersegStr + '.txt')
-    data3 = np.loadtxt('./Results/StateN2_02_25_sp/psd_' + varnm + '_StateN2_02_25_sp_' + npersegStr + '.txt')
-    data4 = np.loadtxt('./Results/StateN2_04_sp/psd_' + varnm + '_StateN2_04_sp_' + npersegStr + '.txt')
-    data5 = np.loadtxt('./Results/StateN2_06_25_sp/psd_' + varnm + '_StateN2_06_25_sp_' + npersegStr + '.txt')
-    if IGWmethod==0: data6 = np.loadtxt('./Results/StateN2_07_5625_sp/psd_' + varnm + '_StateN2_07_5625_sp_' + npersegStr + '.txt')
-    data7 = np.loadtxt('./Results/StateN2_09_sp/psd_' + varnm + '_StateN2_09_sp_' + npersegStr + '.txt')
-    if IGWmethod==0: data8 = np.loadtxt('./Results/StateN2_10_5625_sp/psd_' + varnm + '_StateN2_10_5625_sp_' + npersegStr + '.txt')
-    data9 = np.loadtxt('./Results/StateN2_12_25_sp/psd_' + varnm + '_StateN2_12_25_sp_' + npersegStr + '.txt')
-    if IGWmethod==0: data10 = np.loadtxt('./Results/StateN2_14_0625_sp/psd_' + varnm + '_StateN2_14_0625_sp_' + npersegStr + '.txt')
-    data11 = np.loadtxt('./Results/StateN2_16_sp/psd_' + varnm + '_StateN2_16_sp_' + npersegStr + '.txt')
-    data12 = np.loadtxt('./Results/StateN2_20_25_sp/psd_' + varnm + '_StateN2_20_25_sp_' + npersegStr + '.txt')
-    data13 = np.loadtxt('./Results/StateN2_25_sp/psd_' + varnm + '_StateN2_25_sp_' + npersegStr + '.txt')
+
+    #baseDir = './Results/'
+    baseDir = './Results_bigNu/'
+    data1 = np.loadtxt(baseDir + 'StateN2_00_25_sp/psd_' + varnm + '_StateN2_00_25_sp_' + npersegStr + '.txt')
+    data2 = np.loadtxt(baseDir + 'StateN2_01_sp/psd_' + varnm + '_StateN2_01_sp_' + npersegStr + '.txt')
+    data3 = np.loadtxt(baseDir + 'StateN2_02_25_sp/psd_' + varnm + '_StateN2_02_25_sp_' + npersegStr + '.txt')
+    data4 = np.loadtxt(baseDir + 'StateN2_04_sp/psd_' + varnm + '_StateN2_04_sp_' + npersegStr + '.txt')
+    data5 = np.loadtxt(baseDir + 'StateN2_06_25_sp/psd_' + varnm + '_StateN2_06_25_sp_' + npersegStr + '.txt')
+    data6 = np.loadtxt(baseDir + 'StateN2_07_5625_sp/psd_' + varnm + '_StateN2_07_5625_sp_' + npersegStr + '.txt')
+    data7 = np.loadtxt(baseDir + 'StateN2_09_sp/psd_' + varnm + '_StateN2_09_sp_' + npersegStr + '.txt')
+    data8 = np.loadtxt(baseDir + 'StateN2_10_5625_sp/psd_' + varnm + '_StateN2_10_5625_sp_' + npersegStr + '.txt')
+    data9 = np.loadtxt(baseDir + 'StateN2_12_25_sp/psd_' + varnm + '_StateN2_12_25_sp_' + npersegStr + '.txt')
+    data10 = np.loadtxt(baseDir + 'StateN2_14_0625_sp/psd_' + varnm + '_StateN2_14_0625_sp_' + npersegStr + '.txt')
+    data11 = np.loadtxt(baseDir + 'StateN2_16_sp/psd_' + varnm + '_StateN2_16_sp_' + npersegStr + '.txt')
+    data12 = np.loadtxt(baseDir + 'StateN2_20_25_sp/psd_' + varnm + '_StateN2_20_25_sp_' + npersegStr + '.txt')
+    data13 = np.loadtxt(baseDir + 'StateN2_25_sp/psd_' + varnm + '_StateN2_25_sp_' + npersegStr + '.txt')
 
     if IGWmethod == 1:
-        data1_R = np.loadtxt('./Results/StateN2_00_25_sp/psd_Rho_r_StateN2_00_25_sp_' + npersegStr + '.txt')
-        data2_R = np.loadtxt('./Results/StateN2_01_sp/psd_Rho_r_StateN2_01_sp_' + npersegStr + '.txt')
-        data3_R = np.loadtxt('./Results/StateN2_02_25_sp/psd_Rho_r_StateN2_02_25_sp_' + npersegStr + '.txt')
-        data4_R = np.loadtxt('./Results/StateN2_04_sp/psd_Rho_r_StateN2_04_sp_' + npersegStr + '.txt')
-        data5_R = np.loadtxt('./Results/StateN2_06_25_sp/psd_Rho_r_StateN2_06_25_sp_' + npersegStr + '.txt')
-        data7_R = np.loadtxt('./Results/StateN2_09_sp/psd_Rho_r_StateN2_09_sp_' + npersegStr + '.txt')
-        data9_R = np.loadtxt('./Results/StateN2_12_25_sp/psd_Rho_r_StateN2_12_25_sp_' + npersegStr + '.txt')
-        data11_R = np.loadtxt('./Results/StateN2_16_sp/psd_Rho_r_StateN2_16_sp_' + npersegStr + '.txt')
-        data12_R = np.loadtxt('./Results/StateN2_20_25_sp/psd_Rho_r_StateN2_20_25_sp_' + npersegStr + '.txt')
-        data13_R = np.loadtxt('./Results/StateN2_25_sp/psd_Rho_r_StateN2_25_sp_' + npersegStr + '.txt')
+        data1_R = np.loadtxt(baseDir + 'StateN2_00_25_sp/psd_Rho_r_StateN2_00_25_sp_' + npersegStr + '.txt')
+        data2_R = np.loadtxt(baseDir + 'StateN2_01_sp/psd_Rho_r_StateN2_01_sp_' + npersegStr + '.txt')
+        data3_R = np.loadtxt(baseDir + 'StateN2_02_25_sp/psd_Rho_r_StateN2_02_25_sp_' + npersegStr + '.txt')
+        data4_R = np.loadtxt(baseDir + 'StateN2_04_sp/psd_Rho_r_StateN2_04_sp_' + npersegStr + '.txt')
+        data5_R = np.loadtxt(baseDir + 'StateN2_06_25_sp/psd_Rho_r_StateN2_06_25_sp_' + npersegStr + '.txt')
+        data6_R = np.loadtxt(baseDir + 'StateN2_07_5625_sp/psd_Rho_r_StateN2_07_5625_sp_' + npersegStr + '.txt')
+        data7_R = np.loadtxt(baseDir + 'StateN2_09_sp/psd_Rho_r_StateN2_09_sp_' + npersegStr + '.txt')
+        data8_R = np.loadtxt(baseDir + 'StateN2_10_5625_sp/psd_Rho_r_StateN2_10_5625_sp_' + npersegStr + '.txt')
+        data9_R = np.loadtxt(baseDir + 'StateN2_12_25_sp/psd_Rho_r_StateN2_12_25_sp_' + npersegStr + '.txt')
+        data10_R = np.loadtxt(baseDir + 'StateN2_14_0625_sp/psd_Rho_r_StateN2_14_0625_sp_' + npersegStr + '.txt')
+        data11_R = np.loadtxt(baseDir + 'StateN2_16_sp/psd_Rho_r_StateN2_16_sp_' + npersegStr + '.txt')
+        data12_R = np.loadtxt(baseDir + 'StateN2_20_25_sp/psd_Rho_r_StateN2_20_25_sp_' + npersegStr + '.txt')
+        data13_R = np.loadtxt(baseDir + 'StateN2_25_sp/psd_Rho_r_StateN2_25_sp_' + npersegStr + '.txt')
 
     #Search for largest psd frequencies excluding mean flow. 
     #This method also identifies the mean flow freq and psd, 
@@ -3177,18 +3184,27 @@ if TimescaleSeparation == 1:
                 fhat = data5
                 fhat_R = data5_R
             if nn == 5: 
+                fhat = data6
+                fhat_R = data6_R
+            if nn == 6: 
                 fhat = data7
                 fhat_R = data7_R
-            if nn == 6: 
+            if nn == 7: 
+                fhat = data8
+                fhat_R = data8_R
+            if nn == 8: 
                 fhat = data9
                 fhat_R = data9_R
-            if nn == 7: 
+            if nn == 9: 
+                fhat = data10
+                fhat_R = data10_R
+            if nn == 10: 
                 fhat = data11
                 fhat_R = data11_R
-            if nn == 8: 
+            if nn == 11: 
                 fhat = data12
                 fhat_R = data12_R
-            if nn == 9: 
+            if nn == 12: 
                 fhat = data13
                 fhat_R = data13_R
 
@@ -3276,10 +3292,14 @@ if TimescaleSeparation == 1:
 
             if Modulated == 0:
                 #use ratio of mapped to unmapped signal to find minima of spectral gap
-                ratios = np.divide(fhat[0,:],fhat_R[0,:])
-                #print(ratios)
-                tmp = np.where( ratios > 10 )
-                lowerBoundIdx = np.min( tmp[0] )
+                ratios = np.divide(fhat[0,psdMinIdx:],fhat_R[0,psdMinIdx:])
+
+                #ratios = np.abs(np.subtract(fhat[0,:],fhat_R[0,:]))
+                #if N_bv==1.5: 
+                #    print(ratios)
+                #    pdb.set_trace()
+                tmp = np.where( ratios > 11 )
+                lowerBoundIdx = np.min( tmp[0] ) + psdMinIdx
                 print(N_vec[nn], fhat[1,lowerBoundIdx]*c, fhat[1,upperBoundIdx]*c)
                 psdMinIdx = lowerBoundIdx
 
@@ -3302,7 +3322,8 @@ if TimescaleSeparation == 1:
             #lastPeakIdx = upperBoundIdx
 
         if Modulated == 1:
-            dat__ = np.loadtxt('./meanflowarr.txt')
+            if nrMolecularDiff: dat__ = np.loadtxt('./meanflowarr.txt')
+            else: dat__ = np.loadtxt('./meanflowarr_bigNu.txt')
             WellMode = dat__[nn,3]
             idxs = np.where(fhat[1,:]>=WellMode)
             psdMinIdx = np.min(idxs)
@@ -3421,12 +3442,20 @@ if TimescaleSeparation == 1:
 
     if w2f_analysis == 1:
         if Modulated == 0:
-            fnm1 = './psdIGWarr.txt'
-            fnm2 = './meanflowarr.txt'
+            fnm1 = './psdIGWarr' 
+            if nrMolecularDiff==0: fnm1 = fnm1 + '_bigNu.txt'
+            else: fnm1 = fnm1 + '.txt'
+
+            fnm2 = './meanflowarr' 
+            if nrMolecularDiff==0: fnm2 = fnm2 + '_bigNu.txt'
+            else: fnm2 = fnm2 + '.txt'
+
             np.savetxt(fnm1,psdIGWarr)
             np.savetxt(fnm2,meanflowarr)
         if Modulated == 1: 
-            fnm1 = './meanflowarr_modulated.txt'
+            fnm1 = './meanflowarr_modulated'
+            if nrMolecularDiff==0: fnm1 = fnm1 + '_bigNu.txt'
+            else: fnm1 = fnm1 + '.txt'
             np.savetxt(fnm1,meanflowarr)
 
 

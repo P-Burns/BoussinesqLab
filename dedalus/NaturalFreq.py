@@ -34,7 +34,7 @@ if len(sys.argv) > 2:
     print(N2, OmegaLimit, windowMethod)
 
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 20})
 
 
 #Program control:
@@ -42,7 +42,7 @@ ProblemType			= 'Layers'
 ParkRun 			= -1
 if len(sys.argv) <= 2:
     #N2				= 1
-    #N2				= 2.25
+    N2				= 2.25
     #N2				= 4
     #N2				= 6.25
     #N2				= 7.5625
@@ -50,11 +50,11 @@ if len(sys.argv) <= 2:
     #N2				= 10.5625 
     #N2				= 12.25 
     #N2				= 14.0625
-    N2				= 16
+    #N2				= 16
     #N2				= 20.25
     #N2				= 25
 
-DiffusionFactor			= 100
+DiffusionFactor			= 1E2
 FullFields 			= 0
 Modulated			= 1
 BasisCheck1			= 0
@@ -364,10 +364,10 @@ if FullFields == 1:
     Sbase = -bs*(z-Lz) + STop
 
 #Set time independent objects:
-dir_sigma = './Results/' + RunName + '/NaturalBasis/'
-dir_ivec = './Results/' + RunName + '/NaturalBasis/' 
-#dir_sigma = './Results/' + RunName + '/NaturalBasis' + '_dt3/'
-#dir_ivec = './Results/' + RunName + '/NaturalBasis' + '_dt3/'
+#dir_sigma = './Results/' + RunName + '/NaturalBasis/'
+#dir_ivec = './Results/' + RunName + '/NaturalBasis/' 
+dir_sigma = './Results_bigNu/' + RunName + '/NaturalBasis/'
+dir_ivec = './Results_bigNu/' + RunName + '/NaturalBasis/'
 
 State = np.zeros((Nx,Nz,Nt,nvars))
 

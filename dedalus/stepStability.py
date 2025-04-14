@@ -8,7 +8,7 @@ from scipy.integrate import simps
 
 
 #Control section:
-t_series = 0
+t_series = 1
 panel_plot = 0
 saveFig = 0
 
@@ -24,16 +24,17 @@ k = 4.*(2*np.pi)/L
 n_vec = np.array([2,8,13,18,24,31,41])*np.pi/H #central vertical wavenumber of Gaussian force
 Forces = len(force_vec)
 #Initialise arrays to analyse results as a function of N and the force parameter:
-s1 = np.zeros((Ns,Forces))
-s2 = np.zeros((Ns,Forces))
-s3 = np.zeros((Ns,Forces))
-s4 = np.zeros((Ns,Forces))
+s1 = np.zeros((Ns,Forces)) 	#stability as a function of time rate of number of layers
+s2 = np.zeros((Ns,Forces)) 	#stability as a function of time rate of layer heights
+s3 = np.zeros((Ns,Forces))	#stability as a function of time rate of layer z position
+s4 = np.zeros((Ns,Forces))	#stability as a function of standard deviation of layer heights
+s5 = np.zeros((Ns,Forces)) 	#stability as a function of local density gradient within layers
 c1 = np.zeros((Ns,Forces))
 c2 = np.zeros((Ns,Forces))
-#Also create a mask array to identify/plot parameter space of no steps.
+#Create a mask array to identify/plot parameter space of no steps.
 mask = np.zeros((Ns,Forces),dtype='bool')
 
-#Look at relationship between induced force and Natural frequency 
+#Look at relationship between induced force *frequency* and Natural *frequency*
 #as cause of step instability:
 d1 = np.zeros((Ns,Forces))
 #Look at ratio of external force to background restoring force:
@@ -41,6 +42,7 @@ d2 = np.zeros((Ns,Forces))
 
 #Look at ratio of total energy in linear and nonlinear systems using PSD:
 d3 = np.zeros((Ns,Forces))
+
 
 #Time parameters:
 dt = 0.1
@@ -97,6 +99,7 @@ for ff in range(0,Nfiles):
     #Read in data for some N and force choice for layer tracking results:
     steps_t = np.loadtxt(dir0 + 'steps_t.txt')
     steps_dz = np.loadtxt(dir0 + 'steps_dz.txt')
+    steps_dS = np.loadtxt(dir0 + 'steps_dS.txt')
     ddt_steps = np.loadtxt(dir0 + 'd_dt_step.txt')
     ddt_stepsDz = np.loadtxt(dir0 + 'd_dt_stepDz.txt')
     ddt_steps_z = np.loadtxt(dir0 + 'd_dt_step_z.txt')
@@ -104,8 +107,8 @@ for ff in range(0,Nfiles):
     #Read in data for some N and force choice for PSD results:
     #print(RunName)
     if RunName != '13_125_125_31' and RunName != '13_125_286_31':
-        psd_linear = np.loadtxt(dir1 + 'psd_Rho_r_'+ RunName + '_3000_linear.txt')
-        psd_nonlinear = np.loadtxt(dir1 + 'psd_Rho_r_'+ RunName + '_3000.txt')
+        psd_linear = np.loadtxt(dir1 + 'psd_Rho_r_'+ RunName + '_2900_linear.txt')
+        psd_nonlinear = np.loadtxt(dir1 + 'psd_Rho_r_'+ RunName + '_2900.txt')
 
         #Compute ratio of energy in PSD from linear and nonlinear
         c = 2*np.pi
@@ -121,6 +124,7 @@ for ff in range(0,Nfiles):
     steps_t_cp 		= np.copy(steps_t)
     ddt_steps_cp 	= np.copy(ddt_steps)
     steps_dz_cp 	= np.copy(steps_dz)
+    steps_dS_cp		= np.copy(steps_dS)
     ddt_stepsDz_cp 	= np.copy(ddt_stepsDz)
     ddt_steps_z_cp	= np.copy(ddt_steps_z)
 
@@ -135,16 +139,21 @@ for ff in range(0,Nfiles):
     tIdxsNaN = np.where(steps_t==0)[0]
     steps_t_cp[tIdxsNaN] = np.nan
     steps_dz_cp[steps_dz==0] = np.nan
+    steps_dS_cp[steps_dz==0] = np.nan
+
+    #print(steps_dz_cp.shape, steps_dS_cp.shape)
+    #pdb.set_trace()
 
     #Compute diagnostics:
-    #Only consider absolute values since we are interested in step stability. For instance, this avoids
+    #Only consider absolute values for rates since we are interested in step stability. For instance, this avoids
     #cancellation of rates with different signs from different steps within a staircase during averaging over steps below.
 
     #Average quantities over the steps for each time point.  
     #These step averages provide some kind of measure of staircase stability over time 
     #for each run (i.e. for each N and force characteristics). I have chosen to do this 
     #manually so I am sure what is happening during the averaging (and integration below):
-    steps_dz_abs_ave = np.zeros((Nt))
+    steps_dz_ave = np.zeros((Nt))
+    steps_dS_ave = np.zeros((Nt))
     ddt_stepsDz_abs_ave = np.zeros((Nt))
     ddt_steps_z_abs_ave = np.zeros((Nt))
 
@@ -154,13 +163,21 @@ for ff in range(0,Nfiles):
 
     for tt in range(0,Nt):
         if steps_t[tt] != 0:
-            steps_dz_abs_ave[tt] = np.mean(np.abs(steps_dz[tt,0:int(steps_t[tt])]))
+            steps_dz_ave[tt] = np.mean(steps_dz[tt,0:int(steps_t[tt])])
+
+            #Only interested in how unstable the layerss are (not how stable they may be):
+            idxsPos = np.where( steps_dS[tt,0:int(steps_t[tt])] > 0)
+            if len(idxsPos) != 0:
+                steps_dS_ave[tt] = np.mean(np.abs(steps_dS[tt,idxsPos]))
+            else: 
+                steps_dS_ave[tt] = 0
+
             ddt_stepsDz_abs_ave[tt] = np.mean(np.abs(ddt_stepsDz[tt,0:int(steps_t[tt])]))
             ddt_steps_z_abs_ave[tt] = np.mean(np.abs(ddt_steps_z[tt,0:int(steps_t[tt])]))
     #n.b. for times with no steps the result is zero.  This works well since these points
     #will not contribute to the integrals computed next. Setting points to NaN won't work 
     #with the integrating function trapz. Setting zero points to NaN and then taking the subset of 
-    #finite points will introduce errors into the integration (think area under curve). 
+    #finite points for the integration will introduce errors into the integration (think area under curve). 
  
     #Integrate rates over time to obtain stability measures for each run
     #(i.e. for some N and force parameter).  Integrating step heights and 
@@ -171,6 +188,9 @@ for ff in range(0,Nfiles):
         s3[idxN,idxForce] = np.trapz(ddt_steps_z_abs_ave[t_offset:],dx=dt)
         #Consider standard deviation of step heights as a measure of instability: 
         s4[idxN,idxForce] = np.nanstd(steps_dz_cp[t_offset:,:])
+        #Use local density gradient as measure of step stability:
+        s5[idxN,idxForce] = np.mean(steps_dS_ave[t_offset:])
+
         #Also look at staircase spatial characteristics like we did for unforced case:
         c1[idxN,idxForce] = np.nanmean(steps_dz_cp[t_offset:,:])
         c2[idxN,idxForce] = np.nanmean(steps_t_cp[t_offset:])
@@ -179,6 +199,7 @@ for ff in range(0,Nfiles):
         s2[idxN,idxForce] = 0
         s3[idxN,idxForce] = 0
         s4[idxN,idxForce] = 0
+        s5[idxN,idxForce] = 0
         c1[idxN,idxForce] = 0
         c2[idxN,idxForce] = 0
         mask[idxN,idxForce] = True
@@ -265,6 +286,14 @@ for ff in range(0,Nfiles):
             fig.savefig(fnm + '_d_dt_steps_z.png')
             plt.close(fig)
 
+        #step_dS:
+        fig = plt.figure(figsize=(width,height))
+        grid = plt.GridSpec(1, 1, wspace=0., hspace=0.)
+        ax = fig.add_subplot(grid[0,0])
+        ax.plot(t,steps_dS_ave, 'k')
+        fig.savefig(fnm + '_steps_dS.png')
+        plt.close(fig)
+
     if panel_plot==1:
     #These are normalised versions of above plots:
         ax4 = fig.add_subplot(grid[1,0])
@@ -308,7 +337,8 @@ for ff in range(0,Nfiles):
         if saveFig==0: plt.show()
 
 
-
+#Compute stability value by combining other step stability measures:
+s6 = s1/np.max(s1) + s2/np.max(s2) + s3/np.max(s3) + s5/np.max(s5)
 
 
 
@@ -371,7 +401,7 @@ yvec = np.append(N_vec,5.5)
 
 interp = 'none'
 interp = 'nearest'
-rows = 3
+rows = 4
 columns = 2
 meshwidth=0.1
 snap=True
@@ -421,6 +451,28 @@ plt.title(r'$s_4$')
 #plt.ylabel(r'$N$ (rad/s)')
 
 fig.add_subplot(rows,columns,5)
+#plt.imshow(s5, extent=(xMin,xMax,yMin,yMax), interpolation=interp, cmap=cmap, aspect='auto', origin='lower')
+plt.pcolormesh(xvec,yvec,s5, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
+plt.xlim(0,400)
+plt.ylim(0,6)
+plt.colorbar()
+plt.scatter(xvec2,yvec2, marker='+', s=10, color='k')
+plt.title(r'$s_5$')
+#plt.xlabel(r'$n$ (rad/m)')
+#plt.ylabel(r'$N$ (rad/s)')
+
+fig.add_subplot(rows,columns,6)
+#plt.imshow(s6, extent=(xMin,xMax,yMin,yMax), interpolation=interp, cmap=cmap, aspect='auto', origin='lower')
+plt.pcolormesh(xvec,yvec,s6, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
+plt.xlim(0,400)
+plt.ylim(0,6)
+plt.colorbar()
+plt.scatter(xvec2,yvec2, marker='+', s=10, color='k')
+plt.title(r'$s_6$')
+#plt.xlabel(r'$n$ (rad/m)')
+#plt.ylabel(r'$N$ (rad/s)')
+
+fig.add_subplot(rows,columns,7)
 #plt.imshow(c1, extent=(xMin,xMax,yMin,yMax), interpolation=interp, cmap=cmap, aspect='auto', origin='lower')
 plt.pcolormesh(xvec,yvec,c1, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
 plt.xlim(0,400)
@@ -431,7 +483,7 @@ plt.title(r'$c_1$')
 plt.xlabel(r'$n$ (rad/m)')
 plt.ylabel(r'$N$ (rad/s)')
 
-fig.add_subplot(rows,columns,6)
+fig.add_subplot(rows,columns,8)
 #plt.imshow(c2, extent=(xMin,xMax,yMin,yMax), interpolation=interp, cmap=cmap, aspect='auto', origin='lower')
 plt.pcolormesh(xvec,yvec,c2, cmap=cmap, edgecolors='gray', linewidths=meshwidth, snap=snap)
 plt.xlim(0,400)
@@ -574,17 +626,17 @@ plt.xlabel(r'$n$ (rad/m)')
 plt.ylabel(r'$N$ (rad/s)')
 
 maskIdxs = np.where(mask==0)
-fig.add_subplot(rows,columns,4)
+fig.add_subplot(rows,columns,2)
 plt.scatter(s1[maskIdxs[0],maskIdxs[1]].flatten(),d3[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
 plt.xlabel(r'$s_1$')
 plt.ylabel(r'$d_3$')
 
-fig.add_subplot(rows,columns,5)
+fig.add_subplot(rows,columns,3)
 plt.scatter(s2[maskIdxs[0],maskIdxs[1]].flatten(),d3[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
 plt.xlabel(r'$s_2$')
 plt.ylabel(r'$d_3$')
 
-fig.add_subplot(rows,columns,6)
+fig.add_subplot(rows,columns,4)
 plt.scatter(s3[maskIdxs[0],maskIdxs[1]].flatten(),d3[maskIdxs[0],maskIdxs[1]].flatten(), c='k')
 plt.xlabel(r'$s_3$')
 plt.ylabel(r'$d_3$')
